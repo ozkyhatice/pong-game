@@ -1,3 +1,5 @@
+import { getApiUrl, API_CONFIG } from '../config.js';
+
 export function createRegisterPage(): HTMLElement {
   const container = document.createElement('div');
   container.className = 'min-h-screen bg-gray-50 flex items-center justify-center p-4';
@@ -149,7 +151,7 @@ export function createRegisterPage(): HTMLElement {
     errorDiv.classList.add('hidden');
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.REGISTER), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -184,7 +186,7 @@ export function createRegisterPage(): HTMLElement {
   // Google OAuth registration
   googleRegisterBtn.addEventListener('click', () => {
     // Redirect to Google OAuth endpoint
-    window.location.href = '/api/auth/google';
+    window.location.href = getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE);
   });
 
   container.appendChild(registerCard);

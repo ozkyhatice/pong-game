@@ -1,3 +1,5 @@
+import { getApiUrl, API_CONFIG } from '../config.js';
+
 export function createLoginPage(): HTMLElement {
   const container = document.createElement('div');
   container.className = 'min-h-screen bg-gray-50 flex items-center justify-center p-4';
@@ -100,7 +102,7 @@ export function createLoginPage(): HTMLElement {
     errorDiv.classList.add('hidden');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.LOGIN), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -137,7 +139,7 @@ export function createLoginPage(): HTMLElement {
   // Google OAuth login
   googleLoginBtn.addEventListener('click', () => {
     // Redirect to Google OAuth endpoint
-    window.location.href = '/api/auth/google';
+    window.location.href = getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE);
   });
 
   container.appendChild(loginCard);
