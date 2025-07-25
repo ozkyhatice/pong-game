@@ -4,6 +4,7 @@ import fastifySensible from '@fastify/sensible';
 import fastifyJWT from '@fastify/jwt';
 import dotenv from 'dotenv';
 import authRoutes from './modules/auth/routes/auth.routes.js';
+import userRoutes from './modules/user/routes/user.routes.js';
 
 dotenv.config();
 
@@ -14,5 +15,6 @@ await app.register(fastifySensible);
 await app.register(fastifyJWT, { secret: process.env.JWT_SECRET || 'default_secret' });
 
 await app.register(authRoutes, { prefix: '/auth' });
+await app.register(userRoutes, { prefix: '/users' });
 
 export default app;
