@@ -20,6 +20,18 @@ export const initDB = async () => {
       losses INTEGER DEFAULT 0
     )
   `);
+    await db.exec(`
+    CREATE TABLE IF NOT EXISTS friends (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      requesterID INTEGER NOT NULL,
+      recipientID INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      
+      FOREIGN KEY (requesterId) REFERENCES users(id),
+      FOREIGN KEY (recipientId) REFERENCES users(id))
+      `);
 
+      console.log('Database initialized successfully');
   return db;
 };

@@ -4,6 +4,7 @@ import fastifySensible from '@fastify/sensible';
 import fastifyJWT from '@fastify/jwt';
 import dotenv from 'dotenv';
 import authRoutes from './modules/auth/routes/auth.routes.js';
+import { initDB } from './config/db.js';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ await app.register(fastifyCors, { origin: true });
 await app.register(fastifySensible);
 await app.register(fastifyJWT, { secret: process.env.JWT_SECRET || 'default_secret' });
 
+await app.register(initDB);
 await app.register(authRoutes, { prefix: '/auth' });
 
 export default app;
