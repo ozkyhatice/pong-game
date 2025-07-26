@@ -10,4 +10,9 @@ const CreateFriendRequestSchema = {
     },
     required: ['targetId'],
 }
-export { CreateFriendRequestSchema };
+
+const GetIncomingRequestsSchema = {
+    summary: 'Get incoming friend requests',
+    tags: ['Friend'],
+}
+export { CreateFriendRequestSchema, GetIncomingRequestsSchema };

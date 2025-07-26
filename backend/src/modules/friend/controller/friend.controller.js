@@ -1,5 +1,5 @@
 import userService from '../../user/service/user.service.js';
-import { isExistingFriendRequestService } from '../service/friend.service.js';
+import { isExistingFriendRequestService, getIncomingFriendRequestsService } from '../service/friend.service.js';
 import { initDB } from '../../../config/db.js';
 export async function CreateFriendRequestController(request, reply) {
     const requesterId = request.user.id;
@@ -26,8 +26,7 @@ export async function CreateFriendRequestController(request, reply) {
         return reply.code(400).send({ error: 'Friend request already exists' });
     }
     try {
-        const db = await initDB();
-        const result = await db.run('INSERT INTO friends (requesterID, recipientID, status) VALUES (?, ?, ?)', [requesterId, targetId, 'pending']);
+        const result = await addFriendRequestService(requesterId, targetId);
         if (result.changes > 0) {
             return reply.code(201).send({ message: 'Friend request sent successfully' });
         } else {
@@ -37,4 +36,14 @@ export async function CreateFriendRequestController(request, reply) {
         console.error('Error sending friend request:', error);
         return reply.code(500).send({ error: 'Internal server error' });
     }
+}
+
+export async function getIncomingFriendRequestsController(request, reply) {
+    const userId = request.user.id;
+    const db = await initDB();
+    const requests = await getIncomingFriendRequestsService(userId);
+    if (requests.length === 0) {
+        return reply.code(404).send({ message: 'No incoming friend requests' });
+    }
+    return reply.code(200).send({ requests });
 }
