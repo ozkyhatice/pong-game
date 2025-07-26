@@ -9,7 +9,6 @@ export async function findUserByEmail(email) {
 export async function findUserById(id) {
   const db = await initDB();
   const user = await db.get('SELECT * from users WHERE id = ?', [id]);
-  console.log('User found:', user);
   return user;
 }
 

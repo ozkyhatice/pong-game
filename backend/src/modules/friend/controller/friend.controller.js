@@ -1,6 +1,5 @@
 import userService from '../../user/service/user.service.js';
-import { isExistingFriendRequestService, getIncomingFriendRequestsService } from '../service/friend.service.js';
-import { initDB } from '../../../config/db.js';
+import { isExistingFriendRequestService, getIncomingFriendRequestsService, postAcceptRequestService, isFriend, getIncomingFriendRequestsServiceById} from '../service/friend.service.js';
 export async function CreateFriendRequestController(request, reply) {
     const requesterId = request.user.id;
     const targetId = request.params.targetId;
@@ -12,8 +11,6 @@ export async function CreateFriendRequestController(request, reply) {
     if (!user) {
         return reply.code(404).send({ error: 'Target user not found' });
     }
-    console.log('Requester ID:', requesterId);
-    console.log('Target ID:', targetId);
     if (requesterId == targetId) {
         return reply.code(400).send({ error: 'You cannot send a friend request to yourself' });
     }
@@ -40,10 +37,28 @@ export async function CreateFriendRequestController(request, reply) {
 
 export async function getIncomingFriendRequestsController(request, reply) {
     const userId = request.user.id;
-    const db = await initDB();
     const requests = await getIncomingFriendRequestsService(userId);
     if (requests.length === 0) {
         return reply.code(404).send({ message: 'No incoming friend requests' });
     }
     return reply.code(200).send({ requests });
+}
+
+export async function postAcceptRequestController(request, reply) {
+    const userId = request.user.id;
+    const targetId = request.params.targetId;
+
+    const alreadyFriend = await isFriend(targetId, userId);
+    console.log(alreadyFriend);
+    if (alreadyFriend.length > 0)
+        return reply.code(409).send({ message: "You are already friends" });
+    const pendingRequest = await getIncomingFriendRequestsServiceById(targetId, userId);
+    if (!pendingRequest || pendingRequest.length === 0)
+        return reply.code(404).send({ message: "No pending request found" });
+    const accept = await postAcceptRequestService(userId, targetId);
+    if (accept.changes > 0)
+        return reply.code(201).send({message : "Accepted request"});
+    else
+        return reply.code(500).send({message : "Failed to accept request"});
+
 }
