@@ -35,7 +35,6 @@ export async function isFriend(userId, targetId)
         "SELECT * FROM friends WHERE ((requesterID = ? AND recipientID = ? AND status = ?) OR (requesterID = ? AND recipientID = ? AND status = ?))",
         [userId, targetId,'approved', targetId, userId, 'approved']
     );
-    console.log(result);
     return result;
 }
 export async function getFriendsListServices(userId) {
@@ -56,4 +55,30 @@ export async function deleteFriendServices(userId, targetId) {
     );
     return result;
 
+}
+
+export async function isBlockedAlready(blockerId, blockedId) {
+    const db = await initDB();
+    const existingBlock = await db.get('SELECT * FROM blocked_users WHERE blockerId = ? AND blockedId = ?', [blockerId, blockedId]);
+    return existingBlock;
+}
+export async function blockFriendServices(blockerId, blockedId) {
+    const db = await initDB();
+    const existingBlock = await isBlockedAlready(blockerId, blockedId);
+    
+    if (existingBlock) {
+        return { error: 'User is already blocked' };
+    }
+    
+    try{
+        await db.run('DELETE FROM friends WHERE (requesterID = ? AND recipientID = ?) OR (requesterID = ? AND recipientID = ?)', [blockerId, blockedId, blockedId, blockerId]);
+        const result = await db.run('INSERT INTO blocked_users (blockerId, blockedId) VALUES (?, ?)', [blockerId, blockedId]);
+        if (result.changes > 0) {
+            return { message: 'User blocked successfully' };
+        } else {
+            return { error: 'Failed to block user' };
+        }
+    }catch (error) {
+        return { error: error.message };
+    }
 }

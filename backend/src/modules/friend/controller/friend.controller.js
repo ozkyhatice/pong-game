@@ -1,6 +1,7 @@
+import { verifyJWT } from '../../middleware/auth.middleware.js';
 import userService from '../../user/service/user.service.js';
 import { isExistingFriendRequestService, getIncomingFriendRequestsService, postAcceptRequestService, isFriend, getIncomingFriendRequestsServiceById, getFriendsListServices} from '../service/friend.service.js';
-import { getSentRequestsServices, addFriendRequestService, deleteFriendServices } from '../service/friend.service.js';
+import { getSentRequestsServices, addFriendRequestService, deleteFriendServices, blockFriendServices } from '../service/friend.service.js';
 export async function CreateFriendRequestController(request, reply) {
     const requesterId = request.user.id;
     const targetId = request.params.targetId;
@@ -94,4 +95,32 @@ export async function deleteFriendController(request, reply) {
     else
         return reply.code(500).send({message : "Fail"});
     
+}
+export async function blockFriendController(request, reply) {
+    const userId = request.user.id;
+    const targetId = request.params.id;
+    
+    if (!targetId || isNaN(targetId)) {
+        return reply.code(400).send({ error: 'Invalid target user ID' });
+    }
+    const user = await userService.findUserById(targetId);
+    if (!user) {
+        return reply.code(404).send({ error: 'Target user not found' });
+    }
+    if (userId == targetId) {
+        return reply.code(400).send({ error: 'You cannot block yourself' });
+    }
+    try {
+        const result = await blockFriendServices(userId, targetId);
+        if (result.error) {
+            return reply.code(400).send(result);
+        } else if (result.message) {
+            return reply.code(200).send(result);
+        } else {
+            return reply.code(500).send({ error: 'Failed to block user' });
+        }
+    } catch (error) {
+        console.error('Error blocking user:', error);
+        return reply.code(500).send({ error: 'Internal server error' });    
+    }
 }
