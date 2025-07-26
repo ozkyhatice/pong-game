@@ -32,9 +32,29 @@ const GetFriendsListSchema = {
     summary : 'List of Friends',
     tags:  ['Friend'],
 }
+const GetSentRequestSchema = {
+    summary : 'list of requests sent',
+    tags: ['Friend'],
+}
+
+const DeleteFriendSchema = {
+    summary : 'delete friend',
+    tags: ['Friend'],
+    type: 'object',
+    properties: {
+        targetId: {
+            type: 'integer',
+        }
+    },
+    required: ['targetId']
+}
+
 export { 
     CreateFriendRequestSchema, 
     GetIncomingRequestsSchema,
     PostAcceptRequestSchema,
-    GetFriendsListSchema
+    GetFriendsListSchema,
+    GetSentRequestSchema,
+    DeleteFriendSchema,
+    
 };

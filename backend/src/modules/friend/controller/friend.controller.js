@@ -1,5 +1,6 @@
 import userService from '../../user/service/user.service.js';
 import { isExistingFriendRequestService, getIncomingFriendRequestsService, postAcceptRequestService, isFriend, getIncomingFriendRequestsServiceById, getFriendsListServices} from '../service/friend.service.js';
+import { getSentRequestsServices, addFriendRequestService, deleteFriendServices } from '../service/friend.service.js';
 export async function CreateFriendRequestController(request, reply) {
     const requesterId = request.user.id;
     const targetId = request.params.targetId;
@@ -49,7 +50,6 @@ export async function postAcceptRequestController(request, reply) {
     const targetId = request.params.targetId;
 
     const alreadyFriend = await isFriend(targetId, userId);
-    console.log(alreadyFriend);
     if (alreadyFriend.length > 0)
         return reply.code(409).send({ message: "You are already friends" });
     const pendingRequest = await getIncomingFriendRequestsServiceById(targetId, userId);
@@ -67,4 +67,31 @@ export async function getFriendsListController(request, reply) {
     const userId = request.user.id;
     const friends = await getFriendsListServices(userId);
     return reply.code(200).send(friends);
+}
+
+export async function getSentRequestsController(request, reply) {
+    const userId = request.user.id;
+    const requests = await getSentRequestsServices(userId);
+    return reply.code(200).send(requests);
+    
+}
+export async function deleteFriendController(request, reply) {
+    const userId = request.user.id;
+    const targetId = request.params.targetId;
+
+    const alreadyFriend = await isFriend(userId, targetId);
+    if (alreadyFriend.length > 0)
+    {
+        try{
+            const deletefriend = await deleteFriendServices(userId, targetId);
+            return reply.code(200).send({ message: 'Friend request deleted', deletefriend });
+        }
+        catch(err){
+            return reply.code(400).send({ error: err.message });
+        }
+
+    }
+    else
+        return reply.code(500).send({message : "Fail"});
+    
 }

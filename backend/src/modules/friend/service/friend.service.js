@@ -30,12 +30,30 @@ export async function postAcceptRequestService(userId, targetId) {
 export async function isFriend(userId, targetId)
 {
     const db = await initDB();
-    const result = await db.all('SELECT * FROM friends WHERE requesterID = ? AND recipientID = ? AND status = ?', [userId, targetId, 'approved']);
+
+    const result = await db.all(
+        "SELECT * FROM friends WHERE ((requesterID = ? AND recipientID = ? AND status = ?) OR (requesterID = ? AND recipientID = ? AND status = ?))",
+        [userId, targetId,'approved', targetId, userId, 'approved']
+    );
+    console.log(result);
     return result;
 }
 export async function getFriendsListServices(userId) {
     const db = await initDB();
     const result = await db.all('SELECT * from friends WHERE (requesterID = ? AND status = ?) OR (recipientID = ? AND status = ?)', [userId, 'approved', userId, 'approved']);
-    console.log(result);
     return result;
+}
+export async function getSentRequestsServices(userId) {
+    const db = await initDB();
+    const result = await db.all('SELECT * FROM friends WHERE requesterID = ? AND status = ?', [userId, 'pending']);
+    return result;
+}
+export async function deleteFriendServices(userId, targetId) {
+    const db = await initDB();
+    const result = await db.run(
+        'DELETE FROM friends WHERE ((requesterID = ? AND recipientID = ?) OR (requesterID = ? AND recipientID = ?)) AND status = ?',
+        [userId, targetId, targetId, userId, 'approved']
+    );
+    return result;
+
 }
