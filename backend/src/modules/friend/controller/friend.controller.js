@@ -1,5 +1,5 @@
 import userService from '../../user/service/user.service.js';
-import { isExistingFriendRequestService, getIncomingFriendRequestsService, postAcceptRequestService, isFriend, getIncomingFriendRequestsServiceById} from '../service/friend.service.js';
+import { isExistingFriendRequestService, getIncomingFriendRequestsService, postAcceptRequestService, isFriend, getIncomingFriendRequestsServiceById, getFriendsListServices} from '../service/friend.service.js';
 export async function CreateFriendRequestController(request, reply) {
     const requesterId = request.user.id;
     const targetId = request.params.targetId;
@@ -61,4 +61,10 @@ export async function postAcceptRequestController(request, reply) {
     else
         return reply.code(500).send({message : "Failed to accept request"});
 
+}
+
+export async function getFriendsListController(request, reply) {
+    const userId = request.user.id;
+    const friends = await getFriendsListServices(userId);
+    return reply.code(200).send(friends);
 }

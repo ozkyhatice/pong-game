@@ -33,3 +33,9 @@ export async function isFriend(userId, targetId)
     const result = await db.all('SELECT * FROM friends WHERE requesterID = ? AND recipientID = ? AND status = ?', [userId, targetId, 'approved']);
     return result;
 }
+export async function getFriendsListServices(userId) {
+    const db = await initDB();
+    const result = await db.all('SELECT * from friends WHERE (requesterID = ? AND status = ?) OR (recipientID = ? AND status = ?)', [userId, 'approved', userId, 'approved']);
+    console.log(result);
+    return result;
+}

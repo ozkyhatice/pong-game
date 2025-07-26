@@ -28,8 +28,13 @@ const PostAcceptRequestSchema = {
     },
     required: ['targetId']
 }
+const GetFriendsListSchema = {
+    summary : 'List of Friends',
+    tags:  ['Friend'],
+}
 export { 
     CreateFriendRequestSchema, 
     GetIncomingRequestsSchema,
     PostAcceptRequestSchema,
+    GetFriendsListSchema
 };

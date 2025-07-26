@@ -1,6 +1,6 @@
 import { verifyJWT } from '../../middleware/auth.middleware.js';
-import { CreateFriendRequestSchema, GetIncomingRequestsSchema, PostAcceptRequestSchema } from '../schema.js';
-import { CreateFriendRequestController , getIncomingFriendRequestsController, postAcceptRequestController} from '../controller/friend.controller.js';
+import { CreateFriendRequestSchema, GetIncomingRequestsSchema, PostAcceptRequestSchema, GetFriendsListSchema } from '../schema.js';
+import { CreateFriendRequestController , getIncomingFriendRequestsController, postAcceptRequestController, getFriendsListController} from '../controller/friend.controller.js';
 export default async function friendRoute(app, options) {
     app.post('/add/:targetId', {
         schema: CreateFriendRequestSchema,
@@ -14,5 +14,9 @@ export default async function friendRoute(app, options) {
         schema: PostAcceptRequestSchema,
         preHandler: [verifyJWT]
     }, postAcceptRequestController)
+    app.get('/', {
+        schema: GetFriendsListSchema,
+        preHandler: [verifyJWT],
+    }, getFriendsListController);
 
 }
