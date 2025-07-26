@@ -3,9 +3,9 @@ import fastifyCors from '@fastify/cors';
 import fastifySensible from '@fastify/sensible';
 import fastifyJWT from '@fastify/jwt';
 import dotenv from 'dotenv';
-import authRoutes from './modules/auth/routes/auth.routes.js';
 import { initDB } from './config/db.js';
-
+import authRoutes from './modules/auth/routes/auth.routes.js';
+import friendRoute from './modules/friend/routes/friend.routes.js';
 dotenv.config();
 
 const app = fastify({ logger: true });
@@ -16,5 +16,6 @@ await app.register(fastifyJWT, { secret: process.env.JWT_SECRET || 'default_secr
 
 await app.register(initDB);
 await app.register(authRoutes, { prefix: '/auth' });
+await app.register(friendRoute, { prefix: '/friends' });
 
 export default app;

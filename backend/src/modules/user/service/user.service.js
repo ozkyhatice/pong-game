@@ -6,6 +6,13 @@ export async function findUserByEmail(email) {
   return user;
 }
 
+export async function findUserById(id) {
+  const db = await initDB();
+  const user = await db.get('SELECT * from users WHERE id = ?', [id]);
+  console.log('User found:', user);
+  return user;
+}
+
 export async function createUser({ username, email, password }) {
   const db = await initDB();
   if (!username || !email || !password) {
@@ -25,3 +32,8 @@ export async function createUser({ username, email, password }) {
   const result = await db.run('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, password]);
   return result.lastID; // Return the ID of the newly created user
 }
+export default {
+  findUserByEmail,
+  findUserById, 
+  createUser
+};
