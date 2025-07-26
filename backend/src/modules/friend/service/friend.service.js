@@ -82,3 +82,23 @@ export async function blockFriendServices(blockerId, blockedId) {
         return { error: error.message };
     }
 }
+
+export async function unblockFriendServices(blockerId, blockedId) {
+    const db = await initDB();
+    const existingBlock = await isBlockedAlready(blockerId, blockedId);
+    
+    if (!existingBlock) {
+        return { error: 'User is not blocked' };
+    }
+    
+    try{
+        const result = await db.run('DELETE FROM blocked_users WHERE blockerId = ? AND blockedId = ?', [blockerId, blockedId]);
+        if (result.changes > 0) {
+            return { message: 'User unblocked successfully' };
+        } else {
+            return { error: 'Failed to unblock user' };
+        }
+    }catch (error) {
+        return { error: error.message };
+    }
+}

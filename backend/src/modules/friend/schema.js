@@ -48,8 +48,20 @@ const DeleteFriendSchema = {
     },
     required: ['targetId']
 }
-const blockFriendSchema = {
+const BlockFriendSchema = {
     summary: 'Block a friend',
+    tags: ['Friend'],
+    type: 'object',
+    properties: {
+        targetId: {
+            type: 'integer',
+            description: "ID of the user to block"
+        }
+    },
+    required: ['targetId']
+}
+const UnBlockFriendSchema = {
+    summary: 'Unblock a friend',
     tags: ['Friend'],
     type: 'object',
     properties: {
@@ -68,6 +80,7 @@ export {
     GetFriendsListSchema,
     GetSentRequestSchema,
     DeleteFriendSchema,
-    blockFriendSchema,
+    BlockFriendSchema,
+    UnBlockFriendSchema
 
 };
