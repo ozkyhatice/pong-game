@@ -2,7 +2,7 @@ import { verifyJWT } from '../../middleware/auth.middleware.js';
 import { CreateFriendRequestSchema, GetIncomingRequestsSchema, PostAcceptRequestSchema, GetFriendsListSchema } from '../schema.js';
 import { CreateFriendRequestController , getIncomingFriendRequestsController, postAcceptRequestController, getFriendsListController} from '../controller/friend.controller.js';
 import { GetSentRequestSchema, DeleteFriendSchema, BlockFriendSchema, UnBlockFriendSchema } from '../schema.js';
-import { getSentRequestsController, deleteFriendController, blockFriendController, unblockFriendController } from '../controller/friend.controller.js';
+import { getSentRequestsController, rejectFriendController, blockFriendController, unblockFriendController, deleteFriendController } from '../controller/friend.controller.js';
 export default async function friendRoute(app, options) {
     app.post('/add/:targetId', {
         schema: CreateFriendRequestSchema,
@@ -27,7 +27,7 @@ export default async function friendRoute(app, options) {
     app.delete('/:targetId/reject', {
         schema: DeleteFriendSchema,
         preHandler: [verifyJWT],
-    }, deleteFriendController)
+    }, rejectFriendController)
     app.post('/:id/block', {
         schema: BlockFriendSchema,
         preHandler: [verifyJWT]
@@ -38,5 +38,9 @@ export default async function friendRoute(app, options) {
         preHandler: [verifyJWT]
     }, unblockFriendController
     )
+    app.delete('/:targetId/remove', {
+        schema: DeleteFriendSchema,
+        preHandler: [verifyJWT]
+    }, deleteFriendController)
 
 }
