@@ -20,6 +20,26 @@ export const initDB = async () => {
       losses INTEGER DEFAULT 0
     )
   `);
-
+    await db.exec(`
+    CREATE TABLE IF NOT EXISTS friends (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      requesterID INTEGER NOT NULL,
+      recipientID INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      
+      FOREIGN KEY (requesterId) REFERENCES users(id),
+      FOREIGN KEY (recipientId) REFERENCES users(id))
+      `);
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS blocked_users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        blockerId INTEGER NOT NULL,
+        blockedId INTEGER NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (blockerId) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (blockedId) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
   return db;
 };
