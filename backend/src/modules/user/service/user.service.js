@@ -9,7 +9,6 @@ export async function getUserById(id) {
   return user;
 }
 
-
 export async function findUserById(id) {
   const db = await initDB();
   const user = await db.get('SELECT * from users WHERE id = ?', [id]);
@@ -36,7 +35,6 @@ export async function createUser({ username, email, password }) {
   return result.lastID; // Return the ID of the newly created user
 }
 export default {
-  findUserByEmail,
   findUserById, 
   createUser
 };
