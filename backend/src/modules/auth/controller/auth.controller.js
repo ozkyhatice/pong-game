@@ -8,7 +8,8 @@ export async function registerController(request, reply) {
 
     const token = await reply.jwtSign({
       id: user.id,
-      email: user.email
+      email: user.email,
+      username: user.username
     });
 
     reply.code(201).send({ token, user });
@@ -25,11 +26,16 @@ export async function loginController(request, reply) {
 
     const token = await reply.jwtSign({
       id: user.id,
-      email: user.email
+      email: user.email,
+      username: user.username
     });
 
     reply.send({ token, user });
   } catch (err) {
     reply.code(401).send({ error: err.message });
   }
+}
+
+export async function meController(request, reply) {
+  reply.send({ user: request.user });
 }

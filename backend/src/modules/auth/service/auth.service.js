@@ -5,7 +5,6 @@ import argon2 from 'argon2';
 export async function registerUser({ username, email, password }) {
   const db = await initDB();
 
-  // Kullanıcı zaten var mı?
   const existing = await db.get(
     'SELECT * FROM users WHERE email = ? OR username = ?',
     [email, username]
@@ -34,7 +33,6 @@ export async function registerUser({ username, email, password }) {
 export async function loginUser({ email, password }) {
   const db = await initDB();
 
-  // Kullanıcıyı email ile bul
   const user = await db.get(
     'SELECT * FROM users WHERE email = ?',
     [email]

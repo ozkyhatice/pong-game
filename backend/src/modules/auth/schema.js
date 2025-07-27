@@ -50,3 +50,14 @@ export const loginSchema = {
     }
   }
 };
+
+export const meSchema = {
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        user: userResponseSchema
+      }
+    }
+  }
+};
