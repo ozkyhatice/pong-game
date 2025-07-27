@@ -1,16 +1,29 @@
 // API Configuration
 export const API_CONFIG = {
   BASE_URL: 'http://localhost:3000',
-  
+
   // API endpoints
   ENDPOINTS: {
     AUTH: {
       LOGIN: '/auth/login',
       REGISTER: '/auth/register',
-      GOOGLE: '/auth/google'
+      // GOOGLE: '/auth/google'  -> soon
     },
-    USER: '/user',
-    FRIENDS: '/friends'
+    USER: {
+      ME: '/users/me'
+    },
+    FRIENDS: {
+      LIST: '/friends',
+      ADD: (targetId: string) => `/friends/add/${targetId}`,
+      ACCEPT: (targetId: string) => `/friends/${targetId}/accept`,
+      REJECT: (targetId: string) => `/friends/${targetId}/reject`,
+      BLOCK: (targetId: string) => `/friends/${targetId}/block`,
+      UNBLOCK: (targetId: string) => `/friends/${targetId}/unblock`,
+      REQUESTS: {
+        INCOMING: '/friends/requests/incoming',
+        SENT: '/friends/requests/send'
+      }
+    }
   }
 };
 
