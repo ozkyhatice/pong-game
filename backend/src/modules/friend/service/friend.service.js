@@ -107,3 +107,4 @@ export async function deleteFriendServices(userId, targetId) {
     const result = await db.run('DELETE FROM friends WHERE (requesterID = ? AND recipientID = ?) OR (requesterID = ? AND recipientID = ?)', [userId, targetId, targetId, userId]);
     return result;
 }
+

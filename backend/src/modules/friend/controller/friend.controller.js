@@ -180,3 +180,4 @@ export async function deleteFriendController(request, reply) {
         return reply.code(500).send({ error: 'Internal server error' });
     }
 }
+

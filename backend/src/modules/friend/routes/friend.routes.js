@@ -42,5 +42,5 @@ export default async function friendRoute(app, options) {
         schema: DeleteFriendSchema,
         preHandler: [verifyJWT]
     }, deleteFriendController)
-
+    
 }
