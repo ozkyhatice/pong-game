@@ -9,6 +9,7 @@ export async function getUserById(id) {
   return user;
 }
 
+
 export async function getUserByUsername(username) {
   const db = await initDB();
   const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
