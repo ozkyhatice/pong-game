@@ -10,6 +10,12 @@
     <div id="app" class="min-h-screen">
         <!-- SPA content will be rendered here -->
     </div>
+    
+    <!-- Test için geçici link -->
+    <div style="position: fixed; top: 10px; right: 10px; z-index: 1000; background: white; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        <a href="#" onclick="window.dispatchEvent(new CustomEvent('navigate', { detail: '/chat-test' })); return false;" style="color: blue; text-decoration: none;">Chat Test</a>
+    </div>
+    
     <script type="module" src="./main.js"></script>
 </body>
 </html>
