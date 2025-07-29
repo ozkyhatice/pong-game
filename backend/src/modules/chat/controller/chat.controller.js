@@ -1,4 +1,4 @@
-import { addClientService, broadcastUserStatusService, sendUnreadMessages, markReadMessages, getUnreadMessages, getNotDelieveredMessages} from '../services/chat.service.js';
+import { addClientService, broadcastUserStatusService, sendUnreadMessages, markReadMessagesById, getUnreadMessages, getNotDelieveredMessages} from '../services/chat.service.js';
 import { isFriend } from '../../friend/service/friend.service.js';  
 import { addDbMessageService, SendMessageService, isConnected } from '../services/chat.service.js';
 export async function addClientController(userId, connection) {
@@ -27,34 +27,36 @@ export async function handleIncomingMessage(messages, userId) {
     const { receiverId, content } = msgObj;
     const type = msgObj.type || 'message';
     if (type === 'read') {
-        const msgId = msgObj.msgId;
-        if (!msgId) {
-            throw new Error('Message ID is required to mark as read');
-        }
-        const unreadMessages = await getUnreadMessages(userId);
-        const messageToMark = unreadMessages.find(msg => msg.id === msgId);
-        if (messageToMark) {
-            await markReadMessages(userId, [messageToMark]);
-        } else {
-            console.warn(`Message with ID ${msgId} not found for user ${userId}`);
-        }
-        return;
+        await markReadMessagesById(userId);
     }
     else if (type === 'message') {
-
         if (!receiverId || !content) {
             throw new Error('Receiver ID and content are required');
         }
         if (userId === receiverId) {
             throw new Error('You cannot send a message to yourself');
         }
-        if (await isFriend(userId, receiverId).length === 0) {
-            throw new Error('You can only send messages to friends');
+        // const friends = await isFriend(userId, receiverId);
+        // if (friends.length === 0) {
+        //     throw new Error('You can only send messages to friends');
+        // }
+        if (await !isConnected(receiverId) || await !isConnected(userId)) {
+            console.log(`User ${receiverId} is not connected, message will be sent later`);
+            return;
         }
         const newMessage = await addDbMessageService(userId, receiverId, content);
         if (newMessage && await isConnected(receiverId)) {
             try{
-                await SendMessageService(userId, receiverId, content, newMessage);
+                const messageObj = {
+                    id: newMessage.lastID,
+                    senderId: userId,
+                    receiverId: receiverId,
+                    content: content,
+                    isRead: 0,
+                    delivered: 0,
+                    createdAt: new Date().toISOString()
+                };
+                await SendMessageService(userId, receiverId, content, messageObj);
             }catch (err) {
                 console.error('Error sending message:', err);
             }

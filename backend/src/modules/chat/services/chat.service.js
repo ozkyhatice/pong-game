@@ -61,15 +61,12 @@ export async function sendUnreadMessages(connection, unreadMessages) {
     }
 }
 }
-export async function markReadMessages(userId, unreadMessages) {
-    const db = await initDB();
-    const messageIds = unreadMessages.map(msg => msg.id);
-    if (messageIds.length > 0) {
-        //sql injection risk is low
-        const placeholders = messageIds.map(() => '?').join(', ');
-        const sql = `UPDATE messages SET isRead = 1 WHERE receiverId = ? AND  id IN (${placeholders})`;
-        await db.run(sql, [userId, ...messageIds]);
-    }
+export async function markReadMessagesById(userId) {
+  const db = await initDB();
+  await db.run(
+   `UPDATE messages SET isRead = 1 WHERE receiverId = ? AND isRead = 0`,
+    [userId]
+  );
 }
 
 export async function addDbMessageService(senderId, receiverId, content) {
@@ -84,8 +81,10 @@ export async function addDbMessageService(senderId, receiverId, content) {
 export async function updateMessageStatus(senderId, receiverId, messageData) {
     const db = await initDB();
     const msgId = messageData.id;
+    console.log(`Updating message status - ID: ${msgId}, Sender: ${senderId}, Receiver: ${receiverId}`);
     const sql = `UPDATE messages SET delivered = 1 WHERE id = ? AND senderId = ? AND receiverId = ?`;
-    await db.run(sql, [msgId, senderId, receiverId]);
+    const result = await db.run(sql, [msgId, senderId, receiverId]);
+    console.log(`Update result:`, result);
 }
 
 export async function sendToUser(userId, messageData) {

@@ -10,7 +10,15 @@ ws.on('open', () => {
   console.log('✅ WebSocket bağlantısı kuruldu!');
   ws.send(JSON.stringify({
     receiverId: 2,
-    content: 'Merhaba Hatice',
+    content: 'hello Hatice',
+    type: 'message',
+  }));
+});
+ws2.on('open', () => {
+  console.log('✅ WebSocket bağlantısı kuruldu!');
+  ws2.send(JSON.stringify({
+    receiverId: 1,
+    content: 'hello user1',
     type: 'message',
   }));
 });
@@ -18,15 +26,16 @@ ws.on('open', () => {
 ws.on('message', (data) => {
   const msg = JSON.parse(data);
   if (msg.type === 'message') {
-    ws2.send(JSON.stringify({
-      type: 'read',
-      msgId: msg.id
-    }));
+    console.log('📩 Mesaj alındı:', data);
 
-  // }
-  // data = JSON.parse(data);
-  console.log('📩 Mesaj alındı:', data);
-}});
+    // Kullanıcı 2 tüm mesajlarını okundu olarak bildiriyor
+    ws.send(JSON.stringify({
+      type: 'read',
+      UserId: 1
+
+    }));
+  }
+});
 
 ws.on('close', () => {
   console.log('🔒 Bağlantı kapandı');
