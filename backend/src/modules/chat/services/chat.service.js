@@ -26,9 +26,14 @@ export async function broadcastUserStatusService(userId, status) {
 
 export async function getUnreadMessages(userId) {
     const db = await initDB();
-    const unreadMessages = await db.all('SELECT * from messages WHERE receiverId = ? AND isRead = ? AND delivered = ?', [userId, 0, 0]);
+    const unreadMessages = await db.all('SELECT * from messages WHERE receiverId = ? AND isRead = ?', [userId, 0]);
     console.log('userId:', userId, typeof userId);
     return unreadMessages;
+}
+export async function getNotDelieveredMessages(userId) {
+    const db = await initDB();
+    const notDeliveredMessages = await db.all('SELECT * from messages WHERE receiverId = ? AND delivered = ?', [userId, 0]);
+    return notDeliveredMessages;
 }
 
 export async function sendUnreadMessages(connection, unreadMessages) {
@@ -40,12 +45,13 @@ export async function sendUnreadMessages(connection, unreadMessages) {
         from: msg.senderId,
         content: msg.content,
         createdAt: msg.createdAt,
-        isRead: msg.isRead,
+        isRead: 0,
         delivered: 1,
+        id: msg.id
       }))
     };
     try{
-
+        
         connection.send(JSON.stringify(messagePayload));
         await Promise.all(unreadMessages.map(msg =>
             updateMessageStatus(msg.senderId, msg.receiverId, msg)
@@ -56,7 +62,6 @@ export async function sendUnreadMessages(connection, unreadMessages) {
 }
 }
 export async function markReadMessages(userId, unreadMessages) {
-
     const db = await initDB();
     const messageIds = unreadMessages.map(msg => msg.id);
     if (messageIds.length > 0) {
