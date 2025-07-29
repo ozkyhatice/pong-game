@@ -27,7 +27,7 @@ class App {
       .add('/profile', createProfilePage, true) // Requires authentication
       .add('/game', createGamePage, true) // Requires authentication
       .add('/login', createLoginPage, false) // No authentication required
-      .add('/register', createRegisterPage, false); // No authentication required
+      .add('/register', createRegisterPage, false) // No authentication required
   }
 }
 

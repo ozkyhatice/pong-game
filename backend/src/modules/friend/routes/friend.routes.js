@@ -1,8 +1,10 @@
 import { CreateFriendRequestSchema, GetIncomingRequestsSchema, PostAcceptRequestSchema, GetFriendsListSchema } from '../schema.js';
 import { CreateFriendRequestController , getIncomingFriendRequestsController, postAcceptRequestController, getFriendsListController} from '../controller/friend.controller.js';
 import { GetSentRequestSchema, DeleteFriendSchema, BlockFriendSchema, UnBlockFriendSchema } from '../schema.js';
+
 import { getSentRequestsController, deleteFriendController, blockFriendController, unblockFriendController } from '../controller/friend.controller.js';
 import { verifyToken } from '../../../middleware/auth.js';
+
 
 export default async function friendRoute(app, options) {
     
@@ -47,5 +49,9 @@ export default async function friendRoute(app, options) {
         preHandler: [verifyToken]
     }, unblockFriendController
     )
-
+    app.delete('/:targetId/remove', {
+        schema: DeleteFriendSchema,
+        preHandler: [verifyJWT]
+    }, deleteFriendController)
+    
 }

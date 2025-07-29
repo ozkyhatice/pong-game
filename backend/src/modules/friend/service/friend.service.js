@@ -47,11 +47,11 @@ export async function getSentRequestsServices(userId) {
     const result = await db.all('SELECT * FROM friends WHERE requesterID = ? AND status = ?', [userId, 'pending']);
     return result;
 }
-export async function deleteFriendServices(userId, targetId) {
+export async function rejectFriendServices(userId, targetId) {
     const db = await initDB();
     const result = await db.run(
-        'DELETE FROM friends WHERE ((requesterID = ? AND recipientID = ?) OR (requesterID = ? AND recipientID = ?)) AND status = ?',
-        [userId, targetId, targetId, userId, 'approved']
+        'DELETE FROM friends WHERE (requesterID = ? AND recipientID = ? AND status = ?',
+        [userId, targetId, targetId, userId, 'pending']
     );
     return result;
 
@@ -102,3 +102,9 @@ export async function unblockFriendServices(blockerId, blockedId) {
         return { error: error.message };
     }
 }
+export async function deleteFriendServices(userId, targetId) {
+    const db = await initDB();
+    const result = await db.run('DELETE FROM friends WHERE (requesterID = ? AND recipientID = ?) OR (requesterID = ? AND recipientID = ?)', [userId, targetId, targetId, userId]);
+    return result;
+}
+

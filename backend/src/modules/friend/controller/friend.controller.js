@@ -1,5 +1,6 @@
 import userService from '../../user/service/user.service.js';
 import { isExistingFriendRequestService, getIncomingFriendRequestsService, postAcceptRequestService, isFriend, getIncomingFriendRequestsServiceById, getFriendsListServices} from '../service/friend.service.js';
+
 import { getSentRequestsServices, addFriendRequestService, deleteFriendServices, blockFriendServices, unblockFriendServices } from '../service/friend.service.js';
 
 export async function CreateFriendRequestController(request, reply) {
@@ -72,7 +73,7 @@ export async function getSentRequestsController(request, reply) {
     return reply.code(200).send(requests);
     
 }
-export async function deleteFriendController(request, reply) {
+export async function rejectFriendController(request, reply) {
     const userId = request.user.id;
     const targetId = request.params.targetId;
 
@@ -80,7 +81,7 @@ export async function deleteFriendController(request, reply) {
     if (alreadyFriend.length > 0)
     {
         try{
-            const deletefriend = await deleteFriendServices(userId, targetId);
+            const deletefriend = await rejectFriendServices(userId, targetId);
             return reply.code(200).send({ message: 'Friend request deleted', deletefriend });
         }
         catch(err){
@@ -148,3 +149,32 @@ export async function unblockFriendController(request, reply) {
         return reply.code(500).send({ error: 'Internal server error' });    
     }
 }
+
+export async function deleteFriendController(request, reply) {
+    const userId = request.user.id;
+    const targetId = request.params.targetId;
+
+    if (!targetId || isNaN(targetId)) {
+        return reply.code(400).send({ error: 'Invalid target user ID' });
+    }
+    const user = await userService.findUserById(targetId);
+    if (!user) {
+        return reply.code(404).send({ error: 'Target user not found' });
+    }
+    if (userId == targetId) {
+        return reply.code(400).send({ error: 'You cannot remove yourself' });
+    }
+    
+    try {
+        const result = await deleteFriendServices(userId, targetId);
+        if (result.changes > 0) {
+            return reply.code(200).send({ message: 'Friend removed successfully' });
+        } else {
+            return reply.code(500).send({ error: 'Failed to remove friend' });
+        }
+    } catch (error) {
+        console.error('Error removing friend:', error);
+        return reply.code(500).send({ error: 'Internal server error' });
+    }
+}
+

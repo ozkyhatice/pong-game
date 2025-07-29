@@ -18,3 +18,12 @@ export const getMyProfileSchema = {
     }
   }
 };
+export const getUserRoutesSchema = {
+  type: 'object',
+  properties: {
+    username: { type: 'string' },
+    email: { type: 'string'},
+    id: { type: 'integer' },
+  },
+  required: ['username', 'email', 'id']
+}
