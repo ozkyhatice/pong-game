@@ -2,49 +2,51 @@ import { initDB } from '../../../config/db.js';
 
 export async function getUserById(id) {
   const db = await initDB();
-  const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
-  if (user) {
-    delete user.password; // şifreyi frontend'e gonderme
-  }
+  const user = await db.get('SELECT id, username, email, avatar, wins, losses FROM users WHERE id = ?', [id]);
   return user;
 }
 
-
 export async function getUserByUsername(username) {
   const db = await initDB();
-  const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
-  if (user) {
-    delete user.password;
-  }
+  const user = await db.get('SELECT id, username, email, avatar, wins, losses FROM users WHERE username = ?', [username]);
   return user;
 }
 
 export async function findUserById(id) {
   const db = await initDB();
-  const user = await db.get('SELECT * from users WHERE id = ?', [id]);
+  const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
   return user;
 }
 
-export async function createUser({ username, email, password }) {
+export async function updateProfile(userId, { username, email, avatar }) {
   const db = await initDB();
-  if (!username || !email || !password) {
-	throw new Error('Username, email, and password are required to create a user');
-  }
-  // Insert the new user into the database
-  const existingMail = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-  if (existingMail) {
-	throw new Error('User with this email already exists');
-  }
-
-  const existingUsername = await db.get('SELECT * FROM users WHERE username = ?', [username]);
-  if (existingUsername) {
-	throw new Error('Username already taken');
+  
+  // Check if username is already taken
+  if (username) {
+    const existingUser = await db.get('SELECT id FROM users WHERE username = ? AND id != ?', [username, userId]);
+    if (existingUser) {
+      throw new Error('Username already taken');
+    }
   }
 
-  const result = await db.run('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, password]);
-  return result.lastID; // Return the ID of the newly created user
+  // Check if email is already taken
+  if (email) {
+    const existingEmail = await db.get('SELECT id FROM users WHERE email = ? AND id != ?', [email, userId]);
+    if (existingEmail) {
+      throw new Error('Email already taken');
+    }
+  }
+
+  // Update user
+  const result = await db.run(
+    'UPDATE users SET username = COALESCE(?, username), email = COALESCE(?, email), avatar = COALESCE(?, avatar) WHERE id = ?',
+    [username, email, avatar, userId]
+  );
+
+  if (result.changes === 0) {
+    throw new Error('User not found');
+  }
+
+  return await getUserById(userId);
 }
-export default {
-  findUserById, 
-  createUser
-};
+

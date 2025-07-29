@@ -1,6 +1,6 @@
 import { registerUser, loginUser } from '../service/auth.service.js';
 
-export async function registerController(request, reply) {
+export async function register(request, reply) {
   const { username, email, password } = request.body;
 
   try {
@@ -18,7 +18,7 @@ export async function registerController(request, reply) {
   }
 }
 
-export async function loginController(request, reply) {
+export async function login(request, reply) {
   const { email, password } = request.body;
 
   try {
@@ -36,6 +36,6 @@ export async function loginController(request, reply) {
   }
 }
 
-export async function meController(request, reply) {
+export async function me(request, reply) {
   reply.send({ user: request.user });
 }
