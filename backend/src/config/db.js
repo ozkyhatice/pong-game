@@ -51,6 +51,7 @@ export const initDB = async () => {
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         
         isRead INTEGER DEFAULT 0,
+        delivered INTEGER DEFAULT 0,
         
         FOREIGN KEY (senderId) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (receiverId) REFERENCES users(id) ON DELETE CASCADE

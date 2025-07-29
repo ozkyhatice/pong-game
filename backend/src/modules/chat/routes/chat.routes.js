@@ -11,8 +11,8 @@ export default async function websocketHandler(connection, request) {
         const userId = user.id;
         console.log(`User ID from token: ${userId}`);
         
-        addClientController(userId, connection);
-        unreadMessageController(userId, connection);
+        await addClientController(userId, connection);
+        await unreadMessageController(userId, connection);
         connection.on('message', async (messages) => {
             try {
                 //Frontend sends 'read' messages; backend updates isRead = true
