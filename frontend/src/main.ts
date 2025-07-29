@@ -4,7 +4,6 @@ import { createProfilePage } from './pages/ProfilePage.js';
 import { createGamePage } from './pages/GamePage.js';
 import { createLoginPage } from './pages/LoginPage.js';
 import { createRegisterPage } from './pages/RegisterPage.js';
-import { createChatTestPage } from './pages/ChatTestPage.js';
 
 class App {
   private router: Router;
@@ -29,7 +28,6 @@ class App {
       .add('/game', createGamePage, true) // Requires authentication
       .add('/login', createLoginPage, false) // No authentication required
       .add('/register', createRegisterPage, false) // No authentication required
-      .add('/chat-test', createChatTestPage, false); // Chat test page - no auth required
   }
 }
 
