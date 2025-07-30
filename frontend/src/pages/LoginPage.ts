@@ -139,7 +139,7 @@ export function createLoginPage(): HTMLElement {
   // Google OAuth login
   googleLoginBtn.addEventListener('click', () => {
     // Redirect to Google OAuth endpoint
-    window.location.href = getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE);
+    // window.location.href = getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE);
   });
 
   container.appendChild(loginCard);

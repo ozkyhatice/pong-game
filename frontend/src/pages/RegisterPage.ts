@@ -186,7 +186,7 @@ export function createRegisterPage(): HTMLElement {
   // Google OAuth registration
   googleRegisterBtn.addEventListener('click', () => {
     // Redirect to Google OAuth endpoint
-    window.location.href = getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE);
+    // window.location.href = getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE);
   });
 
   container.appendChild(registerCard);
