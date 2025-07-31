@@ -1,10 +1,6 @@
 import { addClientController, undeliveredMessageController, handleIncomingMessage } from '../controller/chat.controller.js';
 
-export default async function chatRoutes(app, options) {
-  app.get('/ws', { websocket: true }, websocketHandler);
-}
-
-async function websocketHandler(connection, request) {
+export async function websocketHandler(connection, request) {
   console.log('\nWebSocket connection request received');
   const token = request.headers['sec-websocket-protocol'];
   
