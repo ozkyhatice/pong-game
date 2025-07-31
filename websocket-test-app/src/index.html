@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test App</title>
+</head>
+<body>
+    <h1>WebSocket Chat Test</h1>
+    
+    <div>
+        <h3>Connection</h3>
+        <input type="text" id="token" placeholder="JWT Token" style="width: 300px;">
+        <button id="connect">Connect</button>
+        <button id="disconnect">Disconnect</button>
+        <div id="status">Disconnected</div>
+    </div>
+    
+    <div>
+        <h3>Send Message</h3>
+        <input type="number" id="receiverId" placeholder="Receiver ID">
+        <input type="text" id="messageText" placeholder="Message">
+        <button id="sendMessage">Send</button>
+    </div>
+    
+    <div>
+        <h3>Mark as Read</h3>
+        <input type="number" id="messageId" placeholder="Message ID">
+        <button id="markRead">Mark as Read</button>
+    </div>
+    
+    <div>
+        <h3>Messages</h3>
+        <div id="messages" style="border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px;">
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
