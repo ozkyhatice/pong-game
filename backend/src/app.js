@@ -8,7 +8,7 @@ import { initDB } from './config/db.js';
 import authRoutes from './modules/auth/routes/auth.routes.js';
 import friendRoutes from './modules/friend/routes/friend.routes.js';
 import userRoutes from './modules/user/routes/user.routes.js';
-import { websocketHandler } from './modules/chat/routes/chat.routes.js';
+import { websocketHandler } from './websocket/websocket.handler.js';
 
 dotenv.config();
 

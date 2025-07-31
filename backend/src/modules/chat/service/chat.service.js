@@ -1,27 +1,17 @@
 import { initDB } from '../../../config/db.js';
-
-const clients = new Map();
-
-export async function addClient(userID, connection) {
-  clients.set(userID, connection);
-}
-
-export async function isConnected(userID) {
-  return clients.has(userID) && clients.get(userID).readyState === WebSocket.OPEN;
-}
+import { 
+  broadcastToAll,
+  sendToUser
+} from '../../../websocket/services/client.service.js';
 
 export async function broadcastUserStatus(userId, status) {
-  const message = JSON.stringify({
+  const message = {
     type: 'userStatus',
     userID: userId,
     status: status
-  });
+  };
   
-  clients.forEach((user) => {
-    if (user && user.readyState === WebSocket.OPEN) {
-      user.send(message);
-    }
-  });
+  await broadcastToAll(message);
 }
 
 export async function getUnreadMessages(userId) {
@@ -95,16 +85,6 @@ export async function updateMessageStatus(senderId, receiverId, messageData) {
   );
   
   console.log('Update result:', result);
-}
-
-export async function sendToUser(userId, messageData) {
-  const socket = clients.get(userId);
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    const message = JSON.stringify(messageData);
-    socket.send(message);
-  } else {
-    console.error(`WebSocket connection for user ${userId} is not open or does not exist.`);
-  }
 }
 
 export async function sendMessage(senderId, receiverId, content, message) {

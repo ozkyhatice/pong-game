@@ -1,13 +1,15 @@
 import {
-  addClient,
   broadcastUserStatus,
   sendUnreadMessages,
   markMessagesAsRead,
   getUndeliveredMessages,
   addMessageToDb,
-  sendMessage,
-  isConnected
+  sendMessage
 } from '../service/chat.service.js';
+import { 
+  addClient, 
+  isConnected 
+} from '../../../websocket/services/client.service.js';
 
 export async function addClientController(userId, connection) {
   await addClient(userId, connection);
