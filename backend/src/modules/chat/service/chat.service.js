@@ -1,19 +1,6 @@
 import { initDB } from '../../../config/db.js';
-import { 
-  broadcastToAll,
-  sendToUser
-} from '../../../websocket/services/client.service.js';
 
-export async function broadcastUserStatus(userId, status) {
-  const message = {
-    type: 'userStatus',
-    userID: userId,
-    status: status
-  };
-  
-  await broadcastToAll(message);
-}
-
+// Core Database Operations
 export async function getUnreadMessages(userId) {
   const db = await initDB();
   const unreadMessages = await db.all(
@@ -30,31 +17,6 @@ export async function getUndeliveredMessages(userId) {
     [userId, 0]
   );
   return undeliveredMessages;
-}
-
-export async function sendUnreadMessages(connection, unreadMessages) {
-  if (connection && connection.readyState === WebSocket.OPEN) {
-    const messagePayload = {
-      type: 'unreadMessages',
-      messages: unreadMessages.map(msg => ({
-        from: msg.senderId,
-        content: msg.content,
-        createdAt: msg.createdAt,
-        isRead: 0,
-        delivered: 1,
-        id: msg.id
-      }))
-    };
-    
-    try {
-      connection.send(JSON.stringify(messagePayload));
-      await Promise.all(unreadMessages.map(msg =>
-        updateMessageStatus(msg.senderId, msg.receiverId, msg)
-      ));
-    } catch (err) {
-      console.error('Error sending unread messages:', err);
-    }
-  }
 }
 
 export async function markMessagesAsRead(userId) {
@@ -87,30 +49,11 @@ export async function updateMessageStatus(senderId, receiverId, messageData) {
   console.log('Update result:', result);
 }
 
-export async function sendMessage(senderId, receiverId, content, message) {
-  try {
-    await sendToUser(receiverId, {
-      type: 'message',
-      from: senderId,
-      content: content,
-      createdAt: message.createdAt,
-      isRead: message.isRead,
-      delivered: 1,
-      id: message.id
-    });
-    
-    await sendToUser(senderId, {
-      type: 'message',
-      to: receiverId,
-      content: content,
-      createdAt: message.createdAt,
-      isRead: message.isRead,
-      delivered: 1,
-      id: message.id
-    });
-    
-    await updateMessageStatus(senderId, receiverId, message);
-  } catch (err) {
-    console.error('Error sending message:', err);
-  }
+export async function markSpecificMessagesAsRead(userId, senderId) {
+  const db = await initDB();
+  const result = await db.run(
+    'UPDATE messages SET isRead = 1 WHERE receiverId = ? AND senderId = ? AND isRead = 0',
+    [userId, senderId]
+  );
+  return result.changes;
 }

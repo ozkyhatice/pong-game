@@ -11,16 +11,8 @@ export async function removeClient(userId) {
   console.log(`Client ${userId} disconnected`);
 }
 
-export async function getClient(userId) {
-  return clients.get(userId);
-}
-
 export async function isConnected(userId) {
   return clients.has(userId) && clients.get(userId).readyState === WebSocket.OPEN;
-}
-
-export async function getAllClients() {
-  return clients;
 }
 
 export async function broadcastToAll(message) {
@@ -29,6 +21,14 @@ export async function broadcastToAll(message) {
     if (connection && connection.readyState === WebSocket.OPEN) {
       connection.send(messageStr);
     }
+  });
+}
+
+export async function broadcastUserStatus(userId, status) {
+  await broadcastToAll({
+    type: 'userStatus',
+    userID: userId,
+    status: status
   });
 }
 

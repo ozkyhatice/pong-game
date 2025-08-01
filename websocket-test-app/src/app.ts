@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const receiverIdInput = document.getElementById('receiverId') as HTMLInputElement;
     const messageTextInput = document.getElementById('messageText') as HTMLInputElement;
     const sendMessageBtn = document.getElementById('sendMessage') as HTMLButtonElement;
-    const messageIdInput = document.getElementById('messageId') as HTMLInputElement;
+    const senderIdInput = document.getElementById('senderId') as HTMLInputElement;
     const markReadBtn = document.getElementById('markRead') as HTMLButtonElement;
     const messagesDiv = document.getElementById('messages') as HTMLDivElement;
 
@@ -101,8 +101,8 @@ markReadBtn.addEventListener('click', () => {
         return;
     }
 
-    const messageId = parseInt(messageIdInput.value);
-    if (!messageId) {
+    const senderId = parseInt(senderIdInput.value);
+    if (!senderId) {
         alert('Enter message ID!');
         return;
     }
@@ -110,13 +110,13 @@ markReadBtn.addEventListener('click', () => {
     // Backend'inizin beklediği format
     const readMessage = {
         type: 'read',
-        msgId: messageId
+        senderId: senderId
     };
 
     ws.send(JSON.stringify(readMessage));
     console.log('Marked as read:', readMessage);
     
-    messageIdInput.value = '';
+    senderIdInput.value = '';
 });
 
 }); // DOMContentLoaded kapanis

@@ -40,6 +40,7 @@ kill:
 	-lsof -ti:5173 | xargs kill -9 2>/dev/null || true
 	-lsof -ti:8000 | xargs kill -9 2>/dev/null || true
 	-lsof -ti:8080 | xargs kill -9 2>/dev/null || true
+	-lsof -ti:8081 | xargs kill -9 2>/dev/null || true
 	@echo "\033[32m🎉 All processes killed successfully!\033[0m"
 
 fclean: kill clean

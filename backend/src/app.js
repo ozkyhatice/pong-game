@@ -8,6 +8,7 @@ import { initDB } from './config/db.js';
 import authRoutes from './modules/auth/routes/auth.routes.js';
 import friendRoutes from './modules/friend/routes/friend.routes.js';
 import userRoutes from './modules/user/routes/user.routes.js';
+import chatRoutes from './modules/chat/routes/chat.routes.js';
 import { websocketHandler } from './websocket/websocket.handler.js';
 
 dotenv.config();
@@ -27,6 +28,7 @@ await app.register(initDB);
 await app.register(authRoutes, { prefix: '/auth' });
 await app.register(friendRoutes, { prefix: '/friends' });
 await app.register(userRoutes, { prefix: '/users' });
+await app.register(chatRoutes, { prefix: '/chat' });
 app.get('/ws', { websocket: true }, websocketHandler);
 
 
