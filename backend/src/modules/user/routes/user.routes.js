@@ -1,11 +1,13 @@
 import { verifyToken } from "../../../middleware/auth.js";
 import { 
   getMyProfile, 
+  getUserById,
   getUserByUsername,
   updateMyProfile
 } from '../controller/user.controller.js';
 import { 
   getMyProfileSchema, 
+  getUserByIdSchema,
   getUserByUsernameSchema,
   updateProfileSchema
 } from '../schema.js';
@@ -22,6 +24,12 @@ export default async function userRoutes(app, options) {
     preHandler: verifyToken,
     schema: updateProfileSchema
   }, updateMyProfile);
+
+  // Get user by id
+  app.get('/id/:id', {
+    preHandler: verifyToken,
+    schema: getUserByIdSchema
+  }, getUserById);
   
   // Get user by username (should be last to avoid conflicts)
   app.get('/:username', {

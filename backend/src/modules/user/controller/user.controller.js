@@ -1,6 +1,6 @@
 import { 
-  getUserById, 
   getUserByUsername as getUserByUsernameService,
+  getUserById as getUserByIdService,
   updateProfile
 } from '../service/user.service.js';
 
@@ -8,7 +8,7 @@ export async function getMyProfile(request, reply) {
   const userId = request.user.id;
 
   try {
-    const user = await getUserById(userId);
+    const user = await getUserByIdService(userId);
     if (!user) {
       return reply.code(404).send({ error: 'User not found' });
     }
@@ -46,6 +46,21 @@ export async function updateMyProfile(request, reply) {
       return reply.code(400).send({ error: error.message });
     }
     console.error('Error updating user profile:', error);
+    reply.code(500).send({ error: 'Internal Server Error' });
+  }
+}
+
+export async function getUserById(request, reply) {
+  const { id } = request.params;
+
+  try {
+    const user = await getUserByIdService(id);
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+    reply.send({ user });
+  } catch (error) {
+    console.error('Error getting user by id:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
   }
 }

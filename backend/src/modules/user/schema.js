@@ -60,42 +60,19 @@ export const updateProfileSchema = {
   }
 };
 
-export const updateStatsSchema = {
-  body: {
+export const getUserByIdSchema = {
+  params: {
     type: 'object',
     properties: {
-      wins: { type: 'integer', minimum: 0 },
-      losses: { type: 'integer', minimum: 0 }
+      id: { type: 'integer' }
     },
-    additionalProperties: false
+    required: ['id']
   },
   response: {
     200: {
       type: 'object',
       properties: {
         user: userResponseSchema
-      }
-    }
-  }
-};
-
-export const searchUsersSchema = {
-  querystring: {
-    type: 'object',
-    properties: {
-      q: { type: 'string', minLength: 2 },
-      limit: { type: 'integer', minimum: 1, maximum: 50, default: 10 }
-    },
-    required: ['q']
-  },
-  response: {
-    200: {
-      type: 'object',
-      properties: {
-        users: {
-          type: 'array',
-          items: userResponseSchema
-        }
       }
     }
   }
