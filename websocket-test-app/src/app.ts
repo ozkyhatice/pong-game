@@ -1,7 +1,46 @@
 
 let ws: WebSocket | null = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+// Token'dan user ID'sini decode et
+function getCurrentUserId(token: string): number {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.id || payload.userId || payload.sub;
+    } catch (error) {
+        console.error('Error decoding token:', error);
+        return 0;
+    }
+}
+
+interface MyProfile {
+    id: number;
+    username: string;
+    email: string;
+    avatar?: string | null;
+    wins: number;
+    losses: number;
+    createdAt?: string;
+}
+
+interface Friend {
+    id: number;
+    requesterID: number;
+    recipientID: number;
+    status: string;
+}
+
+interface UserProfile {
+    id: number;
+    username: string;
+    email: string;
+    avatar?: string | null;
+    wins: number;
+    losses: number;
+    createdAt?: string;
+}
+
+
+document.addEventListener('DOMContentLoaded', async () => {
 
     // DOM Elements
     const tokenInput = document.getElementById('token') as HTMLInputElement;
@@ -14,9 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const senderIdInput = document.getElementById('senderId') as HTMLInputElement;
     const markReadBtn = document.getElementById('markRead') as HTMLButtonElement;
     const messagesDiv = document.getElementById('messages') as HTMLDivElement;
+    const friendsListDiv = document.getElementById('friendsList') as HTMLDivElement;
 
 // Connect to WebSocket
-connectBtn.addEventListener('click', () => {
+connectBtn.addEventListener('click', async () => {
     const token = tokenInput.value.trim();
     if (!token) {
         alert('token girin');
@@ -50,6 +90,60 @@ connectBtn.addEventListener('click', () => {
     ws.onerror = (error) => {
         console.error('WebSocket error:', error);
     };
+
+    //arkadas listesini guncelle
+
+    const friends = await fetch('http://localhost:3000/friends', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!friends.ok) {
+        console.error('Failed to fetch friends list');
+        return;
+    }
+
+    const friendsList = await friends.json();
+
+    friendsListDiv.innerHTML = ''; // Temizle
+    
+    friendsList.forEach(async (friend: Friend) => {
+        try {
+            // Arkadaşın ID'sini belirle: eğer ben requester'sem recipientID, değilsem requesterID
+            const friendId = friend.requesterID === getCurrentUserId(token) 
+                ? friend.recipientID 
+                : friend.requesterID;
+                
+            const response = await fetch(`http://localhost:3000/users/id/${friendId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) {
+                console.error(`Failed to fetch user profile for ID: ${friendId}`);
+                return;
+            }
+            
+            const result = await response.json();
+            const friendProfile = result.user; // Backend returns { user: {...} }
+            
+            const friendElement = document.createElement('div');
+            friendElement.className = 'friend-item';
+            friendElement.innerHTML = `
+                <div>
+                    <strong>Username:</strong> ${friendProfile.username}<br>
+                    <strong>Email:</strong> ${friendProfile.email}<br>
+                    <strong>Wins:</strong> ${friendProfile.wins || 0} | <strong>Losses:</strong> ${friendProfile.losses || 0}
+                </div>
+            `;
+            friendsListDiv.appendChild(friendElement);
+        } catch (error) {
+            console.error(`Error fetching user profile:`, error);
+        }
+    });
+
+    
+
+
+
 });
 
 // Disconnect
