@@ -9,9 +9,7 @@ import {
   handleRealtimeMessage
 } from '../service/websocket.service.js';
 import {
-  getChatHistory,
-  getTotalUnreadCount,
-  getChatStatistics
+  getChatHistory
 } from '../service/api.service.js';
 import { 
   isConnected 
@@ -122,46 +120,6 @@ export async function markMessagesAsReadController(request, reply) {
     });
   } catch (error) {
     console.error('Error marking messages as read:', error);
-    return reply.status(500).send({
-      success: false,
-      error: 'Internal server error'
-    });
-  }
-}
-
-export async function getUnreadCountController(request, reply) {
-  try {
-    const currentUserId = request.user.id;
-    
-    const unreadCount = await getTotalUnreadCount(currentUserId);
-    
-    return reply.send({
-      success: true,
-      data: {
-        unreadCount
-      }
-    });
-  } catch (error) {
-    console.error('Error getting unread count:', error);
-    return reply.status(500).send({
-      success: false,
-      error: 'Internal server error'
-    });
-  }
-}
-
-export async function getChatStatisticsController(request, reply) {
-  try {
-    const currentUserId = request.user.id;
-    
-    const statistics = await getChatStatistics(currentUserId);
-    
-    return reply.send({
-      success: true,
-      data: statistics
-    });
-  } catch (error) {
-    console.error('Error getting chat statistics:', error);
     return reply.status(500).send({
       success: false,
       error: 'Internal server error'

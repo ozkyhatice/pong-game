@@ -1,14 +1,10 @@
 import {
   getChatHistoryController,
-  markMessagesAsReadController,
-  getUnreadCountController,
-  getChatStatisticsController
+  markMessagesAsReadController
 } from '../controller/chat.controller.js';
 import {
   getChatHistorySchema,
-  markMessagesAsReadSchema,
-  getUnreadCountSchema,
-  getChatStatisticsSchema
+  markMessagesAsReadSchema
 } from '../schema.js';
 import { verifyToken } from '../../../middleware/auth.js';
 
@@ -25,20 +21,6 @@ async function chatRoutes(fastify) {
     schema: markMessagesAsReadSchema,
     preHandler: verifyToken,
     handler: markMessagesAsReadController
-  });
-
-  // GET /chat/unread-count - Get total unread message count
-  fastify.get('/unread-count', {
-    schema: getUnreadCountSchema,
-    preHandler: verifyToken,
-    handler: getUnreadCountController
-  });
-
-  // GET /chat/statistics - Get chat statistics
-  fastify.get('/statistics', {
-    schema: getChatStatisticsSchema,
-    preHandler: verifyToken,
-    handler: getChatStatisticsController
   });
 }
 

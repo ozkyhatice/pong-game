@@ -49,59 +49,9 @@ export async function getChatHistory(userId, otherUserId, options = {}) {
   };
 }
 
-export async function getTotalUnreadCount(userId) {
-  const db = await initDB();
-  const result = await db.get(
-    'SELECT COUNT(*) as count FROM messages WHERE receiverId = ? AND isRead = 0',
-    [userId]
-  );
-  return result.count;
-}
-
 export async function getPaginatedMessages(userId, otherUserId, page = 1, limit = 50) {
   const offset = (page - 1) * limit;
   return await getChatHistory(userId, otherUserId, { limit, offset });
-}
-
-export async function getChatStatistics(userId) {
-  const db = await initDB();
-  
-  // Total messages sent by user
-  const sentResult = await db.get(
-    'SELECT COUNT(*) as count FROM messages WHERE senderId = ?',
-    [userId]
-  );
-  
-  // Total messages received by user
-  const receivedResult = await db.get(
-    'SELECT COUNT(*) as count FROM messages WHERE receiverId = ?',
-    [userId]
-  );
-  
-  // Unread messages count
-  const unreadResult = await db.get(
-    'SELECT COUNT(*) as count FROM messages WHERE receiverId = ? AND isRead = 0',
-    [userId]
-  );
-  
-  // Active conversations (unique users chatted with)
-  const conversationsResult = await db.all(`
-    SELECT DISTINCT 
-      CASE 
-        WHEN senderId = ? THEN receiverId 
-        ELSE senderId 
-      END as userId
-    FROM messages 
-    WHERE senderId = ? OR receiverId = ?
-  `, [userId, userId, userId]);
-  
-  return {
-    totalSent: sentResult.count,
-    totalReceived: receivedResult.count,
-    unreadCount: unreadResult.count,
-    activeConversations: conversationsResult.length,
-    conversationUsers: conversationsResult.map(row => row.userId)
-  };
 }
 
 export async function getRecentConversations(userId, limit = 10) {
