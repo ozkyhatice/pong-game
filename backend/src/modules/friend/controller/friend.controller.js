@@ -53,10 +53,7 @@ export async function getIncomingRequests(request, reply) {
   const userId = request.user.id;
   const requests = await getIncomingFriendRequestsWithUserInfo(userId);
   
-  if (requests.length === 0) {
-    return reply.code(404).send({ message: 'No incoming friend requests' });
-  }
-  
+  // Boş array olsa bile success olarak dön
   return reply.code(200).send({ requests });
 }
 
