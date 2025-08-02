@@ -13,11 +13,6 @@ export const createFriendRequestSchema = {
   }
 };
 
-export const getIncomingRequestsSchema = {
-  summary: 'Get incoming friend requests',
-  tags: ['Friend']
-};
-
 export const acceptRequestSchema = {
   summary: 'Accept friend request',
   tags: ['Friend'],
@@ -50,12 +45,101 @@ export const rejectRequestSchema = {
 
 export const getFriendsListSchema = {
   summary: 'Get friends list',
-  tags: ['Friend']
+  tags: ['Friend'],
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        friends: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              requesterID: { type: 'integer' },
+              recipientID: { type: 'integer' },
+              status: { type: 'string' },
+              friendInfo: {
+                type: 'object',
+                properties: {
+                  id: { type: 'integer' },
+                  username: { type: 'string' },
+                  avatar: { type: ['string', 'null'] },
+                  wins: { type: 'integer' },
+                  losses: { type: 'integer' }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
+export const getIncomingRequestsSchema = {
+  summary: 'Get incoming friend requests',
+  tags: ['Friend'],
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        requests: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              requesterID: { type: 'integer' },
+              recipientID: { type: 'integer' },
+              status: { type: 'string' },
+              senderInfo: {
+                type: 'object',
+                properties: {
+                  id: { type: 'integer' },
+                  username: { type: 'string' },
+                  avatar: { type: ['string', 'null'] },
+                  wins: { type: 'integer' },
+                  losses: { type: 'integer' }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 };
 
 export const getSentRequestsSchema = {
   summary: 'Get sent friend requests',
-  tags: ['Friend']
+  tags: ['Friend'],
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        requests: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              requesterID: { type: 'integer' },
+              recipientID: { type: 'integer' },
+              status: { type: 'string' },
+              targetInfo: {
+                type: 'object',
+                properties: {
+                  id: { type: 'integer' },
+                  username: { type: 'string' },
+                  avatar: { type: ['string', 'null'] },
+                  wins: { type: 'integer' },
+                  losses: { type: 'integer' }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 };
 
 export const deleteFriendSchema = {

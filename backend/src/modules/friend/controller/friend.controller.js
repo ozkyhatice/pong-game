@@ -1,17 +1,17 @@
 import { findUserById } from '../../user/service/user.service.js';
 import {
   isExistingFriendRequest,
-  getIncomingFriendRequests,
   acceptFriendRequest,
   rejectFriendRequest,
   isFriend,
   getIncomingFriendRequestById,
-  getFriendsList,
-  getSentRequests,
   addFriendRequest,
   deleteFriend,
   blockFriend,
-  unblockFriend
+  unblockFriend,
+  getFriendsListWithUserInfo,
+  getIncomingFriendRequestsWithUserInfo,
+  getSentRequestsWithUserInfo
 } from '../service/friend.service.js';
 
 export async function createFriendRequest(request, reply) {
@@ -51,7 +51,7 @@ export async function createFriendRequest(request, reply) {
 
 export async function getIncomingRequests(request, reply) {
   const userId = request.user.id;
-  const requests = await getIncomingFriendRequests(userId);
+  const requests = await getIncomingFriendRequestsWithUserInfo(userId);
   
   if (requests.length === 0) {
     return reply.code(404).send({ message: 'No incoming friend requests' });
@@ -101,14 +101,16 @@ export async function rejectRequest(request, reply) {
 
 export async function getFriendsListController(request, reply) {
   const userId = request.user.id;
-  const friends = await getFriendsList(userId);
-  return reply.code(200).send(friends);
+  const friends = await getFriendsListWithUserInfo(userId);
+  
+  return reply.code(200).send({ friends });
 }
 
 export async function getSentRequestsController(request, reply) {
   const userId = request.user.id;
-  const requests = await getSentRequests(userId);
-  return reply.code(200).send(requests);
+  const requests = await getSentRequestsWithUserInfo(userId);
+  
+  return reply.code(200).send({ requests });
 }
 
 export async function blockFriendController(request, reply) {

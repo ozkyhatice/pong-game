@@ -18,15 +18,6 @@ export async function addFriendRequest(requesterId, targetId) {
   return result;
 }
 
-export async function getIncomingFriendRequests(userId) {
-  const db = await initDB();
-  const requests = await db.all(
-    'SELECT * FROM friends WHERE recipientID = ? AND status = ?', 
-    [userId, 'pending']
-  );
-  return requests;
-}
-
 export async function getIncomingFriendRequestById(targetId, userId) {
   const db = await initDB();
   const requests = await db.all(
@@ -52,24 +43,6 @@ export async function isFriend(userId, targetId) {
      ((requesterID = ? AND recipientID = ? AND status = ?) OR 
       (requesterID = ? AND recipientID = ? AND status = ?))`,
     [userId, targetId, 'approved', targetId, userId, 'approved']
-  );
-  return result;
-}
-
-export async function getFriendsList(userId) {
-  const db = await initDB();
-  const result = await db.all(
-    'SELECT * FROM friends WHERE (requesterID = ? AND status = ?) OR (recipientID = ? AND status = ?)', 
-    [userId, 'approved', userId, 'approved']
-  );
-  return result;
-}
-
-export async function getSentRequests(userId) {
-  const db = await initDB();
-  const result = await db.all(
-    'SELECT * FROM friends WHERE requesterID = ? AND status = ?', 
-    [userId, 'pending']
   );
   return result;
 }
@@ -152,5 +125,85 @@ export async function deleteFriend(userId, targetId) {
     [userId, targetId, targetId, userId]
   );
   return result;
+}
+
+// Zenginleştirilmiş friend servisleri
+export async function getFriendsListWithUserInfo(userId) {
+  const db = await initDB();
+  
+  // Önce friend listesini al
+  const friends = await db.all(
+    'SELECT * FROM friends WHERE (requesterID = ? AND status = ?) OR (recipientID = ? AND status = ?)', 
+    [userId, 'approved', userId, 'approved']
+  );
+  
+  // Her friend için user bilgisini al
+  const enrichedFriends = [];
+  for (const friend of friends) {
+    const friendId = friend.requesterID === userId ? friend.recipientID : friend.requesterID;
+    const userInfo = await db.get(
+      'SELECT id, username, avatar, wins, losses FROM users WHERE id = ?',
+      [friendId]
+    );
+    
+    enrichedFriends.push({
+      ...friend,
+      friendInfo: userInfo
+    });
+  }
+  
+  return enrichedFriends;
+}
+
+export async function getIncomingFriendRequestsWithUserInfo(userId) {
+  const db = await initDB();
+  
+  // Önce gelen istekleri al
+  const requests = await db.all(
+    'SELECT * FROM friends WHERE recipientID = ? AND status = ?', 
+    [userId, 'pending']
+  );
+  
+  // Her request için gönderen kişi bilgisini al
+  const enrichedRequests = [];
+  for (const request of requests) {
+    const senderInfo = await db.get(
+      'SELECT id, username, avatar, wins, losses FROM users WHERE id = ?',
+      [request.requesterID]
+    );
+    
+    enrichedRequests.push({
+      ...request,
+      senderInfo: senderInfo
+    });
+  }
+  
+  return enrichedRequests;
+}
+
+export async function getSentRequestsWithUserInfo(userId) {
+  const db = await initDB();
+  
+  // Önce gönderilen istekleri al
+  const requests = await db.all(
+    'SELECT * FROM friends WHERE requesterID = ? AND status = ?', 
+    [userId, 'pending']
+  );
+  
+  // Her request için hedef kişi bilgisini al
+  const enrichedRequests = [];
+  for (const request of requests) {
+    const targetInfo = await db.get(
+      'SELECT id, username, avatar, wins, losses FROM users WHERE id = ?',
+      [request.recipientID]
+    );
+    
+    enrichedRequests.push({
+      ...request,
+      targetInfo: targetInfo
+    });
+  }
+  
+  return enrichedRequests;
 }
 

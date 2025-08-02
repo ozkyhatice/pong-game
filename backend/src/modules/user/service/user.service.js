@@ -50,3 +50,21 @@ export async function updateProfile(userId, { username, email, avatar }) {
   return await getUserById(userId);
 }
 
+export async function getUserPublicInfo(id) {
+  const db = await initDB();
+  const user = await db.get('SELECT id, username, avatar, wins, losses FROM users WHERE id = ?', [id]);
+  return user;
+}
+
+export async function getUsersPublicInfo(ids) {
+  if (!ids || ids.length === 0) return [];
+  
+  const db = await initDB();
+  const placeholders = ids.map(() => '?').join(',');
+  const users = await db.all(
+    `SELECT id, username, avatar, wins, losses FROM users WHERE id IN (${placeholders})`,
+    ids
+  );
+  return users;
+}
+
