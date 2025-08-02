@@ -23,10 +23,16 @@ interface MyProfile {
 }
 
 interface Friend {
-    id: number;
     requesterID: number;
     recipientID: number;
     status: string;
+    friendInfo: {
+        id: number;
+        username: string;
+        avatar?: string | null;
+        wins: number;
+        losses: number;
+    };
 }
 
 interface UserProfile {
@@ -102,41 +108,27 @@ connectBtn.addEventListener('click', async () => {
         return;
     }
 
-    const friendsList = await friends.json();
+    const friendsResponse = await friends.json();
+    console.log('Friends response:', friendsResponse); // Debug için
 
     friendsListDiv.innerHTML = ''; // Temizle
     
-    friendsList.forEach(async (friend: Friend) => {
+    // Yeni response formatında friends array içinde geliyor
+    friendsResponse.friends.forEach((friend: Friend) => {
         try {
-            // Arkadaşın ID'sini belirle: eğer ben requester'sem recipientID, değilsem requesterID
-            const friendId = friend.requesterID === getCurrentUserId(token) 
-                ? friend.recipientID 
-                : friend.requesterID;
-                
-            const response = await fetch(`http://localhost:3000/users/id/${friendId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            
-            if (!response.ok) {
-                console.error(`Failed to fetch user profile for ID: ${friendId}`);
-                return;
-            }
-            
-            const result = await response.json();
-            const friendProfile = result.user; // Backend returns { user: {...} }
-            
             const friendElement = document.createElement('div');
             friendElement.className = 'friend-item';
             friendElement.innerHTML = `
                 <div>
-                    <strong>Username:</strong> ${friendProfile.username}<br>
-                    <strong>Email:</strong> ${friendProfile.email}<br>
-                    <strong>Wins:</strong> ${friendProfile.wins || 0} | <strong>Losses:</strong> ${friendProfile.losses || 0}
+                    <strong>Username:</strong> ${friend.friendInfo.username}<br>
+                    <strong>ID:</strong> ${friend.friendInfo.id}<br>
+                    <strong>Wins:</strong> ${friend.friendInfo.wins || 0} | <strong>Losses:</strong> ${friend.friendInfo.losses || 0}
+                    <br><small>Status: ${friend.status}</small>
                 </div>
             `;
             friendsListDiv.appendChild(friendElement);
         } catch (error) {
-            console.error(`Error fetching user profile:`, error);
+            console.error(`Error displaying friend:`, error);
         }
     });
 
