@@ -3,7 +3,17 @@ import { getApiUrl, API_CONFIG } from '../../config.js';
 export async function init() {
   console.log('Login page loaded');
   
+  // Regular login form
   const form = document.getElementById('loginForm') as HTMLFormElement;
+  
+  // Google login button
+  const googleLoginBtn = document.getElementById('googleLoginBtn') as HTMLButtonElement;
+
+  // Google login handler
+  googleLoginBtn?.addEventListener('click', () => {
+    const googleAuthUrl = getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE);
+    window.location.href = googleAuthUrl;
+  });
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();

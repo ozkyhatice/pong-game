@@ -96,8 +96,4 @@ function updateProfileUI(userData: any) {
     userLossesElement.textContent = (user.losses || 0).toString();
   }
 
-  const userLevelElement = document.getElementById('userLevel');
-  if (userLevelElement) {
-    userLevelElement.textContent = (user.level || 1).toString();
-  }
 }

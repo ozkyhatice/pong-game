@@ -28,7 +28,7 @@ export const API_CONFIG = {
 
       // GET /auth/google
       // OAuth login redirect (no fetch needed from frontend)
-      // GOOGLE: '/auth/google'
+      GOOGLE: '/auth/google'
     },
 
     USER: {
