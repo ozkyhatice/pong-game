@@ -13,7 +13,7 @@ export const initDB = async () => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL UNIQUE,
       email TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL,
+      password TEXT,
       avatar TEXT,
       wins INTEGER DEFAULT 0,
       losses INTEGER DEFAULT 0
