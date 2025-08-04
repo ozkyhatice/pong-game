@@ -36,9 +36,8 @@ class Router {
     try {
       console.log(`Loading page: ${pageName}`);
 
-      // this.container.style.transition = 'opacity 0.2s';
-      // this.container.style.opacity = '0';
-      // this.container.style.opacity = '1';
+      //this.container.style.transition = 'opacity 0.2s';
+      //this.container.style.opacity = '0';
 
       await new Promise((resolve) => setTimeout(resolve, 200));
 
@@ -47,6 +46,7 @@ class Router {
         throw new Error(`HTTP error! status: ${response.status}`);
 
       const html = await response.text();
+      //this.container.style.opacity = '1';
 
       this.container.innerHTML = html;
 
