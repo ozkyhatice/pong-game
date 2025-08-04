@@ -42,7 +42,7 @@ export async function init() {
         localStorage.setItem('user', JSON.stringify(data.user));
         alert(`Login successful! Welcome ${data.user.username}!`);
         
-        router.navigate('profile');
+        router.navigate('home');
       } else {
         throw new Error(data.message || 'Login failed');
       }

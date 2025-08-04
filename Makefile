@@ -1,33 +1,24 @@
 all:
 	@echo "\033[35m🚀 Starting Pong Game Development Environment...\033[0m"
 	@echo "\033[32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-	@make backend-bg
-	@make frontend-bg
-	@make websocket-test-bg
-	@echo "\033[32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-	@echo "\033[36m🎉 All services are running!\033[0m"
-	@echo "\033[36m📦 Backend: \033[33mhttp://localhost:3000\033[0m"
-	@echo "\033[36m🎨 Frontend: \033[33mhttp://localhost:8080\033[0m"
-	@echo "\033[36m🔌 WebSocket Test: \033[33mhttp://localhost:8081\033[0m"
-	@echo "\033[31m⚠️  Press Ctrl+C to stop all services\033[0m"
-	@echo "\033[32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+	make backend-bg & \
+	make frontend-bg & \
+	make websocket-test-bg & \
+	wait
 
 backend-bg:
 	@echo "\033[32m🔧 Starting backend server in background...\033[0m"
-	@cd backend && npm install && npm run dev &
-	@sleep 2
+	@cd backend && npm install --silent && npm run dev
 	@echo "\033[32m✅ Backend ready at http://localhost:3000\033[0m"
 
 frontend-bg:
 	@echo "\033[34m🎮 Starting frontend server in background...\033[0m"
-	@cd frontend-v2 && npm install && npm run dev &
-	@sleep 2
+	@cd frontend-v2 && npm install --silent && npm run dev &
 	@echo "\033[34m✅ Frontend ready at http://localhost:8080\033[0m"
 
 websocket-test-bg:
 	@echo "\033[35m🔌 Starting websocket test app in background...\033[0m"
-	@cd websocket-test-app && npm install && npm run dev &
-	@sleep 2
+	@cd websocket-test-app && npm install --silent && npm run dev
 	@echo "\033[35m✅ WebSocket test app ready at http://localhost:8081\033[0m"
 
 clean:

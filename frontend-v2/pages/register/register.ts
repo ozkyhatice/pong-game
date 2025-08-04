@@ -70,7 +70,6 @@ export async function init() {
         router.navigate('login');
       } else {
         throw new Error(data.message || 'Registration failed');
-		console.error('Registration error:', data);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed';
