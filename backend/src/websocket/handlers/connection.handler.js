@@ -1,5 +1,5 @@
 import { addClient, removeClient, broadcastUserStatus } from '../services/client.service.js';
-import { undeliveredMessageController } from '../../modules/chat/controller/chat.controller.js';
+import { undeliveredMessageController, onlineClientsController } from '../../modules/chat/controller/chat.controller.js';
 
 export async function handleConnection(connection, request) {
   console.log('\nWebSocket connection request received');
@@ -23,6 +23,9 @@ export async function handleConnection(connection, request) {
     // Send undelivered messages
     await undeliveredMessageController(userId, connection);
     
+    // Send online clients
+    await onlineClientsController(connection);
+
     return userId;
   } catch (err) {
     console.error('WebSocket authentication failed:', err);

@@ -1,11 +1,13 @@
 import { 
-  sendToUser
+  sendToUser,
+  getOnlineClientIds
 } from '../../../websocket/services/client.service.js';
 import {
   getUnreadMessages,
   getUndeliveredMessages,
   updateMessageStatus
 } from './chat.service.js';
+import { getUserById } from '../../user/service/user.service.js';
 
 // WebSocket Specific Operations
 export async function sendMissedMessages(connection, userId) {
@@ -86,5 +88,33 @@ export async function handleRealtimeMessage(senderId, receiverId, content, messa
   } catch (error) {
     console.error('Error handling realtime message:', error);
     return { success: false, error: error.message };
+  }
+}
+
+
+export async function getOnlineClients() {
+  try {
+    const onlineClientIds = await getOnlineClientIds();
+    const onlineClients = [];
+    
+    for (const userId of onlineClientIds) {
+      const userDetails = await getUserById(userId);
+      if (userDetails) {
+        onlineClients.push({
+          id: userDetails.id,
+          username: userDetails.username,
+          email: userDetails.email,
+          avatar: userDetails.avatar,
+          wins: userDetails.wins,
+          losses: userDetails.losses,
+          isOnline: true
+        });
+      }
+    }
+    
+    return onlineClients;
+  } catch (error) {
+    console.error('Error getting online clients:', error);
+    return [];
   }
 }

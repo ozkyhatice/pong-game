@@ -41,3 +41,23 @@ export async function sendToUser(userId, messageData) {
     console.error(`WebSocket connection for user ${userId} is not open or does not exist.`);
   }
 }
+
+export async function getOnlineClientIds() {
+  const onlineClients = [];
+  clients.forEach((connection, userId) => {
+    if (connection && connection.readyState === WebSocket.OPEN) {
+      onlineClients.push(userId);
+    }
+  });
+  return onlineClients;
+}
+
+export async function getClientCount() {
+  let count = 0;
+  clients.forEach((connection, userId) => {
+    if (connection && connection.readyState === WebSocket.OPEN) {
+      count++;
+    }
+  });
+  return count;
+}

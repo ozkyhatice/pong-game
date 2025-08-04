@@ -5,8 +5,8 @@ import {
 } from '../service/chat.service.js';
 import { 
   sendMissedMessages,
-  sendMessage,
-  handleRealtimeMessage
+  handleRealtimeMessage,
+  getOnlineClients
 } from '../service/websocket.service.js';
 import {
   getChatHistory
@@ -18,6 +18,15 @@ import {
 export async function undeliveredMessageController(userId, connection) {
   // Tek seferde hem undelivered hem unread mesajları gönder
   await sendMissedMessages(connection, userId);
+}
+
+export async function onlineClientsController(connection) {
+  // Online tum kullanıcıları gönder
+  const onlineClients = await getOnlineClients();
+  connection.send(JSON.stringify({
+    type: 'onlineClients',
+    data: onlineClients
+  }));
 }
 
 export async function processChatMessage(message, userId) {
