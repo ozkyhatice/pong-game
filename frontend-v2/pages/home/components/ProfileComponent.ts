@@ -1,4 +1,5 @@
 import { Component } from '../../../core/Component.js';
+import { getApiUrl, API_CONFIG } from '../../../config.js';
 
 export interface UserProfile {
   user?: {
@@ -21,16 +22,22 @@ export interface UserProfile {
   avatar?: string;
 }
 
+
 export class ProfileComponent extends Component {
+
   private profile: UserProfile;
   private activeTab: 'friends' | 'requests' | 'add' = 'friends';
+  private friendList: any[] = [];
+  private requestsList: any[] = [];
 
   constructor(profile: UserProfile) {
     super({ className: 'w-80 h-full flex flex-col' });
     this.profile = profile;
+	this.getFriendList();
+	this.getRequestsList();
     this.render();
     this.setupEvents();
-  }
+}
 
   updateProfile(profile: UserProfile): void {
     this.profile = profile;
@@ -114,90 +121,78 @@ export class ProfileComponent extends Component {
     `);
   }
 
+
   private renderTabContent(): string {
     switch (this.activeTab) {
       case 'friends':
-        return `
-          <div class="space-y-3">
-
-            <!-- Friend Item Example -->
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div class="flex items-center">
-                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
-                  A
-                </div>
-                <div>
-                  <div class="text-sm font-medium text-gray-800">Alex Johnson</div>
-                  <div class="text-xs text-green-500 flex items-center">
-                    <div class="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                    Online
-                  </div>
-                </div>
-              </div>
-              <div class="flex space-x-2">
-                <button class="px-3 py-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors">
-                  Invite
-                </button>
-                <button class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors">
-                  Chat
-                </button>
-              </div>
-            </div>
-            
-            <!-- Another Friend Example -->
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div class="flex items-center">
-                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
-                  M
-                </div>
-                <div>
-                  <div class="text-sm font-medium text-gray-800">Mike Chen</div>
-                  <div class="text-xs text-gray-400 flex items-center">
-                    <div class="w-2 h-2 bg-gray-400 rounded-full mr-1"></div>
-                    Last seen 2h ago
-                  </div>
-                </div>
-              </div>
-              <div class="flex space-x-2">
-                <button class="px-3 py-1 text-xs bg-gray-100 text-gray-500 rounded cursor-not-allowed" disabled>
-                  Offline
-                </button>
-              </div>
-            </div>
-            
-          </div>
-        `;
-        
+		if (!Array.isArray(this.friendList) || this.friendList.length === 0) {
+		  return `
+			<div class="text-center text-gray-500">
+			  <p class="text-sm">No friends yet.</p>
+			</div>
+		  `;
+		}
+		return `
+		  <div class="space-y-3">
+			${this.friendList.map(friend => `
+			  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+				<div class="flex items-center">
+				  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+					${friend.friendInfo.username.charAt(0).toUpperCase()}
+				  </div>
+				  <div>
+					<div class="text-sm font-medium text-gray-800">${friend.friendInfo.username}</div>
+					<div class="text-xs text-green-500 flex items-center">
+					  <div class="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+					  Online
+					</div>
+				  </div>
+				</div>
+				<div class="flex space-x-2">
+				  <button class="px-3 py-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors">
+					Invite
+				  </button>
+				  <button class="px-3 py-1 text	-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors">
+					Chat
+				  </button>
+				</div>
+			  </div>
+			`).join('')}
+		  </div>
+		`;
       case 'requests':
-        return `
-          <div class="space-y-3">
-
-            <!-- Incoming Request Example -->
-            <div class="border border-orange-200 bg-orange-50 rounded-lg p-3">
-              <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center">
-                  <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
-                    S
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-gray-800">Sarah Wilson</div>
-                    <div class="text-xs text-orange-600">Wants to be friends</div>
-                  </div>
-                </div>
-                <div class="text-xs text-gray-500">2 min ago</div>
-              </div>
-              <div class="flex space-x-2">
-                <button class="flex-1 px-3 py-2 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
-                  Accept
-                </button>
-                <button class="flex-1 px-3 py-2 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">
-                  Decline
-                </button>
-              </div>
-            </div>
-            
-          </div>
-        `;
+		if (!Array.isArray(this.requestsList) || this.requestsList.length === 0) {
+		  return `
+			<div class="text-center text-gray-500">
+			  <p class="text-sm">No friend requests at the moment.</p>
+			</div>
+		  `;
+		}
+		return `
+		  <div class="space-y-3">
+			${this.requestsList.map(request => `
+			  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+				<div class="flex items-center">
+				  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+					${request.senderInfo.username.charAt(0).toUpperCase()}
+				  </div>
+				  <div>
+					<div class="text-sm font-medium text-gray-800">${request.senderInfo.username}</div>
+					<div class="text-xs text-gray-500">Friend Request</div>
+				  </div>
+				</div>
+				<div class="flex space-x-2">
+				  <button class="px-3 py-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors">
+					Accept
+				  </button>
+				  <button class="px-3 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors">
+					Decline
+				  </button>
+				</div>
+			  </div>
+			`).join('')}
+		  </div>
+		`;
         
       case 'add':
         return `
@@ -228,7 +223,7 @@ export class ProfileComponent extends Component {
     }
   }
 
-  private setupEvents(): void {
+private setupEvents(): void {
     const tabButtons = this.element.querySelectorAll('.social-tab');
     tabButtons.forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -236,11 +231,123 @@ export class ProfileComponent extends Component {
         if (tab && tab !== this.activeTab) {
           this.activeTab = tab;
           this.render();
-          this.setupEvents();
+		  if(tab === 'add')
+			this.setupAddFriendEvent();
+		  else if (tab === 'requests')
+			this.getRequestsList();
+		  else if (tab === 'friends')
+			this.getFriendList();
+		  this.setupEvents();
         }
       });
     });
-	
-  }
+}
+
+private setupAddFriendEvent(): void {
+	const authToken = localStorage.getItem('authToken');
+  	if (!authToken) {
+    	alert('Please login first!');
+    	return;
+  	}
+	const searchInput = this.element.querySelector('#friend-search') as HTMLInputElement;
+	const sendRequestBtn = this.element.querySelector('#send-friend-request') as HTMLButtonElement;
+	sendRequestBtn?.addEventListener('click', async () => {
+		const username = searchInput.value.trim();
+		if (username) {
+			try {
+				const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.BY_USERNAME(username)), {
+					method: 'GET',
+					headers: {
+						Authorization: `Bearer ${authToken}`,
+					}
+				});
+
+				if (response.ok) {
+					const user = await response.json();
+					console.log(`Found user: ${user.username}`);
+					const addResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.ADD(user.user.id)), {
+						method: 'POST',
+						headers: {
+							Authorization: `Bearer ${authToken}`,
+						}
+					});
+
+					if (addResponse.ok)
+						console.log(`Friend request sent to ${user.username}`);
+					else
+						console.error(`Failed to send friend request to ${user.username}`);
+				}
+				else {
+					const errorData = await response.json();
+					console.error(`Error fetching user: ${errorData.message}`);
+					alert(`Error: ${errorData.message}`);
+				}
+				searchInput.value = '';
+			} catch (error) {
+				console.error(error);
+				searchInput.value = '';
+				alert('An error occurred while sending the friend request. Please try again.');
+			}
+		}
+	});
+}
+private async getFriendList(): Promise<void> {
+	const authToken = localStorage.getItem('authToken');
+	if (!authToken) {
+		alert('Please login first!');
+		return;
+	}
+
+	try {
+		const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.LIST), {
+			method: 'GET',
+			headers: {
+				Authorization: `Bearer ${authToken}`,
+			}
+		});
+
+		if (response.ok) {
+			const data = await response.json();
+			console.log('Friends API response:', data.friends);
+			this.friendList = Array.isArray(data.friends) ? data.friends : [];
+		} else {
+			const errorData = await response.json();
+			console.log(`Error fetching friends: ${errorData.message}`);
+		}
+	} catch (error) {
+		console.error(error);
+		alert('An error occurred while fetching the friend list. Please try again.');
+	}
+}
+
+private async getRequestsList(): Promise<void> {
+	const authToken = localStorage.getItem('authToken');
+	if (!authToken) {
+		alert('Please login first!');
+		return;
+	}
+
+	try {
+		const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.REQUESTS.INCOMING), {
+			method: 'GET',
+			headers: {
+				Authorization: `Bearer ${authToken}`,
+			}
+		});
+
+		if (response.ok) {
+			const data = await response.json();
+			console.log('Requests API response:', data.requests);
+			this.requestsList = Array.isArray(data.requests) ? data.requests : [];
+		} else {
+			const errorData = await response.json();
+			console.log(`Error fetching requests: ${errorData.message}`);
+		}
+	} catch (error) {
+		console.error(error);
+		alert('An error occurred while fetching friend requests. Please try again.');
+	}
+}
 
 }
+
