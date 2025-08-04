@@ -4,7 +4,7 @@ import { ProfileComponent, UserProfile } from './components/ProfileComponent.js'
 
 export async function init() {
   console.log('Home page loaded');
-  
+
   const authToken = localStorage.getItem('authToken');
   if (!authToken) {
     alert('Please login first!');
@@ -20,18 +20,14 @@ export async function init() {
 
   try {
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
-	  method: 'GET',
-	  headers: {
-		'Authorization': `Bearer ${authToken}`
-	  }
-	});
+    method: 'GET',
+    headers: {'Authorization': `Bearer ${authToken}`}});
 
-    if (!response.ok) {
+    if (!response.ok)
       throw new Error('Failed to fetch user profile');
-    }
 
     const userProfile: UserProfile = await response.json();
-	console.log('User profile fetched:', userProfile);
+    console.log('User profile fetched:', userProfile);
 
     const profileComponent = new ProfileComponent(userProfile);
 
@@ -50,8 +46,8 @@ export async function init() {
         </div>
         <h2 class="text-xl font-bold text-gray-800 mb-2">Error Loading Profile</h2>
         <p class="text-gray-600 mb-4">Failed to load your profile. Please try refreshing the page.</p>
-        <button 
-          onclick="window.location.reload()" 
+        <button
+          onclick="window.location.reload()"
           class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors">
           Refresh Page
         </button>
@@ -59,5 +55,3 @@ export async function init() {
     `;
   }
 }
-
-
