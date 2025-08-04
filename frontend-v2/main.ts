@@ -15,7 +15,7 @@ function handleOAuthCallback() {
     alert('Google login failed. Please try again.');
   } else if (token && oauthSuccess === 'success') {
     localStorage.setItem('authToken', token);
-    window.router.navigate('profile');
+    window.router.navigate('home');
   }
 
   if (token || error) {

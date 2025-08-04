@@ -51,7 +51,7 @@ Router, uygulamanın kalbidir ve şu işlevleri yerine getirir:
 2. **Sayfa Geçişi**:
    ```typescript
    // Kullanıcı bir butona tıkladığında
-   router.navigate('profile'); // profil sayfasına git
+   router.navigate('home'); // profil sayfasına git
    ```
 
 3. **Browser History**:
@@ -98,7 +98,7 @@ pages/örnek-sayfa/
 ```html
 <div class="h-screen bg-gray-100 p-6">
   <h1 class="text-3xl font-bold">Profil Sayfası</h1>
-  <button onclick="router.navigate('home')">Ana Sayfaya Dön</button>
+  <button onclick="router.navigate('landing')">Ana Sayfaya Dön</button>
 </div>
 ```
 
