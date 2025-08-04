@@ -1,4 +1,5 @@
 export function init() {
-  console.log('Home page loaded');
-
+  if (localStorage.getItem('user') || localStorage.getItem('authToken')) {
+    router.navigate('profile');
+  }
 }

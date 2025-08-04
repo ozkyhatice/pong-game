@@ -39,7 +39,7 @@ class Router {
       this.currentPage = pageName;
       
       // Loading mesajı göster
-      this.container.innerHTML = '<div class="flex items-center justify-center h-screen"><div class="text-xl">Loading...</div></div>';
+      // this.container.innerHTML = '<div class="flex items-center justify-center h-screen"><div class="text-xl">Loading...</div></div>';
       
       // HTML dosyasını yükle
       const response = await fetch(`./pages/${pageName}/${pageName}.html`);
