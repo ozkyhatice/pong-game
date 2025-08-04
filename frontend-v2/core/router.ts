@@ -5,12 +5,22 @@ class Router {
   constructor(container: HTMLElement) {
     this.container = container;
     this.setupBrowserNavigation();
-    this.loadPage('landing');
+    // Try to get page from history state or URL
+    let initialPage = 'landing';
+    if (window.history.state && window.history.state.page)
+      initialPage = window.history.state.page;
+    else {
+      // Try to get from URL hash (e.g., #home)
+      const hash = window.location.hash.replace('#', '');
+      if (hash) initialPage = hash;
+    }
+    this.loadPage(initialPage);
   }
 
   navigate(pageName: string) {
     if (pageName !== this.currentPage) {
-      window.history.pushState({ page: pageName }, '', window.location.href);
+      // Update URL hash for direct linking
+      window.history.pushState({ page: pageName }, '', `#${pageName}`);
       this.loadPage(pageName);
     }
   }
@@ -19,11 +29,25 @@ class Router {
     window.addEventListener('popstate', (event) => {
       if (event.state && event.state.page)
         this.loadPage(event.state.page);
-      else
-        this.loadPage('landing');
+      else {
+        // Try to get from URL hash
+        const hash = window.location.hash.replace('#', '');
+        if (hash) {
+          this.loadPage(hash);
+        } else {
+          this.loadPage('landing');
+        }
+      }
     });
 
-    window.history.replaceState({ page: 'landing' }, '', window.location.href);
+    // Set initial state if not present
+    if (!window.history.state || !window.history.state.page) {
+      let initialPage = 'landing';
+      const hash = window.location.hash.replace('#', '');
+      if (hash)
+        initialPage = hash;
+      window.history.replaceState({ page: initialPage }, '', `#${initialPage}`);
+    }
   }
 
   private async loadPage(pageName: string) {
@@ -36,18 +60,16 @@ class Router {
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       const response = await fetch(`./pages/${pageName}/${pageName}.html`);
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
       const html = await response.text();
 
       this.container.innerHTML = html;
       this.container.style.opacity = '1';
 
       const module = await import(`../pages/${pageName}/${pageName}.js`);
-      if (module.init) {
+      if (module.init)
         module.init();
-      }
 
       this.currentPage = pageName;
     } catch (error) {
