@@ -26,6 +26,8 @@ clean:
 	@cd backend && rm -rf node_modules
 	@cd frontend-v2 && rm -rf node_modules dist
 	@cd websocket-test-app && rm -rf node_modules dist
+	@echo "\033[31m🗑️  Removing database file...\033[0m"
+	@cd backend && rm -f dev.db
 	@echo "\033[32m✅ Cleanup completed!\033[0m"
 
 kill:
@@ -41,6 +43,11 @@ kill:
 	-lsof -ti:8081 | xargs kill -9 2>/dev/null || true
 	@echo "\033[32m🎉 All processes killed successfully!\033[0m"
 
+clean-db:
+	@echo "\033[31m🗑️  Removing database file...\033[0m"
+	@cd backend && rm -f dev.db
+	@echo "\033[32m✅ Database cleaned!\033[0m"
+
 fclean: kill clean
 	@echo "\033[35m🌟 Full cleanup completed! Ready for fresh start! 🌟\033[0m"
 
@@ -55,7 +62,8 @@ help:
 	@echo "\033[35m🔌 make websocket-test\033[0m- Start only websocket test app (foreground)"
 	@echo "\033[35m🔌 make websocket-test-bg\033[0m- Start only websocket test app (background)"
 	@echo "\033[33m🧹 make clean         \033[0m- Remove node_modules and dist folders"
-	@echo "\033[31m💀 make kill          \033[0m- Kill all running processes"
+	@echo "\033[31m�️  make clean-db      \033[0m- Remove database file only"
+	@echo "\033[31m�💀 make kill          \033[0m- Kill all running processes"
 	@echo "\033[36m📊 make status        \033[0m- Check running services status"
 	@echo "\033[35m🌟 make fclean        \033[0m- Full cleanup (kill + clean)"
 	@echo "\033[36m❓ make help          \033[0m- Show this help message"
@@ -64,4 +72,4 @@ help:
 re: fclean all
 	@echo "\033[35m🔄 Rebuilding and restarting all services...\033[0m"
 
-.PHONY: all backend backend-bg frontend frontend-bg websocket-test websocket-test-bg clean kill status fclean help
+.PHONY: all backend backend-bg frontend frontend-bg websocket-test websocket-test-bg clean clean-db kill status fclean help re

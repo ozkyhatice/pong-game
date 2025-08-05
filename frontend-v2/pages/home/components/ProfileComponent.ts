@@ -30,15 +30,16 @@ export class ProfileComponent extends Component {
   private friendList: any[] = [];
   private requestsList: any[] = [];
   private authToken: string | null = localStorage.getItem('authToken');
+  private flag: boolean = true;
 
   constructor(profile: UserProfile) {
-    super({ className: 'w-80 h-full flex flex-col mx-auto' }); //center this
+    super({ className: 'w-80 h-full flex flex-col mx-auto' });
     this.profile = profile;
     this.getFriendList();
     this.getRequestsList();
-    this.render();
-    this.setupEvents();
-  }
+	this.render();
+	this.setupEvents();
+}
 
 updateProfile(profile: UserProfile): void {
     this.profile = profile;
@@ -66,6 +67,13 @@ private render(): void {
       ? Math.round((wins / (wins + losses)) * 100)
       : 0;
 
+	if (this.activeTab === 'friends' && this.flag === true) {
+		this.getFriendList().then(() => {
+			console.log('Friend list updated:', this.friendList);
+			this.render();
+		});
+		this.flag = false;
+	}
     this.setHTML(`
       <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex-shrink-0">
         <!-- Profile Header -->
@@ -128,6 +136,7 @@ private render(): void {
         </div>
       </div>
     `);
+	this.setupEvents();
   }
 
 
@@ -191,10 +200,10 @@ private render(): void {
                   </div>
                 </div>
                 <div class="flex space-x-2">
-                  <button class="px-3 py-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors">
+                  <button id="accept-friend-request-${request.senderInfo.id}" class="px-3 py-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors">
                     Accept
                   </button>
-                  <button class="px-3 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors">
+                  <button id="decline-friend-request-${request.senderInfo.id}" class="px-3 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors">
                     Decline
                   </button>
                 </div>
@@ -230,26 +239,34 @@ private render(): void {
     }
   }
 
-private setupEvents(): void {
+private async setupEvents(): Promise<void> {
 	this.controlAuthEvents();
+
     const tabButtons = this.element.querySelectorAll('.social-tab');
     tabButtons.forEach(btn => {
       btn.addEventListener('click', (e) => {
         const tab = (e.currentTarget as HTMLElement).dataset.tab as 'friends' | 'requests' | 'add';
         if (tab && tab !== this.activeTab) {
           this.activeTab = tab;
-          this.render();
-          
-          if(tab === 'add')
+          if (tab === 'add') {
             this.setupAddFriendEvent();
-          else if (tab === 'requests')
-            this.getRequestsList();
-          else if (tab === 'friends')
-            this.getFriendList();
-          this.setupEvents();
+          } else if (tab === 'requests') {
+            this.getRequestsList().then(() => {
+			  console.log('Requests list updated:', this.requestsList);
+              this.acceptFriendRequestEvents();
+              this.declineFriendRequestEvents();
+            });
+          } else if (tab === 'friends') {
+            this.getFriendList().then(() => {
+				console.log('Friend list updated:', this.friendList);
+            });
+          }
+		  this.render();
+		  this.setupEvents();
         }
       });
     });
+
 }
 
 private setupAddFriendEvent(): void {
@@ -374,7 +391,10 @@ private acceptFriendRequestEvents(): void {
 
 					if (response.ok) {
 						console.log(`Friend request from ${request.senderInfo.username} accepted`);
-						this.getRequestsList();
+						await this.getRequestsList();
+						this.render();
+						this.acceptFriendRequestEvents();
+						this.declineFriendRequestEvents();
 					} else {
 						const errorData = await response.json();
 						console.error(`Error accepting request: ${errorData.message}`);
@@ -404,7 +424,10 @@ private declineFriendRequestEvents(): void {
 
 					if (response.ok) {
 						console.log(`Friend request from ${request.senderInfo.username} declined`);
-						this.getRequestsList();
+						await this.getRequestsList();
+						this.render();
+						this.acceptFriendRequestEvents();
+						this.declineFriendRequestEvents();
 					} else {
 						const errorData = await response.json();
 						console.error(`Error declining request: ${errorData.message}`);
