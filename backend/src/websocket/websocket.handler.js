@@ -11,7 +11,7 @@ export async function websocketHandler(connection, request) {
     // Handle incoming messages
     connection.on('message', async (message) => {
       try {
-        await routeMessage(message, userId);
+        await routeMessage(message, userId, connection);
       } catch (err) {
         console.error('Error routing message:', err);
         connection.send(JSON.stringify({ 
