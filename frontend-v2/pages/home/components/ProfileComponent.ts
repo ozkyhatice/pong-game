@@ -103,6 +103,10 @@ private render(): void {
             <span class="font-semibold text-gray-800">${winRate}%</span>
           </div>
 
+          <button id="edit-profile-btn" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+            Edit Profile
+          </button>
+          
       </div>
 
       <!-- Menu -->
@@ -136,6 +140,13 @@ private render(): void {
         </div>
       </div>
     `);
+
+    const editProfileBtn = document.getElementById('edit-profile-btn');
+  if (editProfileBtn) {
+    editProfileBtn.addEventListener('click', () => {
+      router.navigate('avatar-test');
+    });
+  }
 	this.setupEvents();
   }
 
