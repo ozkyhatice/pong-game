@@ -35,16 +35,13 @@ export class ProfileComponent extends Component {
   constructor(profile: UserProfile) {
     super({ className: 'w-80 h-full flex flex-col mx-auto' });
     this.profile = profile;
-    this.getFriendList();
-    this.getRequestsList();
 	this.render();
-	this.setupEvents();
 }
 
 updateProfile(profile: UserProfile): void {
     this.profile = profile;
     this.render();
-  }
+}
 
 private controlAuthEvents(): void {
   const authToken = localStorage.getItem('authToken');
@@ -68,11 +65,12 @@ private render(): void {
       : 0;
 
 	if (this.activeTab === 'friends' && this.flag === true) {
+		this.flag = false;
 		this.getFriendList().then(() => {
 			console.log('Friend list updated:', this.friendList);
 			this.render();
+			return;
 		});
-		this.flag = false;
 	}
     this.setHTML(`
       <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex-shrink-0">
@@ -241,32 +239,31 @@ private render(): void {
 
 private async setupEvents(): Promise<void> {
 	this.controlAuthEvents();
-
     const tabButtons = this.element.querySelectorAll('.social-tab');
     tabButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    	btn.addEventListener('click', (e) => {
         const tab = (e.currentTarget as HTMLElement).dataset.tab as 'friends' | 'requests' | 'add';
         if (tab && tab !== this.activeTab) {
-          this.activeTab = tab;
-          if (tab === 'add') {
-            this.setupAddFriendEvent();
-          } else if (tab === 'requests') {
-            this.getRequestsList().then(() => {
-			  console.log('Requests list updated:', this.requestsList);
-              this.acceptFriendRequestEvents();
-              this.declineFriendRequestEvents();
-            });
-          } else if (tab === 'friends') {
-            this.getFriendList().then(() => {
-				console.log('Friend list updated:', this.friendList);
-            });
-          }
-		  this.render();
-		  this.setupEvents();
+          	this.activeTab = tab;
+			if (tab === 'requests') {
+				this.getRequestsList().then(() => {
+					console.log('Requests list updated:', this.requestsList);
+					this.render();
+					this.acceptFriendRequestEvents();
+					this.declineFriendRequestEvents();
+            	});
+			} else if (tab === 'friends') {
+				this.getFriendList().then(() => {
+					console.log('Friend list updated:', this.friendList);
+					this.render();
+				});
+			} else if (tab === 'add') {
+				this.render();
+				this.setupAddFriendEvent();
+			}
         }
       });
     });
-
 }
 
 private setupAddFriendEvent(): void {
