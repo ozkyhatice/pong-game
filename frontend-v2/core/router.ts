@@ -5,7 +5,11 @@ class Router {
   constructor(container: HTMLElement) {
     this.container = container;
     this.setupBrowserNavigation();
-    this.loadPage('landing');
+    // Use history state to restore page on refresh, default to 'landing' if not present
+    let initialPage = 'landing';
+    if (window.history.state && window.history.state.page)
+      initialPage = window.history.state.page;
+    this.loadPage(initialPage);
   }
 
   navigate(pageName: string) {
@@ -23,35 +27,36 @@ class Router {
         this.loadPage('landing');
     });
 
-    window.history.replaceState({ page: 'landing' }, '', window.location.href);
+    // Set initial state if not present
+    if (!window.history.state || !window.history.state.page)
+      window.history.replaceState({ page: 'landing' }, '', window.location.href);
   }
 
   private async loadPage(pageName: string) {
     try {
       console.log(`Loading page: ${pageName}`);
 
-      this.container.style.transition = 'opacity 0.2s';
-      this.container.style.opacity = '0';
+      //this.container.style.transition = 'opacity 0.2s';
+      //this.container.style.opacity = '0';
 
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       const response = await fetch(`./pages/${pageName}/${pageName}.html`);
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
+
       const html = await response.text();
+      //this.container.style.opacity = '1';
 
       this.container.innerHTML = html;
-      this.container.style.opacity = '1';
 
       const module = await import(`../pages/${pageName}/${pageName}.js`);
-      if (module.init) {
+      if (module.init)
         module.init();
-      }
 
       this.currentPage = pageName;
     } catch (error) {
-      console.error(' PLoadage Error:', error);
+      console.error('Page Load Error:', error);
       this.container.innerHTML = `
         <div class="flex items-center justify-center h-screen">
           <div class="text-center">

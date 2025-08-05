@@ -31,15 +31,14 @@ export class ProfileComponent extends Component {
   private requestsList: any[] = [];
   private authToken: string | null = localStorage.getItem('authToken');
 
-constructor(profile: UserProfile) {
-    super({ className: 'w-80 h-full flex flex-col' });
+  constructor(profile: UserProfile) {
+    super({ className: 'w-80 h-full flex flex-col mx-auto' }); //center this
     this.profile = profile;
-	this.controlAuthEvents();
-	this.getFriendList();
-	this.getRequestsList();
+    this.getFriendList();
+    this.getRequestsList();
     this.render();
     this.setupEvents();
-}
+  }
 
 updateProfile(profile: UserProfile): void {
     this.profile = profile;
@@ -62,8 +61,8 @@ private render(): void {
     const losses = (user as any).losses || 0;
     const level = (user as any).level || 1;
     const avatar = (user as any).avatar || this.profile.avatar;
-    
-    const winRate = wins + losses > 0 
+
+    const winRate = wins + losses > 0
       ? Math.round((wins / (wins + losses)) * 100)
       : 0;
 
@@ -77,7 +76,7 @@ private render(): void {
           <h2 class="text-lg font-semibold">${username}</h2>
           <p class="text-blue-100 text-sm">Level ${level}</p>
         </div>
-        
+
         <!-- Stats -->
         <div class="p-4 space-y-3">
           <div class="grid grid-cols-2 gap-3">
@@ -90,14 +89,14 @@ private render(): void {
               <div class="text-xs text-red-500">Losses</div>
             </div>
           </div>
-          
+
           <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
             <span class="text-sm text-gray-600">Win Rate</span>
             <span class="font-semibold text-gray-800">${winRate}%</span>
           </div>
-          
+
       </div>
-      
+
       <!-- Menu -->
       <div class="mt-4 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex-1 flex flex-col">
         <!-- Social Tabs -->
@@ -122,7 +121,7 @@ private render(): void {
             Add Friend
           </button>
         </div>
-        
+
         <!-- Tab Content -->
         <div class="p-4 flex-1 overflow-y-auto">
           ${this.renderTabContent()}
@@ -135,86 +134,85 @@ private render(): void {
   private renderTabContent(): string {
     switch (this.activeTab) {
       case 'friends':
-		if (!Array.isArray(this.friendList) || this.friendList.length === 0) {
-		  return `
-			<div class="text-center text-gray-500">
-			  <p class="text-sm">No friends yet.</p>
-			</div>
-		  `;
-		}
-		return `
-		  <div class="space-y-3">
-			${this.friendList.map(friend => `
-			  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-				<div class="flex items-center">
-				  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
-					${friend.friendInfo.username.charAt(0).toUpperCase()}
-				  </div>
-				  <div>
-					<div class="text-sm font-medium text-gray-800">${friend.friendInfo.username}</div>
-					<div class="text-xs text-green-500 flex items-center">
-					  <div class="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-					  Online
-					</div>
-				  </div>
-				</div>
-				<div class="flex space-x-2">
-				  <button class="px-3 py-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors">
-					Invite
-				  </button>
-				  <button class="px-3 py-1 text	-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors">
-					Chat
-				  </button>
-				</div>
-			  </div>
-			`).join('')}
-		  </div>
-		`;
+        if (!Array.isArray(this.friendList) || this.friendList.length === 0) {
+          return `
+            <div class="text-center text-gray-500">
+              <p class="text-sm">No friends yet.</p>
+            </div>
+          `;
+        }
+        return `
+          <div class="space-y-3">
+            ${this.friendList.map(friend => `
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div class="flex items-center">
+                  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+                    ${friend.friendInfo.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-800">${friend.friendInfo.username}</div>
+                    <div class="text-xs text-green-500 flex items-center">
+                      <div class="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+                      Online
+                    </div>
+                  </div>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="px-3 py-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors">
+                    Invite
+                  </button>
+                  <button class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors">
+                    Chat
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
       case 'requests':
-		if (!Array.isArray(this.requestsList) || this.requestsList.length === 0) {
-		  return `
-			<div class="text-center text-gray-500">
-			  <p class="text-sm">No friend requests at the moment.</p>
-			</div>
-		  `;
-		}
-		return `
-		  <div class="space-y-3">
-			${this.requestsList.map(request => `
-			  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-				<div class="flex items-center">
-				  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
-					${request.senderInfo.username.charAt(0).toUpperCase()}
-				  </div>
-				  <div>
-					<div class="text-sm font-medium text-gray-800">${request.senderInfo.username}</div>
-					<div class="text-xs text-gray-500">Friend Request</div>
-				  </div>
-				</div>
-				<div class="flex space-x-2">
-				  <button id='accept-friend-request-${request.senderInfo.id}' class="px-3 py-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors">
-					Accept
-				  </button>
-				  <button id='decline-friend-request-${request.senderInfo.id}' class="px-3 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors">
-					Decline
-				  </button>
-				</div>
-			  </div>
-			`).join('')}
-		  </div>
-		`;
-        
+        if (!Array.isArray(this.requestsList) || this.requestsList.length === 0) {
+          return `
+            <div class="text-center text-gray-500">
+              <p class="text-sm">No friend requests at the moment.</p>
+            </div>
+          `;
+        }
+        return `
+          <div class="space-y-3">
+            ${this.requestsList.map(request => `
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div class="flex items-center">
+                  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+                    ${request.senderInfo.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-800">${request.senderInfo.username}</div>
+                    <div class="text-xs text-gray-500">Friend Request</div>
+                  </div>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="px-3 py-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors">
+                    Accept
+                  </button>
+                  <button class="px-3 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors">
+                    Decline
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
       case 'add':
         return `
           <div class="space-y-4">
-          
+
             <!-- Search Section -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Add Friend</label>
               <div class="flex gap-1 w-full">
-                <input 
-                  type="text" 
-                  placeholder="Enter username..." 
+                <input
+                  type="text"
+                  placeholder="Enter username..."
                   class=" px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   id="friend-search"
                 >
@@ -224,10 +222,9 @@ private render(): void {
               </div>
               <p class="text-xs text-gray-500 mt-2">Enter the exact username to send a friend request</p>
             </div>
-          
+
           </div>
         `;
-        
       default:
         return '';
     }
@@ -242,110 +239,123 @@ private setupEvents(): void {
         if (tab && tab !== this.activeTab) {
           this.activeTab = tab;
           this.render();
-		  if(tab === 'add')
-			this.setupAddFriendEvent();
-		  else if (tab === 'requests')
-		  {
-			this.getRequestsList();
-			this.acceptFriendRequestEvents();
-			this.declineFriendRequestEvents();
-		  }
-		  else if (tab === 'friends')
-			this.getFriendList();
-		  this.setupEvents();
+          
+          if(tab === 'add')
+            this.setupAddFriendEvent();
+          else if (tab === 'requests')
+            this.getRequestsList();
+          else if (tab === 'friends')
+            this.getFriendList();
+          this.setupEvents();
         }
       });
     });
 }
 
 private setupAddFriendEvent(): void {
-	this.controlAuthEvents();
-	const searchInput = this.element.querySelector('#friend-search') as HTMLInputElement;
-	const sendRequestBtn = this.element.querySelector('#send-friend-request') as HTMLButtonElement;
-	sendRequestBtn?.addEventListener('click', async () => {
-		const username = searchInput.value.trim();
-		if (username) {
-			try {
-				const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.BY_USERNAME(username)), {
-					method: 'GET',
-					headers: {
-						Authorization: `Bearer ${this.authToken}`,
-					}
-				});
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        alert('Please login first!');
+        return;
+    }
+    const searchInput = this.element.querySelector('#friend-search') as HTMLInputElement;
+    const sendRequestBtn = this.element.querySelector('#send-friend-request') as HTMLButtonElement;
+    sendRequestBtn?.addEventListener('click', async () => {
+        const username = searchInput.value.trim();
+        if (username) {
+            try {
+                const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.BY_USERNAME(username)), {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${authToken}`,
+                    }
+                });
 
-				if (response.ok) {
-					const user = await response.json();
-					console.log(`Found user: ${user.username}`);
-					const addResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.ADD(user.user.id)), {
-						method: 'POST',
-						headers: {
-							Authorization: `Bearer ${this.authToken}`,
-						}
-					});
+                if (response.ok) {
+                    const user = await response.json();
+                    console.log(`Found user: ${user.username}`);
+                    const addResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.ADD(user.user.id)), {
+                        method: 'POST',
+                        headers: {
+                            Authorization: `Bearer ${authToken}`,
+                        }
+                    });
 
-					if (addResponse.ok)
-						console.log(`Friend request sent to ${user.username}`);
-					else
-						console.error(`Failed to send friend request to ${user.username}`);
-				}
-				else {
-					const errorData = await response.json();
-					console.error(`Error fetching user: ${errorData.message}`);
-					alert(`Error: ${errorData.message}`);
-				}
-				searchInput.value = '';
-			} catch (error) {
-				console.error(error);
-				searchInput.value = '';
-				alert('An error occurred while sending the friend request. Please try again.');
-			}
-		}
-	});
+                    if (addResponse.ok)
+                        console.log(`Friend request sent to ${user.username}`);
+                    else
+                        console.error(`Failed to send friend request to ${user.username}`);
+                }
+                else {
+                    const errorData = await response.json();
+                    console.error(`Error fetching user: ${errorData.message}`);
+                    alert(`Error: ${errorData.message}`);
+                }
+                searchInput.value = '';
+            } catch (error) {
+                console.error(error);
+                searchInput.value = '';
+                alert('An error occurred while sending the friend request. Please try again.');
+            }
+        }
+    });
 }
 private async getFriendList(): Promise<void> {
-	try {
-		const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.LIST), {
-			method: 'GET',
-			headers: {
-				Authorization: `Bearer ${this.authToken}`,
-			}
-		});
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        alert('Please login first!');
+        return;
+    }
 
-		if (response.ok) {
-			const data = await response.json();
-			console.log('Friends API response:', data.friends);
-			this.friendList = Array.isArray(data.friends) ? data.friends : [];
-		} else {
-			const errorData = await response.json();
-			console.log(`Error fetching friends: ${errorData.message}`);
-		}
-	} catch (error) {
-		console.error(error);
-		alert('An error occurred while fetching the friend list. Please try again.');
-	}
+    try {
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.LIST), {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${authToken}`,
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Friends API response:', data.friends);
+            this.friendList = Array.isArray(data.friends) ? data.friends : [];
+        } else {
+            const errorData = await response.json();
+            console.log(`Error fetching friends: ${errorData.message}`);
+        }
+    } catch (error) {
+        console.error(error);
+        alert('An error occurred while fetching the friend list. Please try again.');
+    }
 }
 
 private async getRequestsList(): Promise<void> {
-	try {
-		const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.REQUESTS.INCOMING), {
-			method: 'GET',
-			headers: {
-				Authorization: `Bearer ${this.authToken}`,
-			}
-		});
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        alert('Please login first!');
+        return;
+    }
 
-		if (response.ok) {
-			const data = await response.json();
-			console.log('Requests API response:', data.requests);
-			this.requestsList = Array.isArray(data.requests) ? data.requests : [];
-		} else {
-			const errorData = await response.json();
-			console.log(`Error fetching requests: ${errorData.message}`);
-		}
-	} catch (error) {
-		console.error(error);
-		alert('An error occurred while fetching friend requests. Please try again.');
-	}
+    try {
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.REQUESTS.INCOMING), {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${authToken}`,
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Requests API response:', data.requests);
+            this.requestsList = Array.isArray(data.requests) ? data.requests : [];
+        } else {
+            const errorData = await response.json();
+            console.log(`Error fetching requests: ${errorData.message}`);
+        }
+    } catch (error) {
+        console.error(error);
+        alert('An error occurred while fetching friend requests. Please try again.');
+    }
 }
 
 private acceptFriendRequestEvents(): void {
@@ -413,4 +423,3 @@ private declineFriendRequestEvents(): void {
 }
 
 }
-
