@@ -36,22 +36,28 @@ export async function init() {
     console.log('ProfileComponent successfully mounted to profile-container');
 
   } catch (error) {
-    console.error('Error mounting ProfileComponent:', error);
+    console.log('User not found, redirecting to landing page: ', error);
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    
     profileContainer.innerHTML = `
       <div class="w-80 bg-white rounded-lg p-8 shadow text-center mx-auto">
-        <div class="text-red-600 mb-4">
-          <svg class="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        <div class="text-blue-600 mb-4">
+          <svg class="w-12 h-12 mx-auto mb-2 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         </div>
-        <h2 class="text-xl font-bold text-gray-800 mb-2">Error Loading Profile</h2>
-        <p class="text-gray-600 mb-4">Failed to load your profile. Please try refreshing the page.</p>
-        <button
-          onclick="window.location.reload()"
-          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors">
-          Refresh Page
-        </button>
+        <h2 class="text-xl font-bold text-gray-800 mb-2">Something went wrong</h2>
+        <p class="text-gray-600 mb-4">You are being redirected to the homepage...</p>
+        <div class="flex justify-center">
+          <div class="w-6 h-1 bg-blue-500 rounded animate-pulse"></div>
+        </div>
       </div>
     `;
+    
+    setTimeout(() => {
+      router.navigate('landing');
+    }, 1000);
   }
 }
