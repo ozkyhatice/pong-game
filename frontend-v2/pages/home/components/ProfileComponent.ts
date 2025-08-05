@@ -29,6 +29,7 @@ export class ProfileComponent extends Component {
   private activeTab: 'friends' | 'requests' | 'add' = 'friends';
   private friendList: any[] = [];
   private requestsList: any[] = [];
+  private authToken: string | null = localStorage.getItem('authToken');
 
   constructor(profile: UserProfile) {
     super({ className: 'w-80 h-full flex flex-col mx-auto' }); //center this
@@ -39,13 +40,21 @@ export class ProfileComponent extends Component {
     this.setupEvents();
   }
 
-  updateProfile(profile: UserProfile): void {
+updateProfile(profile: UserProfile): void {
     this.profile = profile;
     this.render();
   }
 
-  private render(): void {
-    // API'den gelen veriyi normalize et
+private controlAuthEvents(): void {
+  const authToken = localStorage.getItem('authToken');
+  if (!authToken) {
+    alert('Please login first!');
+    router.navigate('/login');
+    return;
+  }
+}
+
+private render(): void {
     const user = this.profile.user || this.profile;
     const username = (user as any).username || (user as any).name || (user as any).email || 'Unknown';
     const wins = (user as any).wins || 0;
@@ -222,6 +231,7 @@ export class ProfileComponent extends Component {
   }
 
 private setupEvents(): void {
+	this.controlAuthEvents();
     const tabButtons = this.element.querySelectorAll('.social-tab');
     tabButtons.forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -229,6 +239,7 @@ private setupEvents(): void {
         if (tab && tab !== this.activeTab) {
           this.activeTab = tab;
           this.render();
+          
           if(tab === 'add')
             this.setupAddFriendEvent();
           else if (tab === 'requests')
@@ -345,6 +356,70 @@ private async getRequestsList(): Promise<void> {
         console.error(error);
         alert('An error occurred while fetching friend requests. Please try again.');
     }
+}
+
+private acceptFriendRequestEvents(): void {
+	this.controlAuthEvents();
+	this.requestsList.forEach(request => {
+		const acceptButton = this.element.querySelector(`#accept-friend-request-${request.senderInfo.id}`) as HTMLButtonElement;
+		if (acceptButton) {
+			acceptButton.addEventListener('click', async () => {
+				try {
+					const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.ACCEPT(request.senderInfo.id)), {
+						method: 'POST',
+						headers: {
+							Authorization: `Bearer ${this.authToken}`,
+						}
+					});
+
+					if (response.ok) {
+						console.log(`Friend request from ${request.senderInfo.username} accepted`);
+						this.getRequestsList();
+					} else {
+						const errorData = await response.json();
+						console.error(`Error accepting request: ${errorData.message}`);
+					}
+				} catch (error) {
+					console.error(error);
+					alert('An error occurred while accepting the friend request. Please try again.');
+				}
+			});
+		}
+	});
+}
+
+private declineFriendRequestEvents(): void {
+	this.controlAuthEvents();
+	this.requestsList.forEach(request => {
+		const declineButton = this.element.querySelector(`#decline-friend-request-${request.senderInfo.id}`) as HTMLButtonElement;
+		if (declineButton) {
+			declineButton.addEventListener('click', async () => {
+				try {
+					const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.REJECT(request.senderInfo.id)), {
+						method: 'POST',
+						headers: {
+							Authorization: `Bearer ${this.authToken}`,
+						}
+					});
+
+					if (response.ok) {
+						console.log(`Friend request from ${request.senderInfo.username} declined`);
+						this.getRequestsList();
+					} else {
+						const errorData = await response.json();
+						console.error(`Error declining request: ${errorData.message}`);
+					}
+				} catch (error) {
+					console.error(error);
+					alert('An error occurred while declining the friend request. Please try again.');
+				}
+			});
+		}
+	});
+  }
+
+  public getProfile(): UserProfile {
+	return this.profile;
 }
 
 }
