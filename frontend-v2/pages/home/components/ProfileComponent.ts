@@ -73,14 +73,28 @@ private render(): void {
 		});
 	}
     this.setHTML(`
-      <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex-shrink-0">
-        <!-- Profile Header -->
-        <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 text-white text-center">
+      <div class="relative bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex-shrink-0">
+  <!-- Profile Header -->
+  <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 text-white">
+    
+    <!-- Settings Button -->
+    <button id="profile-settings" 
+            class="absolute top-3 right-3 p-2 hover:bg-black/10 rounded-full transition-colors">
+      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" 
+              d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" 
+              clip-rule="evenodd"/>
+      </svg>
+    </button>
+
+
           <div class="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-blue-600 text-xl font-bold shadow-lg">
             ${avatar || username.charAt(0).toUpperCase()}
           </div>
-          <h2 class="text-lg font-semibold">${username}</h2>
-          <p class="text-blue-100 text-sm">Level ${level}</p>
+		<div class="text-center">
+              <div class="text-xl font-bold text-lg">${username}</div>
+              <div class="text-xs text-blue-100 ">Level ${level}</div>
+        </div>
         </div>
 
         <!-- Stats -->
@@ -135,6 +149,7 @@ private render(): void {
       </div>
     `);
 	this.setupEvents();
+	this.setupSettingsEvent();
   }
 
 
@@ -437,6 +452,14 @@ private declineFriendRequestEvents(): void {
 		}
 	});
   }
+
+  private setupSettingsEvent(): void {
+    const settingsBtn = this.element.querySelector('#profile-settings') as HTMLButtonElement;
+    settingsBtn?.addEventListener('click', () => {
+        console.log('Settings button clicked');
+		//router.navigate('/settings');
+    });
+}
 
   public getProfile(): UserProfile {
 	return this.profile;
