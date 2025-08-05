@@ -1,4 +1,6 @@
 *.db
+uploads/avatars/*
+
 package-lock.json
 node_modules/
 

@@ -3,13 +3,15 @@ import {
   getMyProfile, 
   getUserById,
   getUserByUsername,
-  updateMyProfile
+  updateMyProfile,
+  updateMyAvatar
 } from '../controller/user.controller.js';
 import { 
   getMyProfileSchema, 
   getUserByIdSchema,
   getUserByUsernameSchema,
-  updateProfileSchema
+  updateProfileSchema,
+  updateMyAvatarSchema
 } from '../schema.js';
 
 export default async function userRoutes(app, options) {
@@ -24,6 +26,18 @@ export default async function userRoutes(app, options) {
     preHandler: verifyToken,
     schema: updateProfileSchema
   }, updateMyProfile);
+
+  // avatar upload
+  app.put('/me/avatar', {
+    preHandler: verifyToken,
+    schema: updateMyAvatarSchema
+  }, updateMyAvatar);
+
+  // // avatar delete
+  // app.delete('/me/avatar', {
+  //   preHandler: verifyToken,
+  //   schema: deleteMyAvatarSchema
+  // }, deleteMyAvatar);
 
   // Get user by id
   app.get('/id/:id', {
