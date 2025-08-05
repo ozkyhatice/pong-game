@@ -45,8 +45,7 @@ export const updateProfileSchema = {
     type: 'object',
     properties: {
       username: { type: 'string', minLength: 3, maxLength: 50 },
-      email: { type: 'string', format: 'email' },
-      avatar: { type: ['string', 'null'] }
+      email: { type: 'string', format: 'email' }
     },
     additionalProperties: false
   },
@@ -55,6 +54,25 @@ export const updateProfileSchema = {
       type: 'object',
       properties: {
         user: userResponseSchema
+      }
+    }
+  }
+};
+
+export const updateMyAvatarSchema = {
+  consumes: ['multipart/form-data'],
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+        user: userResponseSchema
+      }
+    },
+    400: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
       }
     }
   }

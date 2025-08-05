@@ -18,7 +18,7 @@ export async function findUserById(id) {
   return user;
 }
 
-export async function updateProfile(userId, { username, email, avatar }) {
+export async function updateProfile(userId, { username, email }) {
   const db = await initDB();
   
   // Check if username is already taken
@@ -37,16 +37,38 @@ export async function updateProfile(userId, { username, email, avatar }) {
     }
   }
 
+  // Validate username format
+  if (username && !/^[a-zA-Z0-9_]+$/.test(username)) {
+    throw new Error('Username can only contain letters, numbers, and underscores');
+  }
+
   // Update user
   const result = await db.run(
-    'UPDATE users SET username = COALESCE(?, username), email = COALESCE(?, email), avatar = COALESCE(?, avatar) WHERE id = ?',
-    [username, email, avatar, userId]
+    'UPDATE users SET username = COALESCE(?, username), email = COALESCE(?, email) WHERE id = ?',
+    [username, email, userId]
   );
 
   if (result.changes === 0) {
     throw new Error('User not found');
   }
 
+  return await getUserById(userId);
+}
+
+export async function updateAvatar(userId, avatarPath) {
+  const db = await initDB();
+  
+  // Avatar yolunu veritabanında güncelle
+  const result = await db.run(
+    'UPDATE users SET avatar = ? WHERE id = ?',
+    [avatarPath, userId]
+  );
+
+  if (result.changes === 0) {
+    throw new Error('User not found');
+  }
+
+  // Güncellenmiş kullanıcıyı geri döndür
   return await getUserById(userId);
 }
 

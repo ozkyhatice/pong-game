@@ -1,8 +1,11 @@
 import { 
   getUserByUsername as getUserByUsernameService,
   getUserById as getUserByIdService,
-  updateProfile
+  updateProfile,
+  updateAvatar
 } from '../service/user.service.js';
+import fs from 'fs';
+import path from 'path';
 
 export async function getMyProfile(request, reply) {
   const userId = request.user.id;
@@ -36,16 +39,65 @@ export async function getUserByUsername(request, reply) {
 
 export async function updateMyProfile(request, reply) {
   const userId = request.user.id;
-  const { username, email, avatar } = request.body;
+  const { username, email } = request.body;
 
   try {
-    const updatedUser = await updateProfile(userId, { username, email, avatar });
+    const updatedUser = await updateProfile(userId, { username, email });
     reply.send({ user: updatedUser });
   } catch (error) {
     if (error.message.includes('already taken') || error.message.includes('not found')) {
       return reply.code(400).send({ error: error.message });
     }
     console.error('Error updating user profile:', error);
+    reply.code(500).send({ error: 'Internal Server Error' });
+  }
+}
+
+export async function updateMyAvatar(request, reply) {
+  const userId = request.user.id;
+
+  try {
+    // Dosya geldi mi kontrol et
+    const data = await request.file();
+    if (!data) {
+      return reply.code(400).send({ error: 'No file uploaded' });
+    }
+
+    // Dosya türü kontrol et (sadece resim kabul et)
+    if (!data.mimetype.startsWith('image/')) {
+      return reply.code(400).send({ error: 'Only image files are allowed' });
+    }
+
+    // Dosya boyutu kontrol et (5MB max)
+    const buffer = await data.toBuffer();
+    if (buffer.length > 5 * 1024 * 1024) {
+      return reply.code(400).send({ error: 'File too large. Maximum 5MB allowed' });
+    }
+
+    // Dosya adı oluştur (userId + timestamp + uzantı)
+    const fileExtension = path.extname(data.filename);
+    const fileName = `${userId}_${Date.now()}${fileExtension}`;
+    
+    // uploads/avatars klasörü var mı kontrol et, yoksa oluştur
+    const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    // Dosyayı kaydet
+    const filePath = path.join(uploadDir, fileName);
+    fs.writeFileSync(filePath, buffer);
+
+    // Veritabanında avatar yolunu güncelle
+    const avatarUrl = `/uploads/avatars/${fileName}`;
+    const updatedUser = await updateAvatar(userId, avatarUrl);
+
+    reply.send({ 
+      message: 'Avatar uploaded successfully',
+      user: updatedUser 
+    });
+  } catch (error) {
+    console.error('Error updating user avatar:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
   }
 }
