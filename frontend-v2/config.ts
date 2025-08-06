@@ -21,6 +21,25 @@ export const API_CONFIG = {
       GOOGLE: '/auth/google'
     },
 
+    TWOFA: {
+      // GET /2fa/setup
+      // Headers: { Authorization: Bearer <token> }
+      SETUP: '/2fa/setup',
+      
+      // PATCH /2fa/disable
+      // Headers: { Authorization: Bearer <token> }
+      DISABLE: '/2fa/disable',
+      
+      // POST /2fa/verify
+      // Body: { token }
+      // Headers: { Authorization: Bearer <token> }
+      VERIFY: '/2fa/verify',
+      
+      // POST /2fa/verify-login
+      // Body: { userId, token }
+      VERIFY_LOGIN: '/2fa/verify-login'
+    },
+
     USER: {
       // GET /users/me
       // Headers: { Authorization: Bearer <token> }

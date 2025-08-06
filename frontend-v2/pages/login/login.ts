@@ -36,8 +36,16 @@ export async function init() {
       });
 
       const data = await response.json();
+      console.log('Login response:', data);
 
-      if (response.ok) {
+      if (data.message === '2FA_REQUIRED') {
+        // Store userId for 2FA verification
+        localStorage.setItem('tempUserId', data.userId.toString());
+        router.navigate('2fa-code');
+        return;
+      }
+
+      if (response.ok && data.token) {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         alert(`Login successful! Welcome ${data.user.username}!`);
