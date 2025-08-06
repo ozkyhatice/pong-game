@@ -44,8 +44,11 @@ export const loginSchema = {
     200: {
       type: 'object',
       properties: {
+        success: { type: 'boolean' },
         token: { type: 'string' },
-        user: userResponseSchema
+        user: userResponseSchema,
+        message: { type: 'string' },
+        userId: { type: 'integer' }
       }
     }
   }

@@ -14,6 +14,8 @@ export const initDB = async () => {
       username TEXT NOT NULL UNIQUE,
       email TEXT NOT NULL UNIQUE,
       password TEXT,
+      twoFASecret TEXT,
+      isTwoFAEnabled BOOLEAN DEFAULT FALSE,
       avatar TEXT,
       wins INTEGER DEFAULT 0,
       losses INTEGER DEFAULT 0

@@ -30,6 +30,17 @@ export async function login(request, reply) {
 
   try {
     const user = await loginUser({ email, password });
+    console.log('2FA is enabled for user:', user.isTwoFAEnabled);
+
+    // Eğer kullanıcı 2FA etkinleştirmişse, 2FA doğrulaması yapılacak
+    if (user.isTwoFAEnabled) {
+      console.log('2FA is enabled for user:', user.id);
+      return reply.send({ 
+        success: true,
+        message: '2FA_REQUIRED', 
+        userId: user.id 
+      });
+    }
 
     const token = await reply.jwtSign({
       id: user.id,
