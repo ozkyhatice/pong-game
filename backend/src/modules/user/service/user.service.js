@@ -2,13 +2,13 @@ import { initDB } from '../../../config/db.js';
 
 export async function getUserById(id) {
   const db = await initDB();
-  const user = await db.get('SELECT id, username, email, avatar, wins, losses FROM users WHERE id = ?', [id]);
+  const user = await db.get('SELECT id, username, email, avatar, wins, losses, isTwoFAEnabled FROM users WHERE id = ?', [id]);
   return user;
 }
 
 export async function getUserByUsername(username) {
   const db = await initDB();
-  const user = await db.get('SELECT id, username, email, avatar, wins, losses FROM users WHERE username = ?', [username]);
+  const user = await db.get('SELECT id, username, email, avatar, wins, losses, isTwoFAEnabled FROM users WHERE username = ?', [username]);
   return user;
 }
 

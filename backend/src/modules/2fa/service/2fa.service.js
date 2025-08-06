@@ -20,7 +20,8 @@ export async function generate2FASecret(userId) {
   });
   const qrCode = await qrcode.toDataURL(secret.otpauth_url);
 
-  await db.run('UPDATE users SET twoFASecret = ?, isTwoFAEnabled = ? WHERE id = ?', [secret.base32, true, userId]);
+  // Secret'ı kaydet ama henüz 2FA'yı aktif etme
+  await db.run('UPDATE users SET twoFASecret = ? WHERE id = ?', [secret.base32, userId]);
 
 
   return { qr: qrCode, secret: secret.base32 };
@@ -59,6 +60,8 @@ export async function verify2FACode(userId, token) {
     throw new Error('Invalid 2FA token.');
   }
 
-  return true;
+  // Verify başarılıysa 2FA'yı aktif et
+  await db.run('UPDATE users SET isTwoFAEnabled = 1 WHERE id = ?', [userId]);
 
+  return true;
 }

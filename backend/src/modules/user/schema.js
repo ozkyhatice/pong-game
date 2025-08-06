@@ -6,7 +6,8 @@ const userResponseSchema = {
     email: { type: 'string', format: 'email' },
     avatar: { type: ['string', 'null'] },
     wins: { type: 'integer' },
-    losses: { type: 'integer' }
+    losses: { type: 'integer' },
+    isTwoFAEnabled: { type: 'boolean' }
   },
   required: ['id', 'username', 'email']
 };

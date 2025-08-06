@@ -3,6 +3,7 @@ import {
   disable2FA,
   verify2FACode,
 } from "../service/2fa.service.js";
+import { initDB } from "../../../config/db.js";
 
 export async function handle2FASetup(request, reply) {
   try {
@@ -53,7 +54,7 @@ export async function handle2FALoginVerify(request, reply) {
     }
 
     // User bilgilerini al
-    const db = request.server.db;
+    const db = await initDB();
     const user = await db.get('SELECT id, email, username FROM users WHERE id = ?', [userId]);
     
     if (!user) {
