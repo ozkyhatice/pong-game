@@ -94,7 +94,7 @@ export async function joinGame(data, userId, connection) {
         message: `User ${userId} joined the game`
     });
     if (room.players.size === 2 && !room.started) {
-        console.log('tge game will start');
+        console.log('the game will start');
     }
     console.log(`User ${userId} joined the game`);
 }
