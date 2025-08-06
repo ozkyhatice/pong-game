@@ -8,6 +8,7 @@ import fastifyStatic from '@fastify/static';
 import dotenv from 'dotenv';
 import { initDB } from './config/db.js';
 import authRoutes from './modules/auth/routes/auth.routes.js';
+import twoFARoutes from './modules/2fa/routes/2fa.routes.js';
 import friendRoutes from './modules/friend/routes/friend.routes.js';
 import userRoutes from './modules/user/routes/user.routes.js';
 import chatRoutes from './modules/chat/routes/chat.routes.js';
@@ -21,7 +22,7 @@ const app = fastify({ logger: true });
 // Plugins
 await app.register(fastifyCors, { 
     origin: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
 });
 await app.register(fastifySensible);
@@ -40,6 +41,7 @@ await app.register(fastifyStatic, {
 
 // Routes
 await app.register(authRoutes, { prefix: '/auth' });
+await app.register(twoFARoutes, { prefix: '/2fa' });
 await app.register(friendRoutes, { prefix: '/friends' });
 await app.register(userRoutes, { prefix: '/users' });
 await app.register(chatRoutes, { prefix: '/chat' });
