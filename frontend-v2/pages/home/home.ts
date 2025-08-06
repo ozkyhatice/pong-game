@@ -39,7 +39,7 @@ export async function init() {
     console.log('User not found, redirecting to landing page: ', error);
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    
+
     profileContainer.innerHTML = `
       <div class="w-80 bg-white rounded-lg p-8 shadow text-center mx-auto">
         <div class="text-blue-600 mb-4">
@@ -49,13 +49,13 @@ export async function init() {
           </svg>
         </div>
         <h2 class="text-xl font-bold text-gray-800 mb-2">Something went wrong</h2>
-        <p class="text-gray-600 mb-4">You are being redirected to the homepage...</p>
+        <p class="text-gray-600 mb-4">You are being redirected to the landing page...</p>
         <div class="flex justify-center">
           <div class="w-6 h-1 bg-blue-500 rounded animate-pulse"></div>
         </div>
       </div>
     `;
-    
+
     setTimeout(() => {
       router.navigate('landing');
     }, 1000);
