@@ -1,6 +1,6 @@
 import { verifyToken } from "../../../middleware/auth.js";
-import { handle2FASetup, handle2FADisable } from "../controller/2fa.controller.js";
-import { setup2FASchema, disable2FASchema } from "../schema.js";
+import { handle2FASetup, handle2FADisable, handle2FAVerify, handle2FALoginVerify } from "../controller/2fa.controller.js";
+import { setup2FASchema, disable2FASchema, verify2FASchema, verify2FALoginSchema } from "../schema.js";
 
 export default async function twoFARoutes(app, options) {
   app.get('/setup', { 
@@ -12,5 +12,15 @@ export default async function twoFARoutes(app, options) {
     preHandler: verifyToken,
     schema: disable2FASchema 
   }, handle2FADisable);
+
+  app.post('/verify', {
+    preHandler: verifyToken,
+    schema: verify2FASchema
+  }, handle2FAVerify);
+
+  //  2FA code sayfasi için (JWT token döndürür)
+  app.post('/verify-login', {
+    schema: verify2FALoginSchema
+  }, handle2FALoginVerify);
 
 }

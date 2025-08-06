@@ -45,3 +45,14 @@ export const verify2FASchema = {
     }
   }
 };
+
+export const verify2FALoginSchema = {
+  body: {
+    type: 'object',
+    required: ['userId', 'token'],
+    properties: {
+      userId: { type: 'integer' },
+      token: { type: 'string', minLength: 6, maxLength: 6 }
+    }
+  }
+};
