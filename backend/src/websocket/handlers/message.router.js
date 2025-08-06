@@ -14,8 +14,7 @@ export async function routeMessage(message, userId, connection) {
       break;
     
     case 'game':
-      // Game modülüne yönlendir - şimdilik atla
-      console.log('Game message received - will be implemented later');
+
       const { handleGameMessage} = await import('../../modules/game/controller/game.controller.js');
       try {
       await handleGameMessage(msgObj, userId, connection);
