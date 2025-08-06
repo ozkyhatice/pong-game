@@ -10,7 +10,7 @@ export async function register(request, reply) {
       id: user.id,
       email: user.email,
       username: user.username
-    });
+    }, { expiresIn: '7d' });
 
     reply.code(201).send({ 
       success: true,
@@ -35,7 +35,7 @@ export async function login(request, reply) {
       id: user.id,
       email: user.email,
       username: user.username
-    });
+    }, { expiresIn: '7d' });
 
     reply.send({ 
       success: true,
