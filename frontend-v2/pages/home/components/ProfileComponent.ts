@@ -74,15 +74,27 @@ export class ProfileComponent extends Component {
       <div class="relative bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex-shrink-0">
         <!-- Profile Header -->
         <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 text-white">
-          <!-- Settings Button -->
-          <button id="profile-settings"
-                  class="absolute top-3 right-3 p-2 hover:bg-black/10 rounded-full transition-colors">
-            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path fill-rule="evenodd"
-                    d="M11.828 2.25c-.916 0-1.699.663-1.85 1.567l-.091.549a.798.798 0 0 1-.517.608 7.45 7.45 0 0 0-.478.198.798.798 0 0 1-.796-.064l-.453-.324a1.875 1.875 0 0 0-2.416.2l-.243.243a1.875 1.875 0 0 0-.2 2.416l.324.453a.798.798 0 0 1 .064.796 7.448 7.448 0 0 0-.198.478.798.798 0 0 1-.608.517l-.55.092a1.875 1.875 0 0 0-1.566 1.849v.344c0 .916.663 1.699 1.567 1.85l.549.091c.281.047.508.25.608.517.06.162.127.321.198.478a.798.798 0 0 1-.064.796l-.324.453a1.875 1.875 0 0 0 .2 2.416l.243.243c.648.648 1.67.733 2.416.2l.453-.324a.798.798 0 0 1 .796-.064c.157.071.316.137.478.198.267.1.47.327.517.608l.092.55c.15.903.932 1.566 1.849 1.566h.344c.916 0 1.699-.663 1.85-1.567l.091-.549a.798.798 0 0 1 .517-.608 7.52 7.52 0 0 0 .478-.198.798.798 0 0 1 .796.064l.453.324a1.875 1.875 0 0 0 2.416-.2l.243-.243c.648-.648.733-1.67.2-2.416l-.324-.453a.798.798 0 0 1-.064-.796c.071-.157.137-.316.198-.478.1-.267.327-.47.608-.517l.55-.091a1.875 1.875 0 0 0 1.566-1.85v-.344c0-.916-.663-1.699-1.567-1.85l-.549-.091a.798.798 0 0 1-.608-.517 7.507 7.507 0 0 0-.198-.478.798.798 0 0 1 .064-.796l.324-.453a1.875 1.875 0 0 0-.2-2.416l-.243-.243a1.875 1.875 0 0 0-2.416-.2l-.453.324a.798.798 0 0 1-.796.064 7.462 7.462 0 0 0-.478-.198.798.798 0 0 1-.517-.608l-.091-.55a1.875 1.875 0 0 0-1.85-1.566h-.344ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z"
-                    clip-rule="evenodd"/>
-            </svg>
-          </button>
+          <!-- Action Buttons -->
+          <div class="absolute top-3 right-3 flex flex-col space-y-1">
+            <!-- Settings Button -->
+            <button id="profile-settings"
+                    class="p-2 hover:bg-black/10 rounded-full transition-colors">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd"
+                      d="M11.828 2.25c-.916 0-1.699.663-1.85 1.567l-.091.549a.798.798 0 0 1-.517.608 7.45 7.45 0 0 0-.478.198.798.798 0 0 1-.796-.064l-.453-.324a1.875 1.875 0 0 0-2.416.2l-.243.243a1.875 1.875 0 0 0-.2 2.416l.324.453a.798.798 0 0 1 .064.796 7.448 7.448 0 0 0-.198.478.798.798 0 0 1-.608.517l-.55.092a1.875 1.875 0 0 0-1.566 1.849v.344c0 .916.663 1.699 1.567 1.85l.549.091c.281.047.508.25.608.517.06.162.127.321.198.478a.798.798 0 0 1-.064.796l-.324.453a1.875 1.875 0 0 0 .2 2.416l.243.243c.648.648 1.67.733 2.416.2l.453-.324a.798.798 0 0 1 .796-.064c.157.071.316.137.478.198.267.1.47.327.517.608l.092.55c.15.903.932 1.566 1.849 1.566h.344c.916 0 1.699-.663 1.85-1.567l.091-.549a.798.798 0 0 1 .517-.608 7.52 7.52 0 0 0 .478-.198.798.798 0 0 1 .796.064l.453.324a1.875 1.875 0 0 0 2.416-.2l.243-.243c.648-.648.733-1.67.2-2.416l-.324-.453a.798.798 0 0 1-.064-.796c.071-.157.137-.316.198-.478.1-.267.327-.47.608-.517l.55-.091a1.875 1.875 0 0 0 1.566-1.85v-.344c0-.916-.663-1.699-1.567-1.85l-.549-.091a.798.798 0 0 1-.608-.517 7.507 7.507 0 0 0-.198-.478.798.798 0 0 1 .064-.796l.324-.453a1.875 1.875 0 0 0-.2-2.416l-.243-.243a1.875 1.875 0 0 0-2.416-.2l-.453.324a.798.798 0 0 1-.796.064 7.462 7.462 0 0 0-.478-.198.798.798 0 0 1-.517-.608l-.091-.55a1.875 1.875 0 0 0-1.85-1.566h-.344ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z"
+                      clip-rule="evenodd"/>
+              </svg>
+            </button>
+            <!-- Logout Button -->
+            <button id="profile-logout"
+                    class="p-2 hover:bg-black/10 rounded-full transition-colors text-red-600">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd"
+                      d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V15a.75.75 0 0 1 1.5 0v3.75a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V5.25a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9A.75.75 0 0 1 15 9V5.25a1.5 1.5 0 0 0-1.5-1.5h-6Zm10.72 4.72a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H9a.75.75 0 0 1 0-1.5h10.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z"
+                      clip-rule="evenodd"/>
+              </svg>
+            </button>
+          </div>
           <!-- Profile Info -->
           <div class="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-blue-600 text-xl font-bold shadow-lg">
             ${avatar || username.charAt(0).toUpperCase()}
@@ -110,7 +122,7 @@ export class ProfileComponent extends Component {
           </div>
         </div>
 
-        <!-- Edit Profile Button !! KALDIRMAYIN TEST YAPIYORUM !! -->  
+        <!-- Edit Profile Button !! KALDIRMAYIN TEST YAPIYORUM !! -->
         <div class="mt-4 flex justify-center">
           <button id="edit-profile-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
             Edit Profile Test Page ( silmeyin )
@@ -158,6 +170,7 @@ export class ProfileComponent extends Component {
     }
     this.setupEvents();
     this.setupSettingsEvent();
+    this.setupLogoutEvent();
   }
 
   private renderTabContent(): string {
@@ -234,7 +247,6 @@ export class ProfileComponent extends Component {
       case 'add':
         return `
           <div class="space-y-4">
-
             <!-- Search Section -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Add Friend</label>
@@ -243,15 +255,13 @@ export class ProfileComponent extends Component {
                   type="text"
                   placeholder="Enter username..."
                   class=" px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  id="friend-search"
-                >
+                  id="friend-search">
                 <button id="send-friend-request" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-xs hover:bg-blue-600 transition-colors">
                   Send Request
                 </button>
               </div>
               <p class="text-xs text-gray-500 mt-2">Enter the exact username to send a friend request</p>
             </div>
-
           </div>
         `;
       default:
@@ -465,7 +475,17 @@ export class ProfileComponent extends Component {
     const settingsBtn = this.element.querySelector('#profile-settings') as HTMLButtonElement;
     settingsBtn?.addEventListener('click', () => {
       console.log('Settings button clicked');
-      router.navigate('/settings');
+      router.navigate('settings');
+    });
+  }
+
+  private setupLogoutEvent(): void {
+    const logoutBtn = this.element.querySelector('#profile-logout') as HTMLButtonElement;
+    logoutBtn?.addEventListener('click', () => {
+      console.log('Logout button clicked');
+      alert('You have been logged out');
+      router.navigate('login');
+      localStorage.removeItem('authToken');
     });
   }
 
