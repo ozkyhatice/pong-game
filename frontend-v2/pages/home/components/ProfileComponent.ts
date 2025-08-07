@@ -110,10 +110,10 @@ export class ProfileComponent extends Component {
           </div>
         </div>
 
-        <!-- Edit Profile Button -->  !! KALDIRMAYIN TEST YAPIYORUM !!
+        <!-- Edit Profile Button !! KALDIRMAYIN TEST YAPIYORUM !! -->  
         <div class="mt-4 flex justify-center">
           <button id="edit-profile-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
-            Edit Profile Test Page ( butonu silmeyin )
+            Edit Profile Test Page ( silmeyin )
           </button>
         </div>
 
