@@ -1,17 +1,12 @@
 import { Component } from '../../../core/Component.js';
 import { getApiUrl, API_CONFIG } from '../../../config.js';
+import { Router } from '../../../core/router.js';
+
+declare global {
+  var router: Router;
+}
 
 export interface UserProfile {
-  user?: {
-    id: string;
-    username: string;
-    email: string;
-    wins: number;
-    losses: number;
-    level: number;
-    name?: string;
-    avatar?: string;
-  };
   id?: string;
   username?: string;
   email?: string;
@@ -27,8 +22,7 @@ export class ProfileComponent extends Component {
   private activeTab: 'friends' | 'requests' | 'add' = 'friends';
   private friendList: any[] = [];
   private requestsList: any[] = [];
-  private authToken: string | null = localStorage.getItem('authToken');
-  private flag: boolean = true;
+  private friendsLoaded: boolean = false;
 
   constructor(profile: UserProfile) {
     super({ className: 'w-80 h-full flex flex-col mx-auto' });
@@ -45,25 +39,40 @@ export class ProfileComponent extends Component {
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
       alert('Please login first!');
-      router.navigate('/login');
+      router.navigate('login');
       return;
     }
   }
 
+  private getAvatarURL(): string {
+    if (this.profile.avatar?.startsWith('http')) {
+      console.log('Using external avatar URL:', this.profile.avatar);
+      return this.profile.avatar;
+    } else if (this.profile.avatar?.startsWith('/')) {
+      console.log('Using local avatar path:', this.profile.avatar);
+      console.log('API Base URL:', getApiUrl(API_CONFIG.BASE_URL));
+      console.log('Full avatar URL:', `${getApiUrl(API_CONFIG.BASE_URL)}${this.profile.avatar}`);
+      return `${API_CONFIG.BASE_URL}${this.profile.avatar}`;
+    } else if (this.profile.username) {
+      return `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(this.profile.username)}`;
+    }
+    return `https://api.dicebear.com/9.x/bottts/svg`;
+  }
+
   private render(): void {
-    const user = this.profile.user || this.profile;
-    const username = (user as any).username || (user as any).name || (user as any).email || 'Unknown';
-    const wins = (user as any).wins || 0;
-    const losses = (user as any).losses || 0;
-    const level = (user as any).level || 1;
-    const avatar = (user as any).avatar || this.profile.avatar;
+    const user = this.profile;
+    const username = user.username || user.name || user.email || 'Unknown';
+    const wins = user.wins || 0;
+    const losses = user.losses || 0;
+    const level = user.level || 1;
+    const avatar = user.avatar;
 
     const winRate = wins + losses > 0
       ? Math.round((wins / (wins + losses)) * 100)
       : 0;
 
-    if (this.activeTab === 'friends' && this.flag === true) {
-      this.flag = false;
+    if (this.activeTab === 'friends' && !this.friendsLoaded) {
+      this.friendsLoaded = true;
       this.getFriendList().then(() => {
         console.log('Friend list updated:', this.friendList);
         this.render();
@@ -96,8 +105,8 @@ export class ProfileComponent extends Component {
             </button>
           </div>
           <!-- Profile Info -->
-          <div class="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-blue-600 text-xl font-bold shadow-lg">
-            ${avatar || username.charAt(0).toUpperCase()}
+          <div class="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-blue-600 text-xl font-bold shadow-lg overflow-hidden">
+            ${`<img src="${this.getAvatarURL()}" alt="${username}" class="w-full h-full object-cover rounded-full">` }
           </div>
           <div class="text-center">
             <div class="text-xl font-bold">${username}</div>
@@ -318,9 +327,10 @@ export class ProfileComponent extends Component {
           });
 
           if (response.ok) {
-            const user = await response.json();
-            console.log(`Found user: ${user.username}`);
-            const addResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.ADD(user.user.id)), {
+            const apiResponse = await response.json();
+            const user = apiResponse.user || apiResponse;
+            console.log(`Found user:`, user);
+            const addResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.ADD(user.id)), {
               method: 'POST',
               headers: {
                 Authorization: `Bearer ${authToken}`,
@@ -407,6 +417,7 @@ export class ProfileComponent extends Component {
 
   private acceptFriendRequestEvents(): void {
     this.controlAuthEvents();
+    const authToken = localStorage.getItem('authToken');
     this.requestsList.forEach(request => {
       const acceptButton = this.element.querySelector(`#accept-friend-request-${request.senderInfo.id}`) as HTMLButtonElement;
       if (acceptButton) {
@@ -415,7 +426,7 @@ export class ProfileComponent extends Component {
             const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.ACCEPT(request.senderInfo.id)), {
               method: 'POST',
               headers: {
-                Authorization: `Bearer ${this.authToken}`,
+                Authorization: `Bearer ${authToken}`,
               }
             });
 
@@ -440,6 +451,7 @@ export class ProfileComponent extends Component {
 
   private declineFriendRequestEvents(): void {
     this.controlAuthEvents();
+    const authToken = localStorage.getItem('authToken');
     this.requestsList.forEach(request => {
       const declineButton = this.element.querySelector(`#decline-friend-request-${request.senderInfo.id}`) as HTMLButtonElement;
       if (declineButton) {
@@ -448,7 +460,7 @@ export class ProfileComponent extends Component {
             const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.REJECT(request.senderInfo.id)), {
               method: 'POST',
               headers: {
-                Authorization: `Bearer ${this.authToken}`,
+                Authorization: `Bearer ${authToken}`,
               }
             });
 

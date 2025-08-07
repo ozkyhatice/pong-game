@@ -8,17 +8,20 @@ function handleOAuthCallback() {
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
   const oauthSuccess = urlParams.get('oauth');
+  const userId = urlParams.get('userId');
   const error = urlParams.get('error');
 
+  // Handle OAuth-specific actions (alerts, storage)
   if (error === 'oauth_failed') {
-    window.router.navigate('login');
     alert('Google login failed. Please try again.');
+  } else if (oauthSuccess === '2fa_required' && userId) {
+    sessionStorage.setItem('pendingOAuthUserId', userId);
   } else if (token && oauthSuccess === 'success') {
     localStorage.setItem('authToken', token);
-    window.router.navigate('home');
   }
 
-  if (token || error) {
+  // Clean up URL parameters
+  if (token || error || userId) {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 }

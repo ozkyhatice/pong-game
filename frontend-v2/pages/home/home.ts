@@ -26,8 +26,11 @@ export async function init() {
     if (!response.ok)
       throw new Error('Failed to fetch user profile');
 
-    const userProfile: UserProfile = await response.json();
-    console.log('User profile fetched:', userProfile);
+    const apiResponse = await response.json();
+    console.log('API response:', apiResponse);
+    
+    const userProfile: UserProfile = apiResponse.user || apiResponse;
+    console.log('User profile extracted:', userProfile);
 
     const profileComponent = new ProfileComponent(userProfile);
 

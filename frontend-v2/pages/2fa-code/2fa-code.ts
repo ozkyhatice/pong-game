@@ -3,9 +3,11 @@ import { getApiUrl, API_CONFIG } from '../../config.js';
 export async function init() {
   console.log('2FA code page loaded');
   
-  // Check if we have a userId from login
-  const tempUserId = localStorage.getItem('tempUserId');
-  if (!tempUserId) {
+  // Check if we have a userId from login or OAuth
+  const tempUserId = sessionStorage.getItem('tempUserId');
+  const pendingOAuthUserId = sessionStorage.getItem('pendingOAuthUserId');
+  const userId = tempUserId || pendingOAuthUserId;
+  if (!userId) {
     alert('No 2FA session found. Please login again.');
     router.navigate('login');
     return;
@@ -31,7 +33,7 @@ export async function init() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          userId: parseInt(tempUserId), 
+          userId: parseInt(userId), 
           token: code 
         }),
       });
@@ -41,7 +43,8 @@ export async function init() {
 
       if (response.ok && data.success && data.token) {
         // Clear temporary userId
-        localStorage.removeItem('tempUserId');
+        sessionStorage.removeItem('tempUserId');
+        sessionStorage.removeItem('pendingOAuthUserId');
         
         // Store auth token and user data
         localStorage.setItem('authToken', data.token);

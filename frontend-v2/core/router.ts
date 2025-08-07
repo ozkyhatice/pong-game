@@ -5,10 +5,28 @@ class Router {
   constructor(container: HTMLElement) {
     this.container = container;
     this.setupBrowserNavigation();
-    // Use history state to restore page on refresh, default to 'landing' if not present
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasOAuth = urlParams.has('oauth') || urlParams.has('token') || urlParams.has('error');
+    
     let initialPage = 'landing';
-    if (window.history.state && window.history.state.page)
+    if (hasOAuth) {
+      const oauthSuccess = urlParams.get('oauth');
+      const userId = urlParams.get('userId');
+      const token = urlParams.get('token');
+      const error = urlParams.get('error');
+      
+      if (error === 'oauth_failed') {
+        initialPage = 'login';
+      } else if (oauthSuccess === '2fa_required' && userId) {
+        initialPage = '2fa-code';
+      } else if (token && oauthSuccess === 'success') {
+        initialPage = 'home';
+      }
+    } else if (window.history.state && window.history.state.page) {
       initialPage = window.history.state.page;
+    }
+    
     this.loadPage(initialPage);
   }
 
@@ -36,8 +54,10 @@ class Router {
     try {
       console.log(`Loading page: ${pageName}`);
 
-      //this.container.style.transition = 'opacity 0.2s';
-      //this.container.style.opacity = '0';
+      // Clean up Babylon.js if leaving landing page
+      if (this.currentPage === 'landing' && pageName !== 'landing') {
+        this.cleanupBabylonjs();
+      }
 
       await new Promise((resolve) => setTimeout(resolve, 200));
 
@@ -46,7 +66,15 @@ class Router {
         throw new Error(`HTTP error! status: ${response.status}`);
 
       const html = await response.text();
-      //this.container.style.opacity = '1';
+
+      // Additional cleanup: Remove Babylon.js canvas if not on landing page
+      if (pageName !== 'landing') {
+        this.cleanupBabylonjs();
+      }
+
+      while (this.container.firstChild) {
+        this.container.removeChild(this.container.firstChild);
+      }
 
       this.container.innerHTML = html;
 
@@ -70,6 +98,27 @@ class Router {
         </div>
       `;
     }
+  }
+
+  private cleanupBabylonjs() {
+    // Call the global cleanup function if it exists
+    if (typeof (window as any).closeBabylonGame === 'function') {
+      try {
+        (window as any).closeBabylonGame();
+      } catch (e) {
+        console.warn('Error calling closeBabylonGame:', e);
+      }
+    }
+
+    // Remove canvas element
+    const babylonCanvas = document.getElementById('babylon-canvas');
+    if (babylonCanvas && babylonCanvas.parentNode) {
+      babylonCanvas.parentNode.removeChild(babylonCanvas);
+    }
+
+    // Reset body background
+    document.body.style.background = '';
+    document.documentElement.style.background = '';
   }
 }
 

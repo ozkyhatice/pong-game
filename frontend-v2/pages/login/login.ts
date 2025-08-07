@@ -40,7 +40,7 @@ export async function init() {
 
       if (data.message === '2FA_REQUIRED') {
         // Store userId for 2FA verification
-        localStorage.setItem('tempUserId', data.userId.toString());
+        sessionStorage.setItem('tempUserId', data.userId.toString());
         router.navigate('2fa-code');
         return;
       }

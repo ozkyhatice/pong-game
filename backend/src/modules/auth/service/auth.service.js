@@ -104,7 +104,9 @@ export async function handleGoogleUser({ email, name, picture }) {
     id: user.id, 
     username: user.username, 
     email: user.email, 
-    avatar: user.avatar 
+    avatar: user.avatar,
+    isTwoFAEnabled: Boolean(user.isTwoFAEnabled),
+    twoFASecret: user.twoFASecret
   };
 }
 

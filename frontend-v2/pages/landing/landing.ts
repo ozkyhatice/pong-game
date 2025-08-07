@@ -39,7 +39,15 @@ export function init() {
     createdCanvas.style.pointerEvents = 'none';
     createdCanvas.style.display = 'block';
     createdCanvas.style.background = 'black';
-    document.body.appendChild(createdCanvas);
+    
+    // Canvas'ı app div'ine ekle (body yerine)
+    const appDiv = document.getElementById('app');
+    if (appDiv) {
+      appDiv.appendChild(createdCanvas);
+    } else {
+      document.body.appendChild(createdCanvas);
+    }
+    
     realCanvas = createdCanvas;
     document.body.style.background = 'transparent';
     document.documentElement.style.background = 'transparent';

@@ -82,6 +82,11 @@ export async function googleCallbackHandler(request, reply) {
       picture: googleUser.picture
     });
 
+    if (user.isTwoFAEnabled) {
+      console.log('2FA is enabled for Google user:', user.id);
+      return reply.redirect(`http://localhost:8080?oauth=2fa_required&userId=${user.id}`);
+    }
+
     // JWT token oluştur
     const jwtToken = await reply.jwtSign({
       id: user.id,
