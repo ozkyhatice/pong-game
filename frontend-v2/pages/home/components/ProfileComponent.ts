@@ -104,12 +104,12 @@ export class ProfileComponent extends Component {
             </button>
           </div>
           <!-- Profile Info -->
-          <div class="flex items-center">
-            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-blue-600 text-xl font-bold shadow-lg mr-4">
-              ${avatar || username.charAt(0).toUpperCase()}
+          <div class="flex items-center pr-20">
+            <div class="w-16 h-16 bg-white rounded-full overflow-hidden shadow-lg mr-4 flex-shrink-0">
+              <img src="${this.getAvatarURL()}" alt="${username}" class="w-full h-full object-cover">
             </div>
-            <div>
-              <div class="text-xl font-bold">${username}</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-lg font-bold break-words leading-tight">${username}</div>
               <div class="text-sm text-blue-100">Level ${level}</div>
             </div>
           </div>
