@@ -1,21 +1,21 @@
 class Router {
   private container: HTMLElement;
-  private currentPage: string = 'landing';
+  public currentPage: string = 'landing';
 
   constructor(container: HTMLElement) {
     this.container = container;
     this.setupBrowserNavigation();
-    
+
     const urlParams = new URLSearchParams(window.location.search);
     const hasOAuth = urlParams.has('oauth') || urlParams.has('token') || urlParams.has('error');
-    
+
     let initialPage = 'landing';
     if (hasOAuth) {
       const oauthSuccess = urlParams.get('oauth');
       const userId = urlParams.get('userId');
       const token = urlParams.get('token');
       const error = urlParams.get('error');
-      
+
       if (error === 'oauth_failed') {
         initialPage = 'login';
       } else if (oauthSuccess === '2fa_required' && userId) {
@@ -26,11 +26,12 @@ class Router {
     } else if (window.history.state && window.history.state.page) {
       initialPage = window.history.state.page;
     }
-    
+
     this.loadPage(initialPage);
   }
 
   navigate(pageName: string) {
+    console.log(`Navigating to: ${pageName}`);
     if (pageName !== this.currentPage) {
       window.history.pushState({ page: pageName }, '', window.location.href);
       this.loadPage(pageName);
