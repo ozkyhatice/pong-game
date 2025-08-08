@@ -1,14 +1,15 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
 import { ProfileComponent, UserProfile } from './components/ProfileComponent.js';
-
+import { notify } from '../../core/notify.js';
 
 export async function init() {
   console.log('Home page loaded');
 
   const authToken = localStorage.getItem('authToken');
   if (!authToken) {
-    alert('Please login first!');
+    router.currentPage = 'home';
     router.navigate('login');
+    notify('Please login first!');
     return;
   }
 
@@ -28,7 +29,7 @@ export async function init() {
 
     const apiResponse = await response.json();
     console.log('API response:', apiResponse);
-    
+
     const userProfile: UserProfile = apiResponse.user || apiResponse;
     console.log('User profile extracted:', userProfile);
 
@@ -42,7 +43,7 @@ export async function init() {
     console.log('User not found, redirecting to landing page: ', error);
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-
+// ilk girişte neden buraya geliyor
     profileContainer.innerHTML = `
       <div class="w-80 bg-white rounded-lg p-8 shadow text-center mx-auto">
         <div class="text-blue-600 mb-4">

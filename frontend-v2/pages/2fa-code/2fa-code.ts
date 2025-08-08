@@ -1,14 +1,15 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
+import { notify } from '../../core/notify.js';
 
 export async function init() {
   console.log('2FA code page loaded');
-  
+
   // Check if we have a userId from login or OAuth
   const tempUserId = sessionStorage.getItem('tempUserId');
   const pendingOAuthUserId = sessionStorage.getItem('pendingOAuthUserId');
   const userId = tempUserId || pendingOAuthUserId;
   if (!userId) {
-    alert('No 2FA session found. Please login again.');
+    notify('No 2FA session found. Please login again.');
     router.navigate('login');
     return;
   }
@@ -17,12 +18,12 @@ export async function init() {
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const codeInput = document.getElementById('2fa-code') as HTMLInputElement;
     const code = codeInput?.value;
 
     if (!code || code.length !== 6) {
-      alert('Please enter a valid 6-digit 2FA code!');
+      notify('Please enter a valid 6-digit 2FA code!');
       return;
     }
 
@@ -32,9 +33,9 @@ export async function init() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          userId: parseInt(userId), 
-          token: code 
+        body: JSON.stringify({
+          userId: parseInt(userId),
+          token: code
         }),
       });
 
@@ -45,20 +46,20 @@ export async function init() {
         // Clear temporary userId
         sessionStorage.removeItem('tempUserId');
         sessionStorage.removeItem('pendingOAuthUserId');
-        
+
         // Store auth token and user data
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        
-        alert(`2FA verification successful! Welcome ${data.user.username}!`);
+
+        notify(`2FA verification successful! Welcome ${data.user.username}!`, 'green');
         router.navigate('home');
       } else {
         throw new Error(data.error || 'Invalid 2FA code');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '2FA verification failed';
-      alert(`Error: ${errorMessage}`);
-      
+      notify(`${errorMessage}`, 'red');
+
       // Clear the code input for retry
       if (codeInput) {
         codeInput.value = '';

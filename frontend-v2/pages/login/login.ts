@@ -1,11 +1,12 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
+import { notify } from '../../core/notify.js';
 
 export async function init() {
   console.log('Login page loaded');
-  
+
   // Regular login form
   const form = document.getElementById('loginForm') as HTMLFormElement;
-  
+
   // Google login button
   const googleLoginBtn = document.getElementById('googleLoginBtn') as HTMLButtonElement;
 
@@ -17,12 +18,12 @@ export async function init() {
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const email = (document.getElementById('email') as HTMLInputElement)?.value;
     const password = (document.getElementById('password') as HTMLInputElement)?.value;
 
     if (!email || !password) {
-      alert('Please fill all fields!');
+      notify('Please fill all fields!');
       return;
     }
 
@@ -48,15 +49,15 @@ export async function init() {
       if (response.ok && data.token) {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        alert(`Login successful! Welcome ${data.user.username}!`);
-        
+        notify(`Login successful! Welcome ${data.user.username}!`, 'green');
+
         router.navigate('home');
       } else {
         throw new Error(data.message || 'Login failed');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
-      alert(`Error: ${errorMessage}`);
+      notify(`${errorMessage}`, 'red');
     }
   });
 }

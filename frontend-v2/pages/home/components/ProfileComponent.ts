@@ -1,6 +1,7 @@
 import { Component } from '../../../core/Component.js';
 import { getApiUrl, API_CONFIG } from '../../../config.js';
 import { Router } from '../../../core/router.js';
+import { notify } from '../../../core/notify.js';
 
 declare global {
   var router: Router;
@@ -38,7 +39,7 @@ export class ProfileComponent extends Component {
   private controlAuthEvents(): void {
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
-      alert('Please login first!');
+      notify('Please login first!');
       router.navigate('login');
       return;
     }
@@ -85,19 +86,17 @@ export class ProfileComponent extends Component {
         <div class="relative bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 text-white">
           <!-- Action Buttons -->
           <div class="absolute top-3 right-3 flex flex-col space-y-1">
-            <!-- Settings Button -->
             <button id="profile-settings"
-                    class="p-2 hover:bg-black/10 rounded-full transition-colors">
+                    class="p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center">
               <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path fill-rule="evenodd"
                       d="M11.828 2.25c-.916 0-1.699.663-1.85 1.567l-.091.549a.798.798 0 0 1-.517.608 7.45 7.45 0 0 0-.478.198.798.798 0 0 1-.796-.064l-.453-.324a1.875 1.875 0 0 0-2.416.2l-.243.243a1.875 1.875 0 0 0-.2 2.416l.324.453a.798.798 0 0 1 .064.796 7.448 7.448 0 0 0-.198.478.798.798 0 0 1-.608.517l-.55.092a1.875 1.875 0 0 0-1.566 1.849v.344c0 .916.663 1.699 1.567 1.85l.549.091c.281.047.508.25.608.517.06.162.127.321.198.478a.798.798 0 0 1-.064.796l-.324.453a1.875 1.875 0 0 0 .2 2.416l.243.243c.648.648 1.67.733 2.416.2l.453-.324a.798.798 0 0 1 .796-.064c.157.071.316.137.478.198.267.1.47.327.517.608l.092.55c.15.903.932 1.566 1.849 1.566h.344c.916 0 1.699-.663 1.85-1.567l.091-.549a.798.798 0 0 1 .517-.608 7.52 7.52 0 0 0 .478-.198.798.798 0 0 1 .796.064l.453.324a1.875 1.875 0 0 0 2.416-.2l.243-.243c.648-.648.733-1.67.2-2.416l-.324-.453a.798.798 0 0 1-.064-.796c.071-.157.137-.316.198-.478.1-.267.327-.47.608-.517l.55-.091a1.875 1.875 0 0 0 1.566-1.85v-.344c0-.916-.663-1.699-1.567-1.85l-.549-.091a.798.798 0 0 1-.608-.517 7.507 7.507 0 0 0-.198-.478.798.798 0 0 1 .064-.796l.324-.453a1.875 1.875 0 0 0-.2-2.416l-.243-.243a1.875 1.875 0 0 0-2.416-.2l-.453.324a.798.798 0 0 1-.796.064 7.462 7.462 0 0 0-.478-.198.798.798 0 0 1-.517-.608l-.091-.55a1.875 1.875 0 0 0-1.85-1.566h-.344ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z"
                       clip-rule="evenodd"/>
               </svg>
             </button>
-            <!-- Logout Button -->
             <button id="profile-logout"
-                    class="p-2 hover:bg-black/10 rounded-full transition-colors text-red-600">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    class="p-1.5 rounded-full bg-white flex items-center justify-center shadow hover:bg-red-50 transition-colors">
+              <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
                 <path fill-rule="evenodd"
                       d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V15a.75.75 0 0 1 1.5 0v3.75a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V5.25a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9A.75.75 0 0 1 15 9V5.25a1.5 1.5 0 0 0-1.5-1.5h-6Zm10.72 4.72a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H9a.75.75 0 0 1 0-1.5h10.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z"
                       clip-rule="evenodd"/>
@@ -105,29 +104,31 @@ export class ProfileComponent extends Component {
             </button>
           </div>
           <!-- Profile Info -->
-          <div class="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-blue-600 text-xl font-bold shadow-lg overflow-hidden">
-            ${`<img src="${this.getAvatarURL()}" alt="${username}" class="w-full h-full object-cover rounded-full">` }
-          </div>
-          <div class="text-center">
-            <div class="text-xl font-bold">${username}</div>
-            <div class="text-xs text-blue-100 ">Level ${level}</div>
+          <div class="flex items-center">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-blue-600 text-xl font-bold shadow-lg mr-4">
+              ${avatar || username.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div class="text-xl font-bold">${username}</div>
+              <div class="text-sm text-blue-100">Level ${level}</div>
+            </div>
           </div>
         </div>
         <!-- Stats -->
         <div class="p-4 space-y-3">
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-3 gap-3">
             <div class="text-center p-3 bg-green-50 rounded-lg">
               <div class="text-xl font-bold text-green-600">${wins}</div>
               <div class="text-xs text-green-500">Wins</div>
+            </div>
+            <div class="text-center p-3 bg-gray-50 rounded-lg">
+              <div class="text-xl font-bold text-blue-600">${winRate}%</div>
+              <div class="text-xs text-blue-500">Win Rate</div>
             </div>
             <div class="text-center p-3 bg-red-50 rounded-lg">
               <div class="text-xl font-bold text-red-600">${losses}</div>
               <div class="text-xs text-red-500">Losses</div>
             </div>
-          </div>
-          <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-            <span class="text-sm text-gray-600">Win Rate</span>
-            <span class="font-semibold text-gray-800">${winRate}%</span>
           </div>
         </div>
 
@@ -143,24 +144,39 @@ export class ProfileComponent extends Component {
         <div class="mt-4 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex-1 flex flex-col">
           <!-- Social Tabs -->
           <div class="flex border-b border-gray-100 flex-shrink-0">
+            <!-- Friends Tab -->
             <button class="social-tab flex-1 px-4 py-3 text-center text-sm font-medium transition-colors ${this.activeTab === 'friends' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'}" data-tab="friends">
-              <svg class="w-4 h-4 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
-              </svg>
-              Friends
+              <span class="flex flex-col items-center">
+                <svg class="w-6 h-6 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd" />
+                  <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
+                </svg>
+                Friends
+              </span>
             </button>
+            <!-- Requests Tab -->
             <button class="social-tab flex-1 px-4 py-3 text-center text-sm font-medium transition-colors ${this.activeTab === 'requests' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'}" data-tab="requests">
-              <svg class="w-4 h-4 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-              </svg>
-              Requests
+              <span class="flex flex-col items-center">
+                <svg class="w-6 h-6 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
+                  ${this.activeTab === 'requests' ? `
+                  <path d="M19.5 22.5a3 3 0 0 0 3-3v-8.174l-6.879 4.022 3.485 1.876a.75.75 0 1 1-.712 1.321l-5.683-3.06a1.5 1.5 0 0 0-1.422 0l-5.683 3.06a.75.75 0 0 1-.712-1.32l3.485-1.877L1.5 11.326V19.5a3 3 0 0 0 3 3h15Z" />
+                  <path d="M1.5 9.589v-.745a3 3 0 0 1 1.578-2.642l7.5-4.038a3 3 0 0 1 2.844 0l7.5 4.038A3 3 0 0 1 22.5 8.844v.745l-8.426 4.926-.652-.351a3 3 0 0 0-2.844 0l-.652.351L1.5 9.589Z" />
+                  ` : `
+                  <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                  <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+                  `}
+                </svg>
+                Requests
+              </span>
             </button>
+            <!-- Add Tab -->
             <button class="social-tab flex-1 px-4 py-3 text-center text-sm font-medium transition-colors ${this.activeTab === 'add' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'}" data-tab="add">
-              <svg class="w-4 h-4 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"/>
-              </svg>
-              Add Friend
+              <span class="flex flex-col items-center">
+                <svg class="w-6 h-6 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M5.25 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM2.25 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM18.75 7.5a.75.75 0 0 0-1.5 0v2.25H15a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H21a.75.75 0 0 0 0-1.5h-2.25V7.5Z" />
+                </svg>
+                Add Friend
+              </span>
             </button>
           </div>
           <!-- Tab Content -->
@@ -308,11 +324,8 @@ export class ProfileComponent extends Component {
   }
 
   private setupAddFriendEvent(): void {
+    this.controlAuthEvents();
     const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-      alert('Please login first!');
-      return;
-    }
     const searchInput = this.element.querySelector('#friend-search') as HTMLInputElement;
     const sendRequestBtn = this.element.querySelector('#send-friend-request') as HTMLButtonElement;
     sendRequestBtn?.addEventListener('click', async () => {
@@ -345,26 +358,23 @@ export class ProfileComponent extends Component {
           else {
             const errorData = await response.json();
             console.error(`Error fetching user: ${errorData.message}`);
-            alert(`Error: ${errorData.message}`);
+            notify(`${errorData.message}`, 'red');
           }
           searchInput.value = '';
         } catch (error) {
           console.error(error);
           searchInput.value = '';
-          alert('An error occurred while sending the friend request. Please try again.');
+          notify('An error occurred while sending the friend request. Please try again.');
         }
       }
     });
   }
 
   private async getFriendList(): Promise<void> {
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-      alert('Please login first!');
-      return;
-    }
+    this.controlAuthEvents();
 
     try {
+      const authToken = localStorage.getItem('authToken');
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.LIST), {
         method: 'GET',
         headers: {
@@ -382,18 +392,15 @@ export class ProfileComponent extends Component {
       }
     } catch (error) {
       console.error(error);
-      alert('An error occurred while fetching the friend list. Please try again.');
+      notify('An error occurred while fetching the friend list. Please try again.');
     }
   }
 
   private async getRequestsList(): Promise<void> {
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-      alert('Please login first!');
-      return;
-    }
+    this.controlAuthEvents();
 
     try {
+      const authToken = localStorage.getItem('authToken');
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.REQUESTS.INCOMING), {
         method: 'GET',
         headers: {
@@ -411,7 +418,7 @@ export class ProfileComponent extends Component {
       }
     } catch (error) {
       console.error(error);
-      alert('An error occurred while fetching friend requests. Please try again.');
+      notify('An error occurred while fetching friend requests. Please try again.');
     }
   }
 
@@ -442,7 +449,7 @@ export class ProfileComponent extends Component {
             }
           } catch (error) {
             console.error(error);
-            alert('An error occurred while accepting the friend request. Please try again.');
+            notify('An error occurred while accepting the friend request. Please try again.');
           }
         });
       }
@@ -476,7 +483,7 @@ export class ProfileComponent extends Component {
             }
           } catch (error) {
             console.error(error);
-            alert('An error occurred while declining the friend request. Please try again.');
+            notify('An error occurred while declining the friend request. Please try again.');
           }
         });
       }
@@ -495,9 +502,9 @@ export class ProfileComponent extends Component {
     const logoutBtn = this.element.querySelector('#profile-logout') as HTMLButtonElement;
     logoutBtn?.addEventListener('click', () => {
       console.log('Logout button clicked');
-      alert('You have been logged out');
-      router.navigate('login');
       localStorage.removeItem('authToken');
+      notify('You have been logged out');
+      router.navigate('login');
     });
   }
 
