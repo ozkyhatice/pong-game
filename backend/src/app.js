@@ -28,7 +28,7 @@ await app.register(fastifyCors, {
 await app.register(fastifySensible);
 await app.register(fastifyJWT, { secret: process.env.JWT_SECRET || 'default_secret' });
 await app.register(websocket);
-await app.register(multipart);
+await app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024 } });
 
 // Database
 await app.register(initDB);

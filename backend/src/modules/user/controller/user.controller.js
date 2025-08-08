@@ -69,8 +69,10 @@ export async function updateMyAvatar(request, reply) {
     }
 
     // Dosya boyutu kontrol et (5MB max)
-    const buffer = await data.toBuffer();
-    if (buffer.length > 5 * 1024 * 1024) {
+    let buffer;
+    try {
+      buffer = await data.toBuffer();
+    } catch (bufferError) {
       return reply.code(400).send({ error: 'File too large. Maximum 5MB allowed' });
     }
 
