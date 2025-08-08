@@ -20,7 +20,7 @@ export async function register(request, reply) {
   } catch (error) {
     reply.code(400).send({ 
       success: false,
-      error: error.message 
+      message: error.message 
     });
   }
 }
@@ -56,7 +56,7 @@ export async function login(request, reply) {
   } catch (error) {
     reply.code(401).send({ 
       success: false,
-      error: error.message 
+      message: error.message 
     });
   }
 }
