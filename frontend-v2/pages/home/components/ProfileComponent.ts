@@ -62,11 +62,9 @@ export class ProfileComponent extends Component {
 
   private render(): void {
     const user = this.profile;
-    const username = user.username || user.name || user.email || 'Unknown';
+    const username = user.username || user.email || 'Unknown';
     const wins = user.wins || 0;
     const losses = user.losses || 0;
-    const level = user.level || 1;
-    const avatar = user.avatar;
 
     const winRate = wins + losses > 0
       ? Math.round((wins / (wins + losses)) * 100)
@@ -110,7 +108,6 @@ export class ProfileComponent extends Component {
             </div>
             <div class="flex-1 min-w-0">
               <div class="text-lg font-bold break-words leading-tight">${username}</div>
-              <div class="text-sm text-blue-100">Level ${level}</div>
             </div>
           </div>
         </div>
