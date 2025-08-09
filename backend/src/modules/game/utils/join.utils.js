@@ -7,12 +7,11 @@ export async function sendMessage(connection, type, event, data = {}) {
   try {
     if (connection && connection.readyState === connection.OPEN) {
       connection.send(JSON.stringify({ type, event, data }));
-      console.log(`📤 Message sent: ${type}/${event}`, data);
     } else {
-      console.warn('❌ Tried to send message to closed or invalid connection:', { type, event, data });
+      console.warn(' Tried to send message to closed or invalid connection:', { type, event, data });
     }
   } catch (error) {
-    console.error('❌ Error sending message:', error, { type, event, data });
+    console.error('Error sending message:', error, { type, event, data });
   }
 }
 

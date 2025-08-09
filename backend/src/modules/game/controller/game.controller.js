@@ -1,4 +1,4 @@
-import { createRoom, sendMessage, checkJoinable, addPlayerToRoom, displayRoomState} from "../utils/game.utils.js";
+import { createRoom, sendMessage, checkJoinable, addPlayerToRoom, displayRoomState} from "../utils/join.utils.js";
 const rooms = new Map();
 export async function handleGameMessage(msgObj, userId, connection) {
 
@@ -17,23 +17,20 @@ const eventHandlers = {
     score: scoreGame,
 };
 
-/*
-{
-  "type": "game",
-  "event": "join",
-  "data": {
-    "roomId": "AB12CD"   // Zaten var olan oda ID’si veya yeni oda için boş olabilir
-  }
-}
-*/
 
 
+// joining a game room
+// type: game
+// event: join
+// data: { roomId: "xxxx" } or { roomId: null }
 export async function joinGame(data, userId, connection) {
     let room;
+    // if roomId already exists, get it
     if (data.roomId) {
         room = rooms.get(data.roomId);
     }
     else {
+        // if roomId does not exist, create a new room
         const roomId = await createRoom(userId, connection, rooms);
         room = rooms.get(roomId);
         if (!room) {
@@ -45,13 +42,14 @@ export async function joinGame(data, userId, connection) {
         return;
     }
     
-    // Odaya katılım kontrolü
+    // check rules of joining
     const canJoin = await checkJoinable(data, room, userId, connection);
     if (!canJoin) {
-        return; // Katılım uygun değilse işlemi sonlandır (hata mesajı checkJoinable'da gönderildi)
+        return; // if joining is not allowed, end the process (error message sent in checkJoinable)
     }
-    
+    // add player to room
     await addPlayerToRoom(room, userId, connection);
+    // Notify the user that they have joined the room
     await sendMessage(connection, 'game', 'joined', {
         roomId: room.id,
         players: Array.from(room.players),
@@ -60,6 +58,7 @@ export async function joinGame(data, userId, connection) {
     if (room.players.size === 2 && !room.started) {
         console.log('the game will start');
     }
+    // Display the current state of the room for debugging
     await displayRoomState(room);
 }
 export async function startGame(data, userId) {
