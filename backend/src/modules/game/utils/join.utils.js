@@ -29,13 +29,19 @@ export async function createRoom(userId, connection, rooms) {
                 vx: 5,                   // Hız (velocity X)
                 vy: 5                    // Hız (velocity Y)
             },
-            paddles: {},               // userId -> { y: konum }
-            score: {},                 // userId -> sayı
+            paddles: {
+                [userId]: { y: 250 }    // İlk oyuncunun paddle'ı
+            },               // userId -> { y: konum }
+            score: {
+                [userId]: 0             // İlk oyuncunun skoru
+            },                 // userId -> sayı
             gameOver: false            // Oyun durumu
         },
         loop: null,                  // setInterval ID’si, oyun döngüsünü durdurmak için
         createdAt: Date.now(),       // Oda oluşturulma zamanı
-        started: false,  
+        started: false,
+        endDate: null,               // Oyun bitiş tarihi
+        winnerId: null               // Oyun kazananı
     };
     rooms.set(roomId, room);
     return roomId;
@@ -54,6 +60,15 @@ export async function displayRoomState(room) {
 export async function addPlayerToRoom(room, userId, connection) {
   room.players.add(userId);
   room.sockets.set(userId, connection);
+  
+  // initialize paddle and score for the new player
+  if (!room.state.paddles[userId]) {
+    room.state.paddles[userId] = { y: 250 };
+  }
+  
+  if (!room.state.score[userId]) {
+    room.state.score[userId] = 0;
+  }
 }
 
 export async function checkJoinable(data, room, userId, connection) {
