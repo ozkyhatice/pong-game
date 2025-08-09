@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend/.
+    container_name: pong-backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/dev.db:/app/dev.db
+    networks:
+      - pong-network
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend-v2/.
+    container_name: pong-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - pong-network
+    restart: unless-stopped
+
+networks:
+  pong-network:
+    driver: bridge
+
+volumes:
+  backend-uploads:
+  backend-db:

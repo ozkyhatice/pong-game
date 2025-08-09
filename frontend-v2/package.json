@@ -6,8 +6,7 @@
   "scripts": {
     "build:css": "tailwindcss -i ./styles/input.css -o ./dist/output.css",
     "dev": "npm run build:css && tsc && cp ./index.html ./dist/ && cp -r ./pages ./dist/ && python3 -m http.server 8080 --directory dist",
-    "build": "npm run build:css && tsc && cp ./index.html ./dist/ && cp -r ./pages ./dist/",
-    "serve": "python3 -m http.server 8080 --directory dist"
+    "build": "npm run build:css && tsc && cp ./index.html ./dist/ && cp -r ./pages ./dist/"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
