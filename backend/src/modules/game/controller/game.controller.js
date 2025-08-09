@@ -1,4 +1,4 @@
-import { generateRoomId , sendMessage} from "../utils/game.utils.js";
+import { createRoom, sendMessage, checkJoinable, addPlayerToRoom, displayRoomState} from "../utils/game.utils.js";
 const rooms = new Map();
 export async function handleGameMessage(msgObj, userId, connection) {
 
@@ -28,44 +28,13 @@ const eventHandlers = {
 */
 
 
-
-export async function createRoom(userId, connection) {
-    const roomId = await generateRoomId();
-    const room = {
-        id: roomId,
-        players: new Set([userId]),
-        sockets: new Map([[userId, connection]]),
-         state: {
-            ball: {
-                x: 400,                  // Ortada başlat
-                y: 300,
-                vx: 5,                   // Hız (velocity X)
-                vy: 5                    // Hız (velocity Y)
-            },
-            paddles: {},               // userId -> { y: konum }
-            score: {},                 // userId -> sayı
-            gameOver: false            // Oyun durumu
-        },
-        loop: null,                  // setInterval ID’si, oyun döngüsünü durdurmak için
-        createdAt: Date.now(),       // Oda oluşturulma zamanı
-        started: false,  
-    };
-    rooms.set(roomId, room);
-    console.log(`Room created with ID: ${roomId} for user ${userId}`);
-    return roomId;
-}
-
-export async function addPlayerToRoom(room, userId, connection) {
-  room.players.add(userId);
-  room.sockets.set(userId, connection);
-}
 export async function joinGame(data, userId, connection) {
     let room;
     if (data.roomId) {
         room = rooms.get(data.roomId);
     }
     else {
-        const roomId = await createRoom(userId, connection);
+        const roomId = await createRoom(userId, connection, rooms);
         room = rooms.get(roomId);
         if (!room) {
             throw new Error(`Failed to create or join room for user ${userId}`);
@@ -75,18 +44,13 @@ export async function joinGame(data, userId, connection) {
         });
         return;
     }
-    if (room.players.has(userId)) {
-        await sendMessage(connection, 'game', 'already-joined', {
-            roomId: room.id
-        });
-        return;
+    
+    // Odaya katılım kontrolü
+    const canJoin = await checkJoinable(data, room, userId, connection);
+    if (!canJoin) {
+        return; // Katılım uygun değilse işlemi sonlandır (hata mesajı checkJoinable'da gönderildi)
     }
-    if (room.players.size >= 2) {
-        await sendMessage(connection, 'game', 'room-full', {
-            roomId: room.id
-        });
-        return;
-    }
+    
     await addPlayerToRoom(room, userId, connection);
     await sendMessage(connection, 'game', 'joined', {
         roomId: room.id,
@@ -96,7 +60,7 @@ export async function joinGame(data, userId, connection) {
     if (room.players.size === 2 && !room.started) {
         console.log('the game will start');
     }
-    console.log(`User ${userId} joined the game`);
+    await displayRoomState(room);
 }
 export async function startGame(data, userId) {
     console.log(`User ${userId} started the game`);

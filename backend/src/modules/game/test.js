@@ -33,20 +33,15 @@ function joinWs2ToRoom() {
   ws2.send(JSON.stringify({
     type: 'game',
     event: 'join',
-    data: { roomId }
+    data: { roomId: roomId }
   }));
-  ws2.send(JSON.stringify({
-    type: 'game',
-    event: 'move',
-    data: { direction: 'right' }
-  }));
+  
 }
 
 // ws1'den oda bilgisi al
 ws1.on('message', (msg) => {
   console.log('📩 ws1 mesaj aldı:', msg.toString());
   const data = JSON.parse(msg);
-  console.log('📦 Parsed data:', data);
   
   // Game room-created eventi kontrol et
   if (data.type === 'game' && data.event === 'room-created' && data.data && data.data.roomId) {
