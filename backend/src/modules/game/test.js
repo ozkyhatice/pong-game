@@ -35,7 +35,11 @@ function joinWs2ToRoom() {
     event: 'join',
     data: { roomId: roomId }
   }));
-  
+  ws2.send(JSON.stringify({
+    type: 'game',
+    event: 'start',
+    data: { roomId: roomId }
+  }));
 }
 
 // ws1'den oda bilgisi al
@@ -72,6 +76,7 @@ ws1.on('message', (msg) => {
       joinWs2ToRoom();
     }
   }
+
 });
 
 

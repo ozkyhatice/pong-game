@@ -61,8 +61,26 @@ export async function joinGame(data, userId, connection) {
     // Display the current state of the room for debugging
     await displayRoomState(room);
 }
-export async function startGame(data, userId) {
+export async function startGame(data, userId, connection) {
     console.log(`User ${userId} started the game`);
+    const room = rooms.get(data.roomId);
+    if (!room || room.started) {
+        await sendMessage(connection, 'game', 'error', {
+            message: `Cannot start game: room not found or already started`
+        });
+        return;
+    }
+    room.started = true;
+    // room.loop = setInterval(() => {
+    //     updateBall(room);
+    //     broadcastGameState(room);   
+    // }, 1000 / 60); // 60 FPS
+    await sendMessage(connection, 'game', 'game-started', {
+        roomId: room.id,
+        players: Array.from(room.players),
+        message: `Game started by user ${userId}`
+    });
+    console.log(`Game started in room ${room.id} by user ${userId}`);
 }
 export async function handlePlayerMove(data, userId) {
     console.log(`User ${userId} moved:`, data);
