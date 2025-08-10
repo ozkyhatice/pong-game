@@ -30,6 +30,7 @@ export async function websocketHandler(connection, request) {
     
   } catch (err) {
     console.error('WebSocket connection failed:', err);
+    await handleDisconnect(userId);
     return connection.close();
   }
 }

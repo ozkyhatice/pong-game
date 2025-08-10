@@ -1,4 +1,6 @@
 // Global client management service for both chat and game
+import { WebSocket } from 'ws';
+
 const clients = new Map();
 
 export async function addClient(userId, connection) {
