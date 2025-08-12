@@ -27,7 +27,7 @@ clean:
 	@cd frontend-v2 && rm -rf node_modules dist
 	@cd websocket-test-app && rm -rf node_modules dist
 	@echo "\033[31m🗑️  Removing database file...\033[0m"
-	@cd backend && rm -f dev.db
+	@rm -rf backend/db/
 	@echo "\033[32m✅ Cleanup completed!\033[0m"
 
 kill:
@@ -45,7 +45,7 @@ kill:
 
 clean-db:
 	@echo "\033[31m🗑️  Removing database file...\033[0m"
-	@cd backend && rm -f dev.db
+	@rm -rf backend/db/
 	@echo "\033[32m✅ Database cleaned!\033[0m"
 
 fclean: kill clean
@@ -122,6 +122,8 @@ monitoring-status:
 # Docker commands
 docker-up:
 	@echo "\033[36m🐳 Starting all services with Docker...\033[0m"
+	@echo "\033[33m📋 Ensuring db directory exists...\033[0m"
+	@mkdir -p backend/db
 	@docker-compose up -d
 	@echo "\033[32m✅ All Docker services started!\033[0m"
 	@echo "\033[34m🎮 Frontend: http://localhost:8080\033[0m"

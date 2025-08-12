@@ -15,6 +15,9 @@ FROM nginx:alpine AS production
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
+# Set correct permissions for nginx
+RUN chmod -R 755 /usr/share/nginx/html
+
 # COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80

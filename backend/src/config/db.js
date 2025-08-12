@@ -3,7 +3,7 @@ import { open } from 'sqlite';
 
 export const initDB = async () => {
   const db = await open({
-    filename: process.env.DATABASE_URL || './dev.db',
+    filename: process.env.DATABASE_URL || './db/dev.db',
     driver: sqlite3.Database
   });
 
@@ -16,6 +16,7 @@ export const initDB = async () => {
       password TEXT,
       twoFASecret TEXT,
       isTwoFAEnabled BOOLEAN DEFAULT FALSE,
+      isGoogleAuth BOOLEAN DEFAULT FALSE,
       avatar TEXT,
       wins INTEGER DEFAULT 0,
       losses INTEGER DEFAULT 0
