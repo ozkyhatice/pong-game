@@ -1,11 +1,22 @@
 import { addClient, removeClient, broadcastUserStatus } from '../services/client.service.js';
 import { undeliveredMessageController, onlineClientsController } from '../../modules/chat/controller/chat.controller.js';
+import { metrics } from '../../plugins/metrics.js';
 
 export async function handleConnection(connection, request) {
   console.log('\nWebSocket connection request received');
+
+  // Prometheus active connections metric degerini arttir
+  try {
+    metrics.activeConnections.inc();
+    console.log('Active connections metric incremented');
+  } catch (err) {
+    console.log('ERROR incrementing metrics:', err.message);
+  }
+  
   const token = request.headers['sec-websocket-protocol'];
   
   if (!token) {
+    console.log('No token provided, closing connection');
     return connection.close();
   }
   
@@ -34,8 +45,17 @@ export async function handleConnection(connection, request) {
 }
 
 export async function handleDisconnect(userId) {
-  await removeClient(userId);
-  await broadcastUserStatus(userId, 'offline');
+  if (userId) {
+    await removeClient(userId);
+    await broadcastUserStatus(userId, 'offline');
+    console.log(`Client ${userId} disconnected`);
+  }
   
-  console.log(`Client ${userId} disconnected`);
+  // Update active connections metric regardless of userId
+  try {
+    metrics.activeConnections.dec();
+    console.log('Active connections metric decremented');
+  } catch (err) {
+    console.log('ERROR decrementing metrics:', err.message);
+  }
 }
