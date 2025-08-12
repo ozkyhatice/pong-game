@@ -45,11 +45,7 @@ export async function updateMyProfile(request, reply) {
     const updatedUser = await updateProfile(userId, { username, email });
     reply.send({ user: updatedUser });
   } catch (error) {
-    if (error.message.includes('already taken') || error.message.includes('not found')) {
-      return reply.code(400).send({ error: error.message });
-    }
-    console.error('Error updating user profile:', error);
-    reply.code(500).send({ error: 'Internal Server Error' });
+    reply.code(400).send({ error: error.message });
   }
 }
 

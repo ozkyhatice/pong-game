@@ -2,7 +2,7 @@ import { initDB } from '../../../config/db.js';
 
 export async function getUserById(id) {
   const db = await initDB();
-  const user = await db.get('SELECT id, username, email, avatar, wins, losses, isTwoFAEnabled FROM users WHERE id = ?', [id]);
+  const user = await db.get('SELECT id, username, email, avatar, wins, losses, isTwoFAEnabled, isGoogleAuth FROM users WHERE id = ?', [id]);
   return user;
 }
 
@@ -20,7 +20,17 @@ export async function findUserById(id) {
 
 export async function updateProfile(userId, { username, email }) {
   const db = await initDB();
-  
+
+  const user = await getUserById(userId);
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  if (email && user.isGoogleAuth) {
+    throw new Error('Cannot change email for Google Auth users');
+  }
+
   // Check if username is already taken
   if (username) {
     const existingUser = await db.get('SELECT id FROM users WHERE username = ? AND id != ?', [username, userId]);
@@ -31,6 +41,10 @@ export async function updateProfile(userId, { username, email }) {
 
   // Check if email is already taken
   if (email) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error('Invalid email format');
+    }
+
     const existingEmail = await db.get('SELECT id FROM users WHERE email = ? AND id != ?', [email, userId]);
     if (existingEmail) {
       throw new Error('Email already taken');
