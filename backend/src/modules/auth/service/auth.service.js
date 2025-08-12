@@ -81,8 +81,8 @@ export async function handleGoogleUser({ email, name, picture }) {
     const uniqueUsername = generateUniqueUsername(name);
     
     const result = await db.run(
-      'INSERT INTO users (username, email, avatar, password) VALUES (?, ?, ?, ?)',
-      [uniqueUsername, email, picture, null]
+      'INSERT INTO users (username, email, avatar, password, isGoogleAuth) VALUES (?, ?, ?, ?, ?)',
+      [uniqueUsername, email, picture, null, true]
     );
     
     user = { 
@@ -92,12 +92,15 @@ export async function handleGoogleUser({ email, name, picture }) {
       avatar: picture 
     };
   } else {
-    // Mevcut kullanıcının avatar'ını güncelle
-    await db.run(
-      'UPDATE users SET avatar = ? WHERE id = ?',
-      [picture, user.id]
-    );
-    user.avatar = picture;
+    if (user.avatar && user.avatar.startsWith('/')) {
+      console.log('User has uploaded avatar, keeping local file');
+    } else {
+      await db.run(
+        'UPDATE users SET avatar = ? WHERE id = ?',
+        [picture, user.id]
+      );
+      user.avatar = picture;
+    }
   }
 
   return { 
