@@ -128,6 +128,7 @@ docker-up:
 	@echo "\033[32m✅ All Docker services started!\033[0m"
 	@echo "\033[34m🎮 Frontend: http://localhost:8080\033[0m"
 	@echo "\033[32m🔧 Backend: http://localhost:3000\033[0m"
+	@echo "\033[35m🔌 WebSocket Test App: http://localhost:8081\033[0m"
 
 docker-down:
 	@echo "\033[31m🐳 Stopping all Docker services...\033[0m"
@@ -175,6 +176,7 @@ docker-full-up:
 	@echo "\033[32m✅ All services started!\033[0m"
 	@echo "\033[34m🎮 Frontend: http://localhost:8080\033[0m"
 	@echo "\033[32m🔧 Backend: http://localhost:3000\033[0m"
+	@echo "\033[35m🔌 WebSocket Test App: http://localhost:8081\033[0m"
 	@echo "\033[36m📈 Prometheus: http://localhost:9090\033[0m"
 	@echo "\033[36m📊 Grafana: http://localhost:3001 (admin/admin)\033[0m"
 

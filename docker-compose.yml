@@ -24,6 +24,17 @@ services:
       - pong-network
     restart: unless-stopped
 
+  websocket-test-app:
+    build: ./websocket-test-app/.
+    container_name: pong-websocket-test
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+    networks:
+      - pong-network
+    restart: unless-stopped
+
 networks:
   pong-network:
     driver: bridge
