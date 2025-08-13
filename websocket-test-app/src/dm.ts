@@ -1,5 +1,5 @@
 import { getToken, getCurrentUserId } from './utils.js';
-import { sendMessage as sendWebSocketMessage, markAsRead as markAsReadWebSocket } from './websocket.js';
+import { sendDMMessage as sendWebSocketMessage, markAsRead as markAsReadWebSocket } from './websocket.js';
 
 interface Message {
     id: number;

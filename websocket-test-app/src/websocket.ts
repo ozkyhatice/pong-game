@@ -1,5 +1,6 @@
 import { handleNewMessage } from './dm.js';
 import { updateOnlineStatus } from './friends.js';
+import { handleGameMessage } from './game.js';
 
 let ws: WebSocket | null = null;
 
@@ -22,6 +23,12 @@ export function connectWebSocket(token: string): Promise<WebSocket> {
             const message = JSON.parse(e.data);
             console.log('Received:', message);
             displayMessage(`Received: ${JSON.stringify(message)}`);
+            
+            // Game messages
+            if (message.type === 'game') {
+                handleGameMessage(message.event, message.data);
+                return;
+            }
             
             // Online/offline durumunu güncelle
             if (message.type === 'userStatus') {
@@ -52,7 +59,26 @@ export function disconnectWebSocket(): void {
     }
 }
 
-export function sendMessage(receiverId: number, content: string): void {
+// Generic sendMessage for any type of message
+export function sendMessage(type: string, event: string, data: any): void {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        alert('Not connected!');
+        return;
+    }
+
+    const message = {
+        type: type,
+        event: event,
+        data: data
+    };
+
+    ws.send(JSON.stringify(message));
+    console.log('Sent:', message);
+    displayMessage(`Sent: ${JSON.stringify(message)}`);
+}
+
+// Specific sendMessage for DM (backward compatibility)
+export function sendDMMessage(receiverId: number, content: string): void {
     if (!ws || ws.readyState !== WebSocket.OPEN) {
         alert('Not connected!');
         return;
