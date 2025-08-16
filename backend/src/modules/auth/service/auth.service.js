@@ -24,16 +24,20 @@ export async function registerUser({ username, email, password }) {
   // Şifreyi hashle
   const hashedPassword = await argon2.hash(password);
 
+  // Varsayılan avatar oluştur (Dicebear bottts, username'e göre seed)
+  const avatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${cleanUsername}`;
+
   // Yeni kullanıcıyı ekle
   const result = await db.run(
-    'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-    [cleanUsername, email, hashedPassword]
+    'INSERT INTO users (username, email, password, avatar) VALUES (?, ?, ?, ?)',
+    [cleanUsername, email, hashedPassword, avatar]
   );
 
   return { 
     id: result.lastID, 
     username: cleanUsername, 
-    email 
+    email,
+    avatar
   };
 }
 
