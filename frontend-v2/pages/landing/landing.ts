@@ -7,13 +7,6 @@ const BALLSPEEDZDEFAULT = 0.07;
 export function init() {
   console.log('Landing page loaded');
 
-  const authToken = localStorage.getItem('authToken');
-  if (authToken) {
-	router.navigate('home');
-	console.log('Redirecting to home page');
-	return;
-  }
-
   // Use Babylon.js from window (CDN loaded in index.html)
   const BABYLON = (window as any).BABYLON;
   if (!BABYLON) {

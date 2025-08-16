@@ -1,104 +1,119 @@
+import { AuthGuard } from './auth-guard.js';
+
 class Router {
   private container: HTMLElement;
-  public currentPage: string = 'landing';
+  public currentPage: string = '';
 
   constructor(container: HTMLElement) {
     this.container = container;
     this.setupBrowserNavigation();
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasOAuth = urlParams.has('oauth') || urlParams.has('token') || urlParams.has('error');
-
-    let initialPage = 'landing';
-    if (hasOAuth) {
-      const oauthSuccess = urlParams.get('oauth');
-      const userId = urlParams.get('userId');
-      const token = urlParams.get('token');
-      const error = urlParams.get('error');
-
-      if (error === 'oauth_failed') {
-        initialPage = 'login';
-      } else if (oauthSuccess === '2fa_required' && userId) {
-        initialPage = '2fa-code';
-      } else if (token && oauthSuccess === 'success') {
-        initialPage = 'home';
-      }
-    } else if (window.history.state && window.history.state.page) {
-      initialPage = window.history.state.page;
-    }
-
-    this.loadPage(initialPage);
+    
+    const initialPage = this.getInitialPage();
+    this.navigate(initialPage);
   }
 
   navigate(pageName: string) {
     console.log(`Navigating to: ${pageName}`);
-    if (pageName !== this.currentPage) {
-      window.history.pushState({ page: pageName }, '', window.location.href);
-      this.loadPage(pageName);
-    }
+    
+    // Auth kontrolü ve yönlendirme
+    AuthGuard.checkAuth(pageName, this);
+    
+    // Sayfa değişikliği gerekli mi?
+    if (pageName === this.currentPage) return;
+    
+    // History state güncelle (URL değişmeden)
+    window.history.pushState({ page: pageName }, '', window.location.href);
+    this.loadPage(pageName);
+  }
+
+  // AuthGuard için direct page load (auth kontrolü olmadan)
+  loadPageDirect(pageName: string) {
+    console.log(`Direct loading page: ${pageName}`);
+    
+    if (pageName === this.currentPage) return;
+    
+    window.history.replaceState({ page: pageName }, '', window.location.href);
+    this.loadPage(pageName);
   }
 
   private setupBrowserNavigation() {
     window.addEventListener('popstate', (event) => {
-      if (event.state && event.state.page)
-        this.loadPage(event.state.page);
-      else
-        this.loadPage('landing');
+      const page = event.state?.page || 'landing';
+      
+      // Auth kontrolü ile yönlendirme
+      const redirectPage = AuthGuard.getRedirectPage(page);
+      if (redirectPage) {
+        this.loadPageDirect(redirectPage);
+      } else {
+        this.loadPageDirect(page);
+      }
     });
 
-    // Set initial state if not present
-    if (!window.history.state || !window.history.state.page)
+    // Initial state set
+    if (!window.history.state || !window.history.state.page) {
       window.history.replaceState({ page: 'landing' }, '', window.location.href);
+    }
+  }
+
+  private getInitialPage(): string {
+    // OAuth params kontrolü
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('oauth') || urlParams.has('token') || urlParams.has('error')) {
+      const error = urlParams.get('error');
+      const oauth = urlParams.get('oauth');
+      const token = urlParams.get('token');
+
+      if (error === 'oauth_failed') return 'login';
+      if (oauth === '2fa_required') return '2fa-code';
+      if (oauth === 'success' && token) return 'home';
+    }
+
+    // History state'den sayfa al veya default landing
+    return window.history.state?.page || 'landing';
   }
 
   private async loadPage(pageName: string) {
     try {
       console.log(`Loading page: ${pageName}`);
 
-      // Clean up Babylon.js if leaving landing page
+      // Babylon.js cleanup
       if (this.currentPage === 'landing' && pageName !== 'landing') {
         this.cleanupBabylonjs();
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
+      // Sayfa dosyasını yükle
       const response = await fetch(`./pages/${pageName}/${pageName}.html`);
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) throw new Error(`Page not found: ${pageName}`);
 
       const html = await response.text();
 
-      // Additional cleanup: Remove Babylon.js canvas if not on landing page
-      if (pageName !== 'landing') {
-        this.cleanupBabylonjs();
-      }
-
-      while (this.container.firstChild) {
-        this.container.removeChild(this.container.firstChild);
-      }
-
+      // Container'ı temizle ve yeni içeriği ekle
       this.container.innerHTML = html;
 
+      // Sayfa scriptini yükle ve çalıştır
       const module = await import(`../pages/${pageName}/${pageName}.js`);
-      if (module.init)
-        module.init();
+      if (module.init) module.init();
 
       this.currentPage = pageName;
+      
     } catch (error) {
       console.error('Page Load Error:', error);
-      this.container.innerHTML = `
-        <div class="flex items-center justify-center h-screen">
-          <div class="text-center">
-            <h1 class="text-2xl font-bold text-red-600 mb-4">Error Loading Page</h1>
-            <p class="text-gray-600 mb-4">Failed to load: ${pageName}</p>
-            <p class="text-sm text-gray-500">${error}</p>
-            <button onclick="router.navigate('landing')" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
-              Go Landing
-            </button>
-          </div>
-        </div>
-      `;
+      this.showError(pageName, error);
     }
+  }
+
+  private showError(pageName: string, error: any) {
+    this.container.innerHTML = `
+      <div class="flex items-center justify-center h-screen">
+        <div class="text-center p-6 bg-white rounded-lg shadow">
+          <h1 class="text-xl font-bold text-red-600 mb-2">Page Load Error</h1>
+          <p class="text-gray-600 mb-4">Failed to load: ${pageName}</p>
+          <button onclick="router.navigate('landing')" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Go to Landing
+          </button>
+        </div>
+      </div>
+    `;
   }
 
   private cleanupBabylonjs() {

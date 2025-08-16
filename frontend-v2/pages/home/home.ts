@@ -1,67 +1,53 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
-import { ProfileComponent, UserProfile } from './components/ProfileComponent.js';
 import { notify } from '../../core/notify.js';
+import { AuthGuard } from '../../core/auth-guard.js';
+import { ProfileComponent, UserProfile } from './components/ProfileComponent.js';
+import { GameAreaComponent } from './components/GameAreaComponent.js';
 
 export async function init() {
   console.log('Home page loaded');
 
   const authToken = localStorage.getItem('authToken');
-  if (!authToken) {
-    router.currentPage = 'home';
-    router.navigate('login');
-    notify('Please login first!');
+  const profileContainer = document.getElementById('profile-container');
+  const gameAreaContainer = document.getElementById('game-area-container');
+  const loadingState = document.getElementById('loading-state');
+
+  if (!profileContainer || !gameAreaContainer) {
+    console.error('Required containers not found');
     return;
   }
 
-  const profileContainer = document.getElementById('profile-container');
-  if (!profileContainer) {
-    console.error('Profile container not found in HTML');
-    return;
-  }
+  // Game Area component'ini hemen yükle
+  const gameAreaComponent = new GameAreaComponent();
+  gameAreaContainer.appendChild(gameAreaComponent.getElement());
 
   try {
+    // User profile verisini al
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
-    method: 'GET',
-    headers: {'Authorization': `Bearer ${authToken}`}});
+      method: 'GET',
+      headers: {'Authorization': `Bearer ${authToken}`}
+    });
 
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error('Failed to fetch user profile');
+    }
 
     const apiResponse = await response.json();
-    console.log('API response:', apiResponse);
+    const user: UserProfile = apiResponse.user || apiResponse;
 
-    const userProfile: UserProfile = apiResponse.user || apiResponse;
-    console.log('User profile extracted:', userProfile);
+    // Loading state'i gizle
+    if (loadingState) loadingState.style.display = 'none';
 
-    const profileComponent = new ProfileComponent(userProfile);
-
+    // Profile component'ini oluştur ve ekle
+    const profileComponent = new ProfileComponent(user);
     profileContainer.appendChild(profileComponent.getElement());
 
-    console.log('ProfileComponent successfully mounted to profile-container');
-
   } catch (error) {
-    console.log('User not found, redirecting to landing page: ', error);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-// ilk girişte neden buraya geliyor
-    profileContainer.innerHTML = `
-      <div class="w-80 bg-white rounded-lg p-8 shadow text-center mx-auto">
-        <div class="text-blue-600 mb-4">
-          <svg class="w-12 h-12 mx-auto mb-2 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </div>
-        <h2 class="text-xl font-bold text-gray-800 mb-2">Something went wrong</h2>
-        <p class="text-gray-600 mb-4">You are being redirected to the landing page...</p>
-        <div class="flex justify-center">
-          <div class="w-6 h-1 bg-blue-500 rounded animate-pulse"></div>
-        </div>
-      </div>
-    `;
-
-    setTimeout(() => {
-      router.navigate('landing');
-    }, 1000);
+    console.error('Error loading user data:', error);
+    
+    // Token geçersizse temizle ve landing'e yönlendir
+    AuthGuard.logout();
+    notify('Session expired. Please login again.', 'red');
+    (window as any).router.navigate('landing');
   }
 }
