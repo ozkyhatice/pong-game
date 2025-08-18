@@ -5,8 +5,8 @@
   "main": "dist/app.js",
   "scripts": {
     "start": "python3 -m http.server 8081 --directory dist",
-    "dev": "tsc && cp ./index.html ./dist/ && python3 -m http.server 8081 --directory dist",
-    "build": "tsc && cp ./index.html ./dist/"
+    "dev": "npx tsc && cp ./index.html ./dist/ && python3 -m http.server 8081 --directory dist",
+    "build": "npx tsc && cp ./index.html ./dist/"
   },
   "dependencies": {},
   "devDependencies": {
