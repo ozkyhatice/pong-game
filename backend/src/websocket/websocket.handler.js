@@ -1,5 +1,7 @@
+
 import { handleConnection, handleDisconnect } from './handlers/connection.handler.js';
 import { routeMessage } from './handlers/message.router.js';
+import { handleReconnection } from '../modules/game/controller/game.controller.js';
 
 export async function websocketHandler(connection, request) {
   let userId = null;
@@ -7,6 +9,9 @@ export async function websocketHandler(connection, request) {
   try {
     // Handle connection and authentication
     userId = await handleConnection(connection, request);
+    
+    // Bağlantı başarılı olduğunda direkt reconnection'ı kontrol et
+    await handleReconnection(connection, userId);
     
     // Handle incoming messages
     connection.on('message', async (message) => {

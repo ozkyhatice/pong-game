@@ -1,7 +1,11 @@
 import { createRoom, sendMessage, checkJoinable, addPlayerToRoom, displayRoomState} from "../utils/join.utils.js";
 import { updateBall, broadcastGameState} from "../utils/start.utils.js";
-import { saveGametoDbServices } from "../services/game.service.js";
-const rooms = new Map();
+import { broadcast, clearAll } from "../utils/end.utils.js";
+import { startGameLoop, stopGameLoop, pauseGame, resumeGame } from "../utils/game-loop.utils.js";
+
+export const rooms = new Map();
+export const userRoom = new Map(); // userId -> roomId
+
 export async function handleGameMessage(msgObj, userId, connection) {
 
     const { event, data} = msgObj;
@@ -17,16 +21,28 @@ const eventHandlers = {
     start: startGame,
     state: stateGame,
     score: scoreGame,
-
+    leave: leaveGame,
+    reconnect: handleReconnectRequest,
 };
 
-
+async function handleReconnectRequest(data, userId, connection) {
+    await handleReconnection(connection, userId);
+}
 
 // joining a game room
 // type: game
 // event: join
 // data: { roomId: "xxxx" } or { roomId: null }
 export async function joinGame(data, userId, connection) {
+    // Check if user is already in a room
+    const existingRoomId = userRoom.get(userId);
+    if (existingRoomId) {
+        await sendMessage(connection, 'game', 'error', {
+            message: `You are already in room ${existingRoomId}. Leave your current room first.`
+        });
+        return;
+    }
+
     let room;
     // if roomId already exists, get it
     if (data.roomId) {
@@ -42,6 +58,8 @@ export async function joinGame(data, userId, connection) {
         await sendMessage(connection, 'game', 'room-created', {
             roomId: room.id
         });
+        console.log(rooms);
+
         return;
     }
     
@@ -87,20 +105,17 @@ export async function startGame(data, userId, connection) {
         });
         return;
     }
+    
     room.started = true;
-    // Initialize paddles and scores for both players
-    room.loop = setInterval(() => {
-        // Update the ball position and check for collisions
-        updateBall(room, connection);
-        // State update gönder
-        stateGame({ roomId: room.id }, userId);        
-    }, 1000 / 60); // 60 FPS
+    startGameLoop(room, connection);
+    
     await sendMessage(connection, 'game', 'game-started', {
         roomId: room.id,
         players: Array.from(room.players),
         message: `Game started by user ${userId}`
     });
 }
+
 export async function scoreGame(data, userId, connection) {
     console.log(`User ${userId} scored:`, data);
     const room = rooms.get(data.roomId);
@@ -114,48 +129,7 @@ export async function scoreGame(data, userId, connection) {
     console.log(`User ${userId} new score: ${room.state.score[userId]}`);
     console.log(`All scores:`, room.state.score);
     
-    // 5 skor kontrolü
-    if (room.state.score[userId] >= 5) {
-        room.state.gameOver = true;
-        room.started = false;
-        room.winnerId = userId; // kazananı belirle
-        room.endDate = new Date(); // bitiş tarihini belirle
-        
-        // Game loop'u durdur
-        if (room.loop) {
-            clearInterval(room.loop);
-            room.loop = null;
-        }
-        
-        console.log(`Game over! Winner: User ${userId}, Final scores:`, room.state.score);
-        console.log(`Game ended at: ${room.endDate}`);
-        
-        // DB'ye kaydet
-        try {
-            await saveGametoDbServices(room);
-            console.log(`Game data saved to DB for room ${room.id}`);
-        } catch (error) {
-            console.error('Error saving game to DB:', error);
-        }
-        
-        // Tüm oyunculara game-over gönder
-        for (const [playerId, socket] of room.sockets) {
-            await sendMessage(socket, 'game', 'game-over', {
-                roomId: room.id,
-                winner: userId,
-                finalScore: room.state.score
-            });
-        }
-    } else {
-        // Oyun devam ediyor, score update gönder
-        for (const [playerId, socket] of room.sockets) {
-            await sendMessage(socket, 'game', 'score-update', {
-                roomId: room.id,
-                scores: room.state.score,
-                lastScorer: userId
-            });
-        }
-    }
+  
 }
 export async function handlePlayerMove(data, userId) {
     const room = rooms.get(data.roomId);
@@ -197,4 +171,53 @@ export async function stateGame(data, userId) {
             state: stateData
         });
     }
+}
+
+export async function leaveGame(data, userId, connection) {
+    await clearAll(userId, 'leave'); // Clear user-room mapping and broadcast game over if necessary
+    
+}
+
+
+export async function handleReconnection(connection, userId) {
+    const roomId = userRoom.get(userId);
+    if (!roomId) {
+        console.warn(`User ${userId} is not in any room.`);
+        return;
+    }
+    
+    const room = rooms.get(roomId);
+    if (!room) {
+        console.warn(`Room ${roomId} not found for user ${userId}.`);
+        return;
+    }
+    
+    // Reconnect the user to the room
+    room.sockets.set(userId, connection);
+    
+    // Eğer oyun başlamışsa ve durdurulmuşsa, oyunu tekrar başlat
+    if (room.started && room.state.paused) {
+        resumeGame(room);
+        
+        // Game loop'u yeniden başlat
+        if (!room.loop) {
+            startGameLoop(room, connection);
+        }
+    }
+    
+    // Notify all users about reconnection
+    broadcast(room, 'game', 'reconnected', {
+        userId: userId,
+        message: `User ${userId} has reconnected to the room ${room.id}.`
+    });
+    
+    // Send current state to reconnected user
+    sendMessage(connection, 'game', "room-state", {
+        roomId: room.id,
+        state: room.state,
+        players: Array.from(room.players)
+    });
+
+    // Display the current state of the room for debugging
+    await displayRoomState(room);
 }
