@@ -8,6 +8,7 @@ all:
 
 backend-bg:
 	@echo "\033[32m🔧 Starting backend server in background...\033[0m"
+	@mkdir -p backend/db
 	@cd backend && npm install --silent && npm run dev
 	@echo "\033[32m✅ Backend ready at http://localhost:3000\033[0m"
 
@@ -27,7 +28,7 @@ clean:
 	@cd frontend-v2 && rm -rf node_modules dist
 	@cd websocket-test-app && rm -rf node_modules dist
 	@echo "\033[31m🗑️  Removing database file...\033[0m"
-	@rm -rf backend/db/
+	@rm -rf backend/db/*
 	@echo "\033[32m✅ Cleanup completed!\033[0m"
 
 kill:
@@ -45,7 +46,7 @@ kill:
 
 clean-db:
 	@echo "\033[31m🗑️  Removing database file...\033[0m"
-	@rm -rf backend/db/
+	@rm -rf backend/db/*
 	@echo "\033[32m✅ Database cleaned!\033[0m"
 
 fclean: kill clean
