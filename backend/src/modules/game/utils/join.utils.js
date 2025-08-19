@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { userRoom } from '../controller/game.controller.js';
 export async function generateRoomId() {
     return uuidv4();
 }
@@ -22,7 +23,7 @@ export async function createRoom(userId, connection, rooms) {
         id: roomId,
         players: new Set([userId]),
         sockets: new Map([[userId, connection]]),
-         state: {
+        state: {
             ball: {
                 x: 400,                  // Ortada başlat
                 y: 300,
@@ -35,7 +36,8 @@ export async function createRoom(userId, connection, rooms) {
             score: {
                 [userId]: 0             // İlk oyuncunun skoru
             },                 // userId -> sayı
-            gameOver: false            // Oyun durumu
+            gameOver: false,           // Oyun durumu
+            paused: false,
         },
         loop: null,                  // setInterval ID’si, oyun döngüsünü durdurmak için
         createdAt: Date.now(),       // Oda oluşturulma zamanı
@@ -44,6 +46,7 @@ export async function createRoom(userId, connection, rooms) {
         winnerId: null               // Oyun kazananı
     };
     rooms.set(roomId, room);
+    userRoom.set(userId, roomId); // Kullanıcı ve oda ilişkisi->connection close için
     return roomId;
 }
 
@@ -69,6 +72,7 @@ export async function addPlayerToRoom(room, userId, connection) {
   if (!room.state.score[userId]) {
     room.state.score[userId] = 0;
   }
+  userRoom.set(userId, room.id); // Update user-room mapping
 }
 
 export async function checkJoinable(data, room, userId, connection) {

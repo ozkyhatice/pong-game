@@ -1,6 +1,8 @@
 import { addClient, removeClient, broadcastUserStatus } from '../services/client.service.js';
 import { undeliveredMessageController, onlineClientsController } from '../../modules/chat/controller/chat.controller.js';
+import { userRoom , rooms} from '../../modules/game/controller/game.controller.js';
 import { metrics } from '../../plugins/metrics.js';
+import { clearAll } from '../../modules/game/utils/end.utils.js';
 
 export async function handleConnection(connection, request) {
   console.log('\nWebSocket connection request received');
@@ -50,7 +52,8 @@ export async function handleDisconnect(userId) {
     await broadcastUserStatus(userId, 'offline');
     console.log(`Client ${userId} disconnected`);
   }
-  
+  clearAll(userId, 'disconnect'); // Clear user-room mapping and broadcast game over if necessary
+
   // Update active connections metric regardless of userId
   try {
     metrics.activeConnections.dec();
