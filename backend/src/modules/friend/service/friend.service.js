@@ -2,9 +2,10 @@ import { initDB } from '../../../config/db.js';
 
 export async function isExistingFriendRequest(requesterId, targetId) {
   const db = await initDB();
+  // İki yönlü kontrol: iki kullanıcı arasında herhangi bir istek veya arkadaşlık var mı?
   const existingRequest = await db.get(
-    'SELECT * FROM friends WHERE requesterID = ? AND recipientID = ?', 
-    [requesterId, targetId]
+    'SELECT * FROM friends WHERE ((requesterID = ? AND recipientID = ?) OR (requesterID = ? AND recipientID = ?))',
+    [requesterId, targetId, targetId, requesterId]
   );
   return existingRequest;
 }
