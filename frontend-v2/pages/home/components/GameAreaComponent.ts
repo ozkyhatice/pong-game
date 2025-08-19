@@ -1,5 +1,6 @@
 import { Component } from '../../../core/Component.js';
 import { notify } from '../../../core/notify.js';
+import { AppState } from '../../../core/AppState.js';
 
 export class GameAreaComponent extends Component {
   constructor() {
@@ -78,6 +79,10 @@ export class GameAreaComponent extends Component {
         <button id="end-game-btn" class="px-3 py-1 bg-gray-400 text-black rounded">
           End Game
         </button>
+
+        <button id="user-profile-btn" class="px-3 py-1 bg-gray-400 text-black rounded" userId="2">
+          User Profile
+        </button>
       </div>
 
     `);
@@ -87,15 +92,26 @@ export class GameAreaComponent extends Component {
     const joinBtn = this.element.querySelector('#join-matchmaking-btn');
     const leaveBtn = this.element.querySelector('#leave-matchmaking-btn');
     const sendBtn = this.element.querySelector('#send-invite-btn');
+    const usernameInput = this.element.querySelector('#friend-username-input');
     const lobbyBtn = this.element.querySelector('#lobby-btn'); //test
     const endGameBtn = this.element.querySelector('#end-game-btn'); //test
-    const usernameInput = this.element.querySelector('#friend-username-input');
-
+    
     joinBtn?.addEventListener('click', this.handleJoinMatchmaking.bind(this));
     leaveBtn?.addEventListener('click', this.handleLeaveMatchmaking.bind(this));
     sendBtn?.addEventListener('click', this.handleSendInvite.bind(this));
     lobbyBtn?.addEventListener('click', () => { router.navigate('game-lobby'); }); //test
     endGameBtn?.addEventListener('click', () => { router.navigate('end-game'); }); //test
+    
+    
+    const userProfileBtn = this.element.querySelector('#user-profile-btn'); //test
+    userProfileBtn?.addEventListener('click', () => {
+      const appState = AppState.getInstance();
+      const userId = userProfileBtn.getAttribute('userId');
+      if (userId) {
+        appState.setViewingUser({ id: Number(userId), username: 'User' });
+        router.navigate('user-profile');
+      }
+    }); //test
   }
 
   private handleJoinMatchmaking(): void {
