@@ -1,4 +1,5 @@
 import { notify } from './notify.js';
+import { WebSocketManager } from './WebSocketManager.js';
 
 export class AuthGuard {
   private static isAuthenticated(): boolean {
@@ -34,8 +35,7 @@ export class AuthGuard {
       if (!this.isAuthenticated() && pageName !== 'landing') {
         notify('Please login to access this page!');
       }
-      // Direct page load to avoid infinite loop
-      router.loadPageDirect(redirectPage);
+      router.navigate(redirectPage);
     }
   }
 
@@ -44,5 +44,9 @@ export class AuthGuard {
     localStorage.removeItem('user');
     sessionStorage.removeItem('tempUserId');
     sessionStorage.removeItem('pendingOAuthUserId');
+
+    const wsManager = WebSocketManager.getInstance();
+    wsManager.disconnect();
+
   }
 }
