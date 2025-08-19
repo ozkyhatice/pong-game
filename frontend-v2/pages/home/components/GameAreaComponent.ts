@@ -10,8 +10,6 @@ export class GameAreaComponent extends Component {
 
   private render(): void {
     this.setHTML(`
-      <div id="invite-notifications" class="mb-4"></div>
-
       <!-- Game Content -->
       <div class="flex-1 p-6 overflow-y-auto">
         <div class="bg-white rounded-lg shadow-lg p-6">
@@ -71,6 +69,17 @@ export class GameAreaComponent extends Component {
           </div>
         </div>
       </div>
+
+      <div class="m-4">
+        <button id="lobby-btn" class="px-3 py-1 bg-gray-400 text-black rounded">
+          lobby 
+        </button>
+
+        <button id="end-game-btn" class="px-3 py-1 bg-gray-400 text-black rounded">
+          End Game
+        </button>
+      </div>
+
     `);
   }
 
@@ -78,11 +87,15 @@ export class GameAreaComponent extends Component {
     const joinBtn = this.element.querySelector('#join-matchmaking-btn');
     const leaveBtn = this.element.querySelector('#leave-matchmaking-btn');
     const sendBtn = this.element.querySelector('#send-invite-btn');
+    const lobbyBtn = this.element.querySelector('#lobby-btn'); //test
+    const endGameBtn = this.element.querySelector('#end-game-btn'); //test
     const usernameInput = this.element.querySelector('#friend-username-input');
 
     joinBtn?.addEventListener('click', this.handleJoinMatchmaking.bind(this));
     leaveBtn?.addEventListener('click', this.handleLeaveMatchmaking.bind(this));
     sendBtn?.addEventListener('click', this.handleSendInvite.bind(this));
+    lobbyBtn?.addEventListener('click', () => { router.navigate('game-lobby'); }); //test
+    endGameBtn?.addEventListener('click', () => { router.navigate('end-game'); }); //test
   }
 
   private handleJoinMatchmaking(): void {

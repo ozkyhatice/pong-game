@@ -1,0 +1,37 @@
+<div class="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+
+	<div class="bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+    <div class="text-center mb-4">
+      <h1 class="text-2xl font-bold text-white mb-1">Game Lobby</h1>
+      <p class="text-slate-400 text-sm" id="room-status">Waiting for players...</p>
+    </div>
+
+    <div class="flex justify-between items-center mb-4">
+
+    <!-- Player 1 -->
+      <div class="flex flex-col items-center flex-1">
+        <img src="https://placehold.co/400x400?text=Player\n1" alt="P1" class="w-12 h-12 rounded-full bg-slate-700 object-cover mb-2" />
+        <span class="text-white text-sm font-medium" id="player1-name">-</span>
+        <span id="player1-ready-text" class="text-xs text-gray-400 mt-1">Not Ready</span>
+      </div>
+      <span class="text-slate-500 mx-2">vs</span>
+      
+	  <!-- Player 2 -->
+      <div class="flex flex-col items-center flex-1">
+        <img src="https://placehold.co/400x400?text=Player\n2" alt="P2" class="w-12 h-12 rounded-full bg-slate-700 object-cover mb-2" />
+        <span class="text-white text-sm font-medium" id="player2-name">-</span>
+        <span id="player2-ready-text" class="text-xs text-gray-400 mt-1">Not Ready</span>
+      </div>
+
+    </div>
+
+	<div class="flex justify-between items-center bg-slate-700 rounded p-2 mb-4 text-xs">
+      <span class="text-slate-400">Room:</span>
+      <span id="room-id" class="text-white font-mono">-</span>
+    </div>
+
+  <button id="ready-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition-colors mb-2 disabled:opacity-50 disabled:cursor-not-allowed">Ready</button>
+    <button id="leave-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded transition-colors">Leave Lobby</button>
+
+  </div>
+</div>
