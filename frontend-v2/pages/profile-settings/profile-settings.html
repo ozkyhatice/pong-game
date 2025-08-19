@@ -1,0 +1,72 @@
+
+<div class="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+    <div class="w-full max-w-4xl bg-white rounded-xl shadow-lg border border-slate-200 p-8">
+        
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-slate-800">⚙️ Profile Settings</h1>
+            <button id="backHomeBtn" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition-colors">← Back to Home</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <div class="space-y-6">
+                <div class="bg-slate-50 rounded-lg p-6 text-center">
+                    <div id="avatarPreview" class="w-28 h-28 mx-auto rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center overflow-hidden mb-4 shadow-lg"></div>
+                    <div id="profileInfo" class="text-slate-600 mb-4"></div>
+                    
+                    <div class="space-y-3">
+                        <h3 class="font-semibold text-slate-800">Avatar Upload</h3>
+                        <input type="file" id="avatarFile" accept="image/*" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <button id="uploadBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium transition-colors">Upload Avatar</button>
+                        <button id="removeAvatarBtn" class="w-full text-sm text-red-600 hover:text-red-700 py-1">Remove Current Avatar</button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-lg p-6">
+                    <h3 class="font-semibold text-slate-800 mb-4">Profile Information</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="newUsername" placeholder="Enter username" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <input type="email" id="newEmail" placeholder="Enter email address" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <button id="updateBtn" class="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-medium transition-colors">Update Profile</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-slate-50 rounded-lg p-6">
+                    <h3 class="font-semibold text-slate-800 mb-4">🔐 Two-Factor Authentication</h3>
+                    <div id="twofaStatus" class="text-slate-600 mb-4 p-3 bg-white rounded border"></div>
+                    
+                    <div class="flex gap-3 mb-4">
+                        <button id="enable2faBtn" style="display: none;" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">Enable 2FA</button>
+                        <button id="disable2faBtn" style="display: none;" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">Disable 2FA</button>
+                    </div>
+                    
+                    <div id="qrCodeContainer" style="display: none;" class="bg-white rounded-lg border border-slate-200 p-6 space-y-4">
+                        <div class="text-center">
+                            <h4 class="font-medium text-slate-800 mb-3">📱 Scan QR Code</h4>
+                            <div id="qrCode" class="flex justify-center mb-4"></div>
+                        </div>
+                        
+                        <div class="bg-slate-50 rounded-lg p-4">
+                            <p class="text-sm text-slate-600 mb-2"><strong>Backup Secret Key:</strong></p>
+                            <div class="bg-white border rounded p-2 font-mono text-xs break-all">
+                                <span id="secretKey"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-slate-700">Verification Code</label>
+                            <input type="text" id="verifyCode" placeholder="Enter 6-digit code" maxlength="6" class="w-full p-3 border border-slate-300 rounded-lg text-center text-lg font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <button id="verifyBtn" class="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-medium transition-colors">✓ Verify & Enable 2FA</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="messages" class="mt-8 p-4 rounded-lg border border-slate-200 bg-slate-50 text-sm"></div>
+    </div>
+</div>
+

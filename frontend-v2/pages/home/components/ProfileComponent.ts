@@ -212,7 +212,7 @@ export class ProfileComponent extends Component {
 
       // Settings button
       if (target.closest('#settings-btn')) {
-        (window as any).router.navigate('avatar-test');
+        (window as any).router.navigate('profile-settings');
         return;
       }
 

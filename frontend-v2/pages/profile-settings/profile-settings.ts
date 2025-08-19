@@ -264,12 +264,15 @@ export function init() {
     const enable2faBtn = document.getElementById('enable2faBtn');
     const disable2faBtn = document.getElementById('disable2faBtn');
     const verifyBtn = document.getElementById('verifyBtn');
+    const backHomeBtn = document.getElementById('backHomeBtn');
     
     updateBtn?.addEventListener('click', updateProfile);
     uploadBtn?.addEventListener('click', uploadAvatar);
     enable2faBtn?.addEventListener('click', setup2FA);
     disable2faBtn?.addEventListener('click', disable2FA);
     verifyBtn?.addEventListener('click', verify2FA);
+    backHomeBtn?.addEventListener('click', () => { router.navigate('home'); });
+
     
     loadProfile();
 }
