@@ -3,79 +3,98 @@ import { notify } from '../../../core/notify.js';
 
 export class GameAreaComponent extends Component {
   constructor() {
-    super({ className: 'h-full flex flex-col' });
+    super();
     this.render();
+    this.setupEvents();
   }
 
   private render(): void {
     this.setHTML(`
-        <!-- Game Content -->
-        <div class="flex-1 p-6 overflow-y-auto">
-          <div class="max-w-2xl mx-auto space-y-6">
-            <!-- Quick Actions -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button id="start-game-btn" class="bg-green-500 hover:bg-green-600 text-white py-6 px-6 rounded-lg text-lg font-semibold transition flex items-center justify-center space-x-2">
-                <span>🎮</span>
-                <span>Start Game</span>
+      <div id="invite-notifications" class="mb-4"></div>
+
+      <!-- Game Content -->
+      <div class="flex-1 p-6 overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">🎮 Choose Game Mode</h2>
+
+          <!-- Matchmaking Section -->
+          <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 class="text-lg font-semibold text-blue-800 mb-3">🎯 Random Match</h3>
+            <p class="text-blue-600 text-sm mb-4">System will find you a random opponent</p>
+            <div class="flex space-x-3">
+              <button id="join-matchmaking-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                Find Random Game
               </button>
-              <button class="bg-blue-500 text-white py-6 px-6 rounded-lg text-lg font-semibold flex items-center justify-center space-x-2 opacity-50 cursor-not-allowed">
-                <span>⚡</span>
-                <span>Quick Match</span>
+              <button id="leave-matchmaking-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors hidden">
+                Leave Queue
               </button>
             </div>
-
-            <!-- Game Modes -->
-            <div class="bg-gray-50 rounded-lg p-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">Game Modes</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button class="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-300 transition text-left opacity-50 cursor-not-allowed">
-                  <div class="font-medium text-gray-800">Classic Pong</div>
-                  <div class="text-sm text-gray-600">Traditional 1v1 match</div>
-                </button>
-                <button class="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-300 transition text-left opacity-50 cursor-not-allowed">
-                  <div class="font-medium text-gray-800">Tournament</div>
-                  <div class="text-sm text-gray-600">Compete with multiple players</div>
-                </button>
-                <button class="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-300 transition text-left opacity-50 cursor-not-allowed">
-                  <div class="font-medium text-gray-800">Ranked Match</div>
-                  <div class="text-sm text-gray-600">Climb the leaderboard</div>
-                </button>
-                <button class="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-300 transition text-left opacity-50 cursor-not-allowed">
-                  <div class="font-medium text-gray-800">Private Room</div>
-                  <div class="text-sm text-gray-600">Play with friends</div>
-                </button>
-              </div>
+            <div id="queue-status" class="mt-2 text-sm text-blue-600 hidden">
+              In queue... Looking for opponent...
             </div>
+          </div>
 
-            <!-- Recent Activity -->
-            <div class="bg-gray-50 rounded-lg p-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
-              <div class="text-center text-gray-500 py-8">
-                <p>No recent games played</p>
-                <p class="text-sm">Start playing to see your match history!</p>
+          <!-- Friend Invite Section -->
+          <div class="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+            <h3 class="text-lg font-semibold text-green-800 mb-3">👥 Invite Friend</h3>
+            <p class="text-green-600 text-sm mb-4">Invite your friend to play</p>
+            <div class="flex space-x-3">
+              <input 
+                type="text" 
+                id="friend-username-input" 
+                placeholder="Friend Username" 
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+              <button id="send-invite-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                Send Invite
+              </button>
+            </div>
+          </div>
+
+          <!-- invites -->
+          <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div id="invites-item" class="space-y-2">
+
+              <!-- Mocked invite item -->
+              <div class="flex items-center justify-between p-2 bg-white rounded border border-gray-200">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center text-white font-bold text-sm">A</div>
+                  <span class="font-medium text-gray-800">alice</span>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs">Join</button>
+                  <button class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">Reject</button>
+                </div>
               </div>
+
             </div>
           </div>
         </div>
       </div>
     `);
-
-    this.setupEvents();
   }
 
   private setupEvents(): void {
-    const startGameBtn = this.element.querySelector('#start-game-btn');
-    const logoutBtn = this.element.querySelector('#logout-btn');
+    const joinBtn = this.element.querySelector('#join-matchmaking-btn');
+    const leaveBtn = this.element.querySelector('#leave-matchmaking-btn');
+    const sendBtn = this.element.querySelector('#send-invite-btn');
+    const usernameInput = this.element.querySelector('#friend-username-input');
 
-    startGameBtn?.addEventListener('click', () => {
-      (window as any).router.navigate('game');
-    });
-
-    logoutBtn?.addEventListener('click', () => {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      notify('Logged out successfully!');
-      (window as any).router.navigate('landing');
-    });
+    joinBtn?.addEventListener('click', this.handleJoinMatchmaking.bind(this));
+    leaveBtn?.addEventListener('click', this.handleLeaveMatchmaking.bind(this));
+    sendBtn?.addEventListener('click', this.handleSendInvite.bind(this));
   }
+
+  private handleJoinMatchmaking(): void {
+    // Random matchmaking join islemi
+  }
+
+  private handleLeaveMatchmaking(): void {
+    // Matchmaking queue'dan cikma islemi
+  }
+
+  private handleSendInvite(): void {
+    // Arkadas davet gonderme islemi
+  }
+
 }
