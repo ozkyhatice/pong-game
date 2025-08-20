@@ -25,13 +25,11 @@ export class WebSocketManager {
     this.shouldReconnect = true;
     this.reconnectAttempts = 0;
     this.createConnection();
-    console.log(`WebSocket connected to ${this.url} with token ${this.token}`);
+    console.log(`WebSocket connecting to ${this.url}`);
   }
 
   private createConnection(): void {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      return;
-    }
+    if (this.ws?.readyState === WebSocket.OPEN) return;
 
     this.ws = new WebSocket(this.url, this.token);
     
@@ -42,10 +40,18 @@ export class WebSocketManager {
 
     this.ws.onmessage = (event) => {
       try {
-        const message: WSMessage = JSON.parse(event.data);
-        this.emit(message.type, message.data);
+        console.log('Raw WebSocket event.data:', event.data);
+        const message: any = JSON.parse(event.data);
+        console.log('Parsed WebSocket message:', message);
+        
+        if (message.type === 'message') {
+          this.emit(message.type, message);
+        } else {
+          this.emit(message.type, message.data || message);
+        }
       } catch (error) {
         console.error('WS message parse error:', error);
+        console.error('Raw data that failed to parse:', event.data);
       }
     };
 

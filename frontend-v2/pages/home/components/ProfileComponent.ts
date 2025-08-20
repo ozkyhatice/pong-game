@@ -2,6 +2,7 @@ import { Component } from '../../../core/Component.js';
 import { getApiUrl, API_CONFIG } from '../../../config.js';
 import { notify } from '../../../core/notify.js';
 import { AuthGuard } from '../../../core/auth-guard.js';
+import { AppState } from '../../../core/AppState.js';
 
 export interface UserProfile {
   id?: string;
@@ -22,7 +23,7 @@ export class ProfileComponent extends Component {
     super({ className: 'h-full flex flex-col' });
     this.profile = profile;
     this.render();
-    this.setupEvents(); // Sadece bir kez çağır
+    this.setupEvents();
     this.loadFriends();
   }
 
@@ -153,7 +154,7 @@ export class ProfileComponent extends Component {
                   <span class="text-sm font-medium">${this.escapeHtml(friend.friendInfo.username)}</span>
                 </div>
                 <div class="flex space-x-1">
-                  <button class="px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200">Chat</button>
+                  <button class="view-profile-btn px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200" data-user-id="${friend.friendInfo.id}" data-username="${friend.friendInfo.username}">View Profile</button>
                   <button class="px-2 py-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200">Play</button>
                 </div>
               </div>
@@ -242,6 +243,17 @@ export class ProfileComponent extends Component {
         if (id) this.handleDeclineFriend(id);
         return;
       }
+
+      // View friend profile
+      if (target.closest('.view-profile-btn')) {
+        const profileBtn = target.closest('.view-profile-btn');
+        const userId = profileBtn?.getAttribute('data-user-id');
+        const username = profileBtn?.getAttribute('data-username');
+        if (userId && username) {
+          this.handleViewProfile(userId, username);
+        }
+        return;
+      }
     };
   }
 
@@ -295,7 +307,6 @@ export class ProfileComponent extends Component {
       return;
     }
 
-    // Disable button to prevent multiple clicks
     if (button) {
       button.disabled = true;
       button.textContent = 'Sending...';
@@ -305,7 +316,6 @@ export class ProfileComponent extends Component {
       const token = localStorage.getItem('authToken');
       if (!token) return;
 
-      // Find user
       const userResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.BY_USERNAME(username)), {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -318,7 +328,6 @@ export class ProfileComponent extends Component {
       const userData = await userResponse.json();
       const user = userData.user || userData;
 
-      // Send friend request
       const addResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.ADD(user.id)), {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
@@ -328,7 +337,6 @@ export class ProfileComponent extends Component {
         notify(`Friend request sent to ${this.escapeHtml(username)}!`);
         input.value = '';
       } else {
-        // Try to show error message from response
         let errorMsg = 'Failed to send friend request';
         try {
           const errorData = await addResponse.json();
@@ -342,7 +350,6 @@ export class ProfileComponent extends Component {
       console.error('Error adding friend:', error);
       notify('Error sending friend request', 'red');
     } finally {
-      // Re-enable button
       if (button) {
         button.disabled = false;
         button.textContent = 'Send Request';
@@ -391,5 +398,16 @@ export class ProfileComponent extends Component {
     } catch (error) {
       console.error('Error declining friend:', error);
     }
+  }
+
+  private handleViewProfile(userId: string, username: string): void {
+    const appState = AppState.getInstance();
+    
+    appState.setViewingUser({
+      id: parseInt(userId),
+      username: username,
+    });
+    
+    (window as any).router.navigate('user-profile');
   }
 }
