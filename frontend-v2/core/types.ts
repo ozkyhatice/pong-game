@@ -5,14 +5,19 @@ export interface WSMessage {
   receiverId?: number;
   content?: string;
   senderId?: number;
+  senderUsername?: string;
 }
 
 export interface GameMessage extends WSMessage {
   type: 'game';
-  event: 'join' | 'move' | 'start' | 'state' | 'score' | 'leave' | 'reconnect';
+  event: 'join' | 'move' | 'start' | 'state' | 'score' | 'leave' | 'reconnect' | 'game-invite' | 'invite-accepted';
   data: {
     roomId?: string;
     y?: number;
+    receiverId?: number;
+    senderUsername?: string;
+    senderId?: number;
+    acceptedBy?: number;
     [key: string]: any;
   };
 }

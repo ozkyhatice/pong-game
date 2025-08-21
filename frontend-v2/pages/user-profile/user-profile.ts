@@ -2,6 +2,7 @@ import { AppState } from '../../core/AppState.js';
 import { ChatManager } from './components/ChatManager.js';
 import { notify } from '../../core/notify.js';
 import { getApiUrl, API_CONFIG } from '../../config.js';
+import { GameService } from '../../services/GameService.js';
 
 export function init() {
   const matchesTab = document.getElementById('matches-tab') as HTMLButtonElement;
@@ -10,6 +11,7 @@ export function init() {
   const chatContent = document.getElementById('chat-content') as HTMLElement;
   const chatInput = document.getElementById('chat-input') as HTMLInputElement;
   const sendBtn = document.getElementById('send-message-btn') as HTMLButtonElement;
+  const challengeBtn = document.getElementById('challenge-btn') as HTMLButtonElement;
   const chatMessages = document.getElementById('chat-messages') as HTMLElement;
 
   let currentUserId: number | null = null;
@@ -17,6 +19,7 @@ export function init() {
   let chatManager: ChatManager | null = null;
 
   const appState = AppState.getInstance();
+  const gameService = new GameService();
 
   setupEventListeners();
   initCurrentUser();
@@ -24,6 +27,7 @@ export function init() {
   function setupEventListeners(): void {
     matchesTab?.addEventListener('click', () => showTab('matches'));
     chatTab?.addEventListener('click', () => showTab('chat'));
+    challengeBtn?.addEventListener('click', () => handleChallenge());
   }
 
   async function initCurrentUser(): Promise<void> {
@@ -31,7 +35,7 @@ export function init() {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        showError('No auth token found');
+        notify('No auth token found');
         return;
       }
 
@@ -40,7 +44,7 @@ export function init() {
       });
 
       if (!response.ok) {
-        showError('Failed to get current user');
+        notify('Failed to get current user');
         return;
       }
 
@@ -53,11 +57,11 @@ export function init() {
         updatePageContent(viewingUser);
         initializeChatManager();
       } else {
-        showError('No user selected to view');
+        notify('No user selected to view');
       }
     } catch (error) {
       console.error('Error getting current user:', error);
-      showError('Failed to load user data');
+      notify('Failed to load user data');
     }
   }
 
@@ -104,7 +108,26 @@ export function init() {
     }
   }
 
-  function showError(message: string): void {
-    notify(message, 'red');
+  async function handleChallenge() {
+    if (!currentUserId || !friendUserId) {
+      notify('No user selected for challenge', 'red');
+      return;
+    }
+
+    try {
+      const viewingUser = appState.getViewingUser();
+      
+      if (!viewingUser) {
+        notify('No user selected for challenge', 'red');
+        return;
+      }
+
+      gameService.sendGameInvite(friendUserId, viewingUser.username);
+      notify(`Game invitation sent to ${viewingUser.username}!`);
+    } catch (error) {
+      console.error('Failed to send game invitation:', error);
+      notify('Failed to send game invitation', 'red');
+    }
   }
+
 }

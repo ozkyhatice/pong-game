@@ -1,4 +1,6 @@
 import { WSMessage } from './types.js';
+import { AppState } from './AppState.js';
+import { notify } from './notify.js';
 
 export class WebSocketManager {
   private static instance: WebSocketManager;
@@ -37,6 +39,9 @@ export class WebSocketManager {
       console.log('🟢 WS: Connected');
       this.reconnectAttempts = 0;
       this.emit('connected', {});
+      
+      // Check if user is in a room and redirect to lobby
+      this.checkRoomAndRedirect();
     };
 
     this.ws.onmessage = (event) => {
@@ -56,10 +61,10 @@ export class WebSocketManager {
             event: message.event,
             data: message.data
           });
-          this.emit(message.type, message.data || message);
+          this.emit(message.type, message);
         } else {
           console.log('📡 WS:', message.type, message.data || message);
-          this.emit(message.type, message.data || message);
+          this.emit(message.type, message);
         }
       } catch (error) {
         console.error('❌ WS: Parse error:', event.data);
@@ -147,5 +152,19 @@ export class WebSocketManager {
 
   isConnected(): boolean {
     return this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  private checkRoomAndRedirect(): void {
+    const appState = AppState.getInstance();
+    
+    if (appState.isInRoom()) {
+      const currentRoom = appState.getCurrentRoom();
+      console.log('🏠 User is in room:', currentRoom?.roomId, '- Redirecting to lobby');
+      notify('User is in room: ' + currentRoom?.roomId + ' - Redirecting to lobby', 'red');
+
+      setTimeout(() => {
+        (window as any).router.navigate('game-lobby');
+      }, 500);
+    }
   }
 }

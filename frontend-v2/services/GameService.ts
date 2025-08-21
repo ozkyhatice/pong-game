@@ -36,6 +36,19 @@ export class GameService {
     this.send('reconnect', {});
   }
 
+  sendGameInvite(receiverId: number, senderUsername: string): void {
+    this.send('game-invite', {
+      receiverId,
+      senderUsername
+    });
+  }
+
+  acceptGameInvite(senderId: number): void {
+    this.send('invite-accepted', {
+      senderId
+    });
+  }
+
   onRoomCreated(callback: (data: any) => void): void {
     this.wsManager.on('room-created', callback);
   }
@@ -62,6 +75,14 @@ export class GameService {
 
   onGameError(callback: (data: any) => void): void {
     this.wsManager.on('error', callback);
+  }
+
+  onGameInvite(callback: (data: any) => void): void {
+    this.wsManager.on('game-invite', callback);
+  }
+
+  onInviteAccepted(callback: (data: any) => void): void {
+    this.wsManager.on('invite-accepted', callback);
   }
 
   removeListener(event: string, callback: Function): void {
