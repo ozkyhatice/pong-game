@@ -2,6 +2,7 @@ import { createRoom, sendMessage, checkJoinable, addPlayerToRoom, displayRoomSta
 import { updateBall, broadcastGameState} from "../utils/start.utils.js";
 import { broadcast, clearAll } from "../utils/end.utils.js";
 import { startGameLoop, stopGameLoop, pauseGame, resumeGame } from "../utils/game-loop.utils.js";
+import { getClientById } from "../../../websocket/services/client.service.js";
 
 export const rooms = new Map();
 export const userRoom = new Map(); // userId -> roomId
@@ -23,6 +24,8 @@ const eventHandlers = {
     score: scoreGame,
     leave: leaveGame,
     reconnect: handleReconnectRequest,
+    'game-invite': handleGameInvite,
+    'invite-accepted': handleInviteAccepted,
 };
 
 async function handleReconnectRequest(data, userId, connection) {
@@ -220,4 +223,94 @@ export async function handleReconnection(connection, userId) {
 
     // Display the current state of the room for debugging
     await displayRoomState(room);
+}
+
+export async function handleGameInvite(data, userId, connection) {
+    const { receiverId, senderUsername } = data;
+    
+    console.log(`Game invite from user ${userId} to user ${receiverId}`);
+    
+    // Get recipient's WebSocket connection
+    const recipientClient = getClientById(receiverId);
+    if (!recipientClient) {
+        await sendMessage(connection, 'game', 'error', {
+            message: `User ${receiverId} is not online`
+        });
+        return;
+    }
+    
+    // Send game invitation to recipient
+    const inviteMessage = {
+        type: 'game',
+        event: 'game-invite',
+        senderId: userId,
+        receiverId: receiverId,
+        senderUsername: senderUsername || 'Unknown'
+    };
+    
+    recipientClient.send(JSON.stringify(inviteMessage));
+    console.log(`Game invitation sent from ${userId} to ${receiverId}`);
+}
+
+export async function handleInviteAccepted(data, userId, connection) {
+    const { senderId } = data;
+    
+    console.log(`User ${userId} accepted game invite from ${senderId}`);
+    
+    // Check if both users are still online
+    const senderClient = getClientById(senderId);
+    if (!senderClient) {
+        await sendMessage(connection, 'game', 'error', {
+            message: `Inviter is no longer online`
+        });
+        return;
+    }
+    
+    // Check if users are already in rooms
+    const accepterInRoom = userRoom.get(userId);
+    const senderInRoom = userRoom.get(senderId);
+    
+    if (accepterInRoom) {
+        await sendMessage(connection, 'game', 'error', {
+            message: `You are already in room ${accepterInRoom}`
+        });
+        return;
+    }
+    
+    if (senderInRoom) {
+        await sendMessage(connection, 'game', 'error', {
+            message: `Inviter is already in another room`
+        });
+        return;
+    }
+    
+    // Create new room with sender (inviter) as the creator
+    const roomId = await createRoom(senderId, senderClient, rooms);
+    const room = rooms.get(roomId);
+    
+    if (!room) {
+        await sendMessage(connection, 'game', 'error', {
+            message: `Failed to create room`
+        });
+        return;
+    }
+    
+    // Add accepter (current user) to room
+    await addPlayerToRoom(room, userId, connection);
+    
+    // Notify both users
+    await sendMessage(connection, 'game', 'room-created', {
+        roomId: room.id,
+        players: Array.from(room.players),
+        message: 'Game room created! You can now start the game.'
+    });
+    
+    await sendMessage(senderClient, 'game', 'invite-accepted', {
+        roomId: room.id,
+        acceptedBy: userId,
+        players: Array.from(room.players),
+        message: 'Your game invitation was accepted! Room created.'
+    });
+    
+    console.log(`Room ${roomId} created for users ${userId} and ${senderId}`);
 }

@@ -63,3 +63,11 @@ export async function getClientCount() {
   });
   return count;
 }
+
+export function getClientById(userId) {
+  const client = clients.get(userId);
+  if (client && client.readyState === WebSocket.OPEN) {
+    return client;
+  }
+  return null;
+}
