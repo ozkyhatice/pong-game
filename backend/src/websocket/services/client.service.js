@@ -5,12 +5,12 @@ const clients = new Map();
 
 export async function addClient(userId, connection) {
   clients.set(userId, connection);
-  console.log(`Client ${userId} connected`);
+  console.log(`Client ${userId} connected and added to client management service`);
 }
 
 export async function removeClient(userId) {
   clients.delete(userId);
-  console.log(`Client ${userId} disconnected`);
+  console.log(`Client ${userId} removed from client management service`);
 }
 
 export async function isConnected(userId) {

@@ -20,12 +20,12 @@ export class WebSocketManager {
   }
 
   connect(token: string, url: string = 'ws://localhost:3000/ws'): void {
+    console.log('🔌 WS: Connecting to', url);
     this.token = token;
     this.url = url;
     this.shouldReconnect = true;
     this.reconnectAttempts = 0;
     this.createConnection();
-    console.log(`WebSocket connecting to ${this.url}`);
   }
 
   private createConnection(): void {
@@ -34,33 +34,46 @@ export class WebSocketManager {
     this.ws = new WebSocket(this.url, this.token);
     
     this.ws.onopen = () => {
+      console.log('🟢 WS: Connected');
       this.reconnectAttempts = 0;
       this.emit('connected', {});
     };
 
     this.ws.onmessage = (event) => {
       try {
-        console.log('Raw WebSocket event.data:', event.data);
         const message: any = JSON.parse(event.data);
-        console.log('Parsed WebSocket message:', message);
         
         if (message.type === 'message') {
+          console.log('📨 WS: Chat received ->', {
+            from: message.from,
+            to: message.to, 
+            content: message.content,
+            id: message.id
+          });
           this.emit(message.type, message);
+        } else if (message.type === 'game') {
+          console.log('🎮 WS: Game received ->', {
+            event: message.event,
+            data: message.data
+          });
+          this.emit(message.type, message.data || message);
         } else {
+          console.log('📡 WS:', message.type, message.data || message);
           this.emit(message.type, message.data || message);
         }
       } catch (error) {
-        console.error('WS message parse error:', error);
-        console.error('Raw data that failed to parse:', event.data);
+        console.error('❌ WS: Parse error:', event.data);
       }
     };
 
     this.ws.onclose = () => {
+      console.log('🔴 WS: Disconnected');
       this.emit('disconnected', {});
       this.handleReconnect();
     };
 
     this.ws.onerror = (error) => {
+      console.error('❌ WS: Error:', error);
       this.emit('error', error);
     };
   }
@@ -68,6 +81,7 @@ export class WebSocketManager {
   private handleReconnect(): void {
     if (this.shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
+      console.log(`🔄 WS: Reconnecting (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
       setTimeout(() => {
         if (this.shouldReconnect) {
           this.createConnection();
@@ -78,7 +92,22 @@ export class WebSocketManager {
 
   send(message: WSMessage): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
+      if (message.type === 'message') {
+        console.log('📤 WS: Chat sending ->', {
+          to: message.receiverId,
+          content: message.content
+        });
+      } else if (message.type === 'game') {
+        console.log('📤 WS: Game sending ->', {
+          event: message.event,
+          data: message.data
+        });
+      } else {
+        console.log('📤 WS:', message.type, message);
+      }
       this.ws.send(JSON.stringify(message));
+    } else {
+      console.warn('⚠️ WS: Not connected, message dropped');
     }
   }
 
@@ -107,6 +136,7 @@ export class WebSocketManager {
   }
 
   disconnect(): void {
+    console.log('🔌 WS: Disconnecting');
     this.shouldReconnect = false;
     this.reconnectAttempts = 0;
     if (this.ws) {

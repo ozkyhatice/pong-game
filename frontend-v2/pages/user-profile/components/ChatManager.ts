@@ -54,31 +54,15 @@ export class ChatManager {
   }
 
   private setupWebSocketForChat(): void {
-    console.log('Setting up WebSocket for chat...');
     this.chatService.onNewMessage(this.handleReceiveMessage.bind(this));
 
     const wsManager = WebSocketManager.getInstance();
-    console.log('WebSocket connected?', wsManager.isConnected());
-
     if (!wsManager.isConnected()) {
       const authToken = localStorage.getItem('authToken');
       if (authToken) {
-        console.log('Reconnecting WebSocket...');
         wsManager.connect(authToken);
       }
     }
-
-    wsManager.on('connected', () => {
-      console.log('WebSocket connected in chat');
-    });
-
-    wsManager.on('disconnected', () => {
-      console.log('WebSocket disconnected in chat');
-    });
-
-    wsManager.on('message', (data: any) => {
-      console.log('Raw WebSocket message received in chat:', data);
-    });
   }
 
   async loadChatMessages(): Promise<void> {
@@ -179,31 +163,13 @@ export class ChatManager {
   }
 
   private async handleReceiveMessage(message: any): Promise<void> {
-    console.log('Received WebSocket message:', message);
-    console.log('Current chat context:', { currentUserId: this.currentUserId, friendUserId: this.friendUserId });
-    
-    if (!message) {
-      console.error('Message is undefined!');
-      return;
-    }
-    
-    if (!message.from && !message.to) {
-      console.error('Message missing from or to:', message);
-      return;
-    }
+    if (!message || (!message.from && !message.to)) return;
     
     const isForCurrentChat = 
       (message.from === this.friendUserId) ||  
       (message.to === this.friendUserId);      
     
-    console.log('Is message for current chat?', isForCurrentChat);
-    
-    if (!isForCurrentChat) {
-      console.log('Message not for current chat, ignoring');
-      return;
-    }
-
-    console.log('Processing message for current chat');
+    if (!isForCurrentChat) return;
 
     const apiMessage: ApiMessage = {
       id: message.id || Date.now(),
@@ -215,7 +181,6 @@ export class ChatManager {
       createdAt: message.createdAt ? message.createdAt.slice(0, 19).replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' ')
     };
 
-    console.log('Adding message to UI:', apiMessage);
     const messageElement = this.createMessageElement(apiMessage);
     this.chatMessages.appendChild(messageElement);
     this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
