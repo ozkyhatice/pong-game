@@ -61,7 +61,11 @@ export class WebSocketManager {
             event: message.event,
             data: message.data
           });
-          this.emit(message.type, message);
+          // Emit both the general 'game' event and the specific event
+          this.emit(message.type, message.data || message);
+          if (message.event) {
+            this.emit(message.event, message.data || message);
+          }
         } else {
           console.log('📡 WS:', message.type, message.data || message);
           this.emit(message.type, message);

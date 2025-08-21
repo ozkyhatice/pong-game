@@ -99,8 +99,8 @@ export class GameAreaComponent extends Component {
     joinBtn?.addEventListener('click', this.handleJoinMatchmaking.bind(this));
     leaveBtn?.addEventListener('click', this.handleLeaveMatchmaking.bind(this));
     sendBtn?.addEventListener('click', this.handleSendInvite.bind(this));
-    lobbyBtn?.addEventListener('click', () => { router.navigate('game-lobby'); }); //test
-    endGameBtn?.addEventListener('click', () => { router.navigate('end-game'); }); //test
+    lobbyBtn?.addEventListener('click', () => { (window as any).router.navigate('game-lobby'); }); //test
+    endGameBtn?.addEventListener('click', () => { (window as any).router.navigate('end-game'); }); //test
     
     
     const userProfileBtn = this.element.querySelector('#user-profile-btn'); //test
@@ -109,7 +109,7 @@ export class GameAreaComponent extends Component {
       const userId = userProfileBtn.getAttribute('userId');
       if (userId) {
         appState.setViewingUser({ id: Number(userId), username: 'User' });
-        router.navigate('user-profile');
+        (window as any).router.navigate('user-profile');
       }
     }); //test
   }

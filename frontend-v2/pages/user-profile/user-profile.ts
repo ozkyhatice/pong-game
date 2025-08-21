@@ -15,6 +15,7 @@ export function init() {
   const chatMessages = document.getElementById('chat-messages') as HTMLElement;
 
   let currentUserId: number | null = null;
+  let currentUsername: string | null = null;
   let friendUserId: number | null = null;
   let chatManager: ChatManager | null = null;
 
@@ -50,6 +51,7 @@ export function init() {
 
       const data = await response.json();
       currentUserId = data.user.id;
+      currentUsername = data.user.username;
 
       const viewingUser = appState.getViewingUser();
       if (viewingUser) {
@@ -109,8 +111,8 @@ export function init() {
   }
 
   async function handleChallenge() {
-    if (!currentUserId || !friendUserId) {
-      notify('No user selected for challenge', 'red');
+    if (!currentUserId || !friendUserId || !currentUsername) {
+      notify('User information not available', 'red');
       return;
     }
 
@@ -122,7 +124,7 @@ export function init() {
         return;
       }
 
-      gameService.sendGameInvite(friendUserId, viewingUser.username);
+      gameService.sendGameInvite(friendUserId, currentUsername);
       notify(`Game invitation sent to ${viewingUser.username}!`);
     } catch (error) {
       console.error('Failed to send game invitation:', error);
