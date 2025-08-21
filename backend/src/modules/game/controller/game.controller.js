@@ -243,9 +243,11 @@ export async function handleGameInvite(data, userId, connection) {
     const inviteMessage = {
         type: 'game',
         event: 'game-invite',
-        senderId: userId,
-        receiverId: receiverId,
-        senderUsername: senderUsername || 'Unknown'
+        data: {
+            senderId: userId,
+            receiverId: receiverId,
+            senderUsername: senderUsername || 'Unknown'
+        }
     };
     
     recipientClient.send(JSON.stringify(inviteMessage));
