@@ -23,6 +23,7 @@ const eventHandlers = {
     state: stateGame,
     score: scoreGame,
     leave: leaveGame,
+    ready: handlePlayerReady,
     reconnect: handleReconnectRequest,
     'game-invite': handleGameInvite,
     'invite-accepted': handleInviteAccepted,
@@ -179,6 +180,56 @@ export async function stateGame(data, userId) {
 export async function leaveGame(data, userId, connection) {
     await clearAll(userId, 'leave'); // Clear user-room mapping and broadcast game over if necessary
     
+}
+
+export async function handlePlayerReady(data, userId, connection) {
+    const roomId = userRoom.get(userId);
+    if (!roomId) {
+        await sendMessage(connection, 'game', 'error', {
+            message: 'You are not in any room'
+        });
+        return;
+    }
+
+    const room = rooms.get(roomId);
+    if (!room) {
+        await sendMessage(connection, 'game', 'error', {
+            message: 'Room not found'
+        });
+        return;
+    }
+
+    // Initialize ready status if not exists
+    if (!room.readyPlayers) {
+        room.readyPlayers = new Set();
+    }
+
+    // Mark player as ready
+    room.readyPlayers.add(userId);
+    console.log(`User ${userId} is ready in room ${roomId}`);
+
+    // Broadcast ready status to all players
+    for (const [playerId, socket] of room.sockets) {
+        await sendMessage(socket, 'game', 'player-ready', {
+            roomId: room.id,
+            readyPlayerId: userId,
+            readyPlayers: Array.from(room.readyPlayers),
+            totalPlayers: room.players.size
+        });
+    }
+
+    // Check if all players are ready (and we have 2 players)
+    if (room.readyPlayers.size === 2 && room.players.size === 2) {
+        console.log(`All players ready in room ${roomId}. Game can start.`);
+        
+        // Broadcast that game can start
+        for (const [playerId, socket] of room.sockets) {
+            await sendMessage(socket, 'game', 'all-ready', {
+                roomId: room.id,
+                message: 'All players are ready! Game can now start.'
+            });
+        }
+    }
 }
 
 
