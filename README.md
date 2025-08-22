@@ -15,7 +15,7 @@ A modern multiplayer Pong game built with TypeScript and Fastify, featuring real
 │   │   ├── modules/      # Feature modules (auth, chat, game, etc.)
 │   │   ├── websocket/    # Real-time communication
 │   │   └── middleware/   # Authentication & security
-├── frontend-v2/          # TypeScript client
+├── frontend/          # TypeScript client
 │   ├── core/            # Router, components, utilities
 │   ├── pages/           # SPA routes and components
 │   └── styles/          # Tailwind CSS
@@ -70,7 +70,7 @@ npm install
 npm run dev        # http://localhost:3000
 
 # Frontend  
-cd ../frontend-v2
+cd ../frontend
 npm install
 npm run dev        # http://localhost:8080
 ```

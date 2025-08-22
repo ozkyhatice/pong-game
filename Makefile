@@ -3,7 +3,6 @@ all:
 	@echo "\033[32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 	make backend-bg & \
 	make frontend-bg & \
-	make websocket-test-bg & \
 	wait
 
 backend-bg:
@@ -14,19 +13,13 @@ backend-bg:
 
 frontend-bg:
 	@echo "\033[34m🎮 Starting frontend server in background...\033[0m"
-	@cd frontend-v2 && npm install --silent && npm run dev &
+	@cd frontend && npm install --silent && npm run dev &
 	@echo "\033[34m✅ Frontend ready at http://localhost:8080\033[0m"
-
-websocket-test-bg:
-	@echo "\033[35m🔌 Starting websocket test app in background...\033[0m"
-	@cd websocket-test-app && npm install --silent && npm run dev
-	@echo "\033[35m✅ WebSocket test app ready at http://localhost:8081\033[0m"
 
 clean:
 	@echo "\033[33m🧹 Cleaning up node_modules and dist folders...\033[0m"
 	@cd backend && rm -rf node_modules
-	@cd frontend-v2 && rm -rf node_modules dist
-	@cd websocket-test-app && rm -rf node_modules dist
+	@cd frontend && rm -rf node_modules dist
 	@echo "\033[31m🗑️  Removing database file...\033[0m"
 	@rm -rf backend/db/*
 	@echo "\033[32m✅ Cleanup completed!\033[0m"
@@ -60,8 +53,6 @@ help:
 	@echo "\033[32m🔧 make backend-bg    \033[0m- Start only backend server (background)"
 	@echo "\033[34m🎨 make frontend      \033[0m- Start only frontend server (background)"
 	@echo "\033[34m🎨 make frontend-bg   \033[0m- Start only frontend server (background)"
-	@echo "\033[35m🔌 make websocket-test\033[0m- Start only websocket test app (foreground)"
-	@echo "\033[35m🔌 make websocket-test-bg\033[0m- Start only websocket test app (background)"
 	@echo "\033[33m🧹 make clean         \033[0m- Remove node_modules and dist folders"
 	@echo "\033[31m🗑️  make clean-db      \033[0m- Remove database file only"
 	@echo "\033[31m💀 make kill          \033[0m- Kill all running processes"
@@ -129,7 +120,6 @@ docker-up:
 	@echo "\033[32m✅ All Docker services started!\033[0m"
 	@echo "\033[34m🎮 Frontend: http://localhost:8080\033[0m"
 	@echo "\033[32m🔧 Backend: http://localhost:3000\033[0m"
-	@echo "\033[35m🔌 WebSocket Test App: http://localhost:8081\033[0m"
 
 docker-down:
 	@echo "\033[31m🐳 Stopping all Docker services...\033[0m"
@@ -177,7 +167,6 @@ docker-full-up:
 	@echo "\033[32m✅ All services started!\033[0m"
 	@echo "\033[34m🎮 Frontend: http://localhost:8080\033[0m"
 	@echo "\033[32m🔧 Backend: http://localhost:3000\033[0m"
-	@echo "\033[35m🔌 WebSocket Test App: http://localhost:8081\033[0m"
 	@echo "\033[36m📈 Prometheus: http://localhost:9090\033[0m"
 	@echo "\033[36m📊 Grafana: http://localhost:3001 (admin/admin)\033[0m"
 
@@ -187,4 +176,4 @@ docker-full-down:
 	@cd monitoring && docker-compose down
 	@echo "\033[32m✅ All services stopped!\033[0m"
 
-.PHONY: all backend backend-bg frontend frontend-bg websocket-test websocket-test-bg clean clean-db kill status fclean help re monitoring-up monitoring-down monitoring-logs monitoring-restart monitoring-status docker-up docker-down docker-logs docker-restart docker-build docker-rebuild docker-status docker-clean docker-full-up docker-full-down
+.PHONY: all backend backend-bg frontend frontend-bg clean clean-db kill status fclean help re monitoring-up monitoring-down monitoring-logs monitoring-restart monitoring-status docker-up docker-down docker-logs docker-restart docker-build docker-rebuild docker-status docker-clean docker-full-up docker-full-down

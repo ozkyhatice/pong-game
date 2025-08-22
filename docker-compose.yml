@@ -14,21 +14,10 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./frontend-v2/.
+    build: ./frontend/.
     container_name: pong-frontend
     ports:
       - "8080:80"
-    depends_on:
-      - backend
-    networks:
-      - pong-network
-    restart: unless-stopped
-
-  websocket-test-app:
-    build: ./websocket-test-app/.
-    container_name: pong-websocket-test
-    ports:
-      - "8081:80"
     depends_on:
       - backend
     networks:
