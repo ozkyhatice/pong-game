@@ -4,7 +4,7 @@ interface ViewingUser {
   avatar?: string;
 }
 
-interface RoomInfo {
+export interface RoomInfo {
   roomId: string;
   players: number[];
   createdAt: number;

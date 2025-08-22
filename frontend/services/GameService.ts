@@ -85,6 +85,10 @@ export class GameService {
     this.wsManager.on('invite-accepted', callback);
   }
 
+  onPlayerLeft(callback: (data: any) => void): void {
+    this.wsManager.on('player left', callback);
+  }
+
   removeListener(event: string, callback: Function): void {
     this.wsManager.off(event, callback);
   }

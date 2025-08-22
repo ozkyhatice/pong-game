@@ -42,28 +42,31 @@ export async function broadcastLeft(room, userId) {
     if (userId2) 
         winId = userId2[0];
     console.log("winnerId:", winId);
+    // Stop game if it's running
     if (room.started && !room.state.gameOver) {
         clearInterval(room.loop);
         console.log(`Game loop stopped for room ${room.id}`);
         room.started = false;
         room.loop = null;
-        room.state.gameOver = true; // Oyun bitti
+        room.state.gameOver = true;
         room.endDate = new Date();
-        try {
-            for (const [playerId, socket] of room.sockets) {
+    }
+    
+    // Always broadcast player left message
+    try {
+        for (const [playerId, socket] of room.sockets) {
+            if (playerId !== userId) { // Don't send to the user who left
                 await sendMessage(socket, 'game', 'player left', {
                     roomId: room.id,
-                    winner: winId, // Disconnect nedeniyle kazanan yok
-                    finalScore: room.state.score,
+                    winner: winId,
+                    finalScore: room.state ? room.state.score : null,
                     leftPlayer: userId
                 });
-    
             }
-            // await saveGametoDbServices(room, userId); //db kaydet
-            // console.log(`Game over broadcasted for room ${room.id}`);   
-        }catch (error) {
-            console.error('Error broadcasting - leave:', error);
         }
+        console.log(`Player left message broadcasted for room ${room.id}`);   
+    } catch (error) {
+        console.error('Error broadcasting - leave:', error);
     }
 }
 export async function broadcast(room, type, event, data = {}) {
@@ -80,7 +83,7 @@ export async function broadcast(room, type, event, data = {}) {
 
 export async function clearAll(userId, message) {
       const roomId = userRoom.get(userId);
-      const user2 = Array.from(userRoom.keys()).find(id => userRoom.get(id) === roomId);
+      const user2 = Array.from(userRoom.keys()).find(id => userRoom.get(id) === roomId && id !== userId);
       
       if (roomId) {
         const room = rooms.get(roomId);
@@ -99,7 +102,7 @@ export async function clearAll(userId, message) {
             });
           } else if (message === 'leave') {
             if (room.started && !room.state.gameOver) {
-                console.log(`User ${user2} left room ${user2.id}`);
+                console.log(`User ${userId} left room ${room.id}`);
                 const players = Array.from(room.players);
                 if (players.length === 2) {
                     room.winnerId = user2;
@@ -107,9 +110,19 @@ export async function clearAll(userId, message) {
                 }
             }
             await broadcastLeft(room, userId);
+            
+            // Remove the user who left
             userRoom.delete(userId);
             room.players.delete(userId);
             room.sockets.delete(userId);
+            
+            // Also remove the other user from the room since the game is over
+            if (user2) {
+                userRoom.delete(user2);
+                room.players.delete(user2);
+                room.sockets.delete(user2);
+                console.log(`Also removed user ${user2} from room ${room.id}`);
+            }
           }
         }
         console.log('roomId:', roomId);
