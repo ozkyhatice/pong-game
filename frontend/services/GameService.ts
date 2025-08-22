@@ -20,6 +20,10 @@ export class GameService {
     this.send('leave', { roomId });
   }
 
+  setPlayerReady(roomId: string): void {
+    this.send('ready', { roomId });
+  }
+
   movePlayer(roomId: string, y: number): void {
     this.send('move', { roomId, y });
   }
@@ -87,6 +91,14 @@ export class GameService {
 
   onPlayerLeft(callback: (data: any) => void): void {
     this.wsManager.on('player left', callback);
+  }
+
+  onPlayerReady(callback: (data: any) => void): void {
+    this.wsManager.on('player-ready', callback);
+  }
+
+  onAllReady(callback: (data: any) => void): void {
+    this.wsManager.on('all-ready', callback);
   }
 
   removeListener(event: string, callback: Function): void {
