@@ -30,21 +30,17 @@ export class GameInviteManager {
   public loadStoredInvites(): void {
     if (!this.currentUserId || !this.friendUserId) return;
 
-    const storageKey = `gameInvites_${this.currentUserId}_${this.friendUserId}`;
-    const storedInvites = JSON.parse(localStorage.getItem(storageKey) || '{}');
-
-    const friendInvite = storedInvites[this.friendUserId];
+    const storedInvites = JSON.parse(localStorage.getItem('gameInvites') || '[]');
+    const friendInvite = storedInvites.find((inv: any) => inv.senderId === this.friendUserId);
+    
     if (friendInvite) {
       const now = Date.now();
-      const inviteAge = now - friendInvite.timestamp;
+      const inviteAge = now - (friendInvite.timestamp || 0);
       if (inviteAge < 10 * 60 * 1000) { // 10 minutes
         this.activeInvites.set(friendInvite.senderId, friendInvite);
         const inviteElement = this.createGameInviteElement(friendInvite);
         inviteElement.setAttribute('data-invite-sender', friendInvite.senderId.toString());
         this.chatMessages.appendChild(inviteElement);
-      } else {
-        delete storedInvites[this.friendUserId];
-        localStorage.setItem(storageKey, JSON.stringify(storedInvites));
       }
     }
   }
@@ -171,13 +167,18 @@ export class GameInviteManager {
       timestamp: Date.now()
     });
 
-    const storageKey = `gameInvites_${this.currentUserId}_${this.friendUserId}`;
-    const storedInvites = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    storedInvites[invite.senderId] = {
+    const storedInvites = JSON.parse(localStorage.getItem('gameInvites') || '[]');
+    
+    // Remove old invite from same sender
+    const filteredInvites = storedInvites.filter((inv: any) => inv.senderId !== invite.senderId);
+    
+    // Add new invite
+    filteredInvites.push({
       ...invite,
       timestamp: Date.now()
-    };
-    localStorage.setItem(storageKey, JSON.stringify(storedInvites));
+    });
+    
+    localStorage.setItem('gameInvites', JSON.stringify(filteredInvites));
   }
 
   private removeInviteFromChat(senderId: number): void {
@@ -190,10 +191,9 @@ export class GameInviteManager {
   private clearInviteFromStorage(senderId: number): void {
     this.activeInvites.delete(senderId);
 
-    const storageKey = `gameInvites_${this.currentUserId}_${this.friendUserId}`;
-    const storedInvites = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    delete storedInvites[senderId];
-    localStorage.setItem(storageKey, JSON.stringify(storedInvites));
+    const storedInvites = JSON.parse(localStorage.getItem('gameInvites') || '[]');
+    const filteredInvites = storedInvites.filter((inv: any) => inv.senderId !== senderId);
+    localStorage.setItem('gameInvites', JSON.stringify(filteredInvites));
   }
 
   private escapeHtml(text: string): string {

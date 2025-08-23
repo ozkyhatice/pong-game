@@ -1,5 +1,6 @@
 import { AppState, RoomInfo } from "../../core/AppState.js";
 import { GameService } from "../../services/GameService.js";
+import { UserService } from "../../services/UserService.js";
 import { Router } from "../../core/router.js";
 import { notify } from "../../core/notify.js";
 
@@ -8,49 +9,52 @@ declare global {
 }
 
 export function init() {
-  const player1Name = document.getElementById('player1-name');
-  const player2Name = document.getElementById('player2-name');
-  const player1ReadyText = document.getElementById('player1-ready-text');
-  const player2ReadyText = document.getElementById('player2-ready-text');
   const roomStatus = document.getElementById('room-status');
   const roomId = document.getElementById('room-id');
   const readyBtn = document.getElementById('ready-btn');
   const leaveBtn = document.getElementById('leave-btn');
-
-  if (readyBtn) {
-    readyBtn.addEventListener('click', handleReady);
-  }
-  
-  if (leaveBtn) {
-    leaveBtn.addEventListener('click', handleLeave);
-  }
-
-
-
+  const player1Name = document.getElementById('player1-name');
+  const player2Name = document.getElementById('player2-name');
+  const player1Avatar = document.getElementById('player1-avatar') as HTMLImageElement;
+  const player2Avatar = document.getElementById('player2-avatar') as HTMLImageElement;
 
   const appState = AppState.getInstance();
   const gameService = new GameService();
-
+  const userService = new UserService();
   const currentRoom: RoomInfo | null = appState.getCurrentRoom();
 
-  // odadan birisi ayrilirsa
+  if (readyBtn) readyBtn.addEventListener('click', handleReady);
+  if (leaveBtn) leaveBtn.addEventListener('click', handleLeave);
+  
+  initLobby();
+
   gameService.onPlayerLeft((data) => {
-    console.log('Player left:', data);
     appState.clearCurrentRoom();
-    notify(`Player ${data.leftPlayer} left the game. Returning to home.`);
+    notify(`Player left the game.`);
     router.navigate('home');
   });
 
-  // diger user hazir oldugunda
   gameService.onPlayerReady((data) => {
-    console.log('Player ready:', data);
-    updateReadyStatus(data);
+    updateLobbyStatus(data);
+    // Reload player info when someone joins  
+    if (data.newPlayerJoined) {
+      setTimeout(() => loadPlayerInfo(), 500);
+    }
   });
 
-  // tum userlar hazir mesaji -> oyunu baslat
-  gameService.onAllReady((data) => {
-    console.log('All players ready:', data);
-    notify('All players are ready! Game can now start.');
+  gameService.onPlayerJoined((data) => {
+    console.log('Player joined event:', data);
+    // Update room info when someone joins
+    if (data.roomInfo) {
+      console.log('Updating room info:', data.roomInfo);
+      appState.setCurrentRoom(data.roomInfo);
+      setTimeout(() => loadPlayerInfo(), 500);
+    }
+  });
+
+  gameService.onAllReady(() => {
+    notify('All players ready! Starting game...');
+    router.navigate('remote-game');
   });
 
   function handleReady() {
@@ -68,29 +72,65 @@ export function init() {
     }
   }
 
-//odadan ayril butonu
   function handleLeave() {
-    const roomId = currentRoom?.roomId || '';
-    gameService.leaveGame(roomId);
+    if (!currentRoom?.roomId) return;
+    gameService.leaveGame(currentRoom.roomId);
     appState.clearCurrentRoom();
     router.navigate('home');
   }
 
-  function updateReadyStatus(data: any) {
-    const { readyPlayerId, readyPlayers, totalPlayers } = data;
+  async function initLobby() {
+    if (!currentRoom?.roomId) return;
     
-    // Update UI to show which players are ready
-    if (player1ReadyText && player2ReadyText) {
-      // Assuming player1 and player2 based on readyPlayers array
-      const readyPlayerIds = readyPlayers || [];
+    if (roomId) roomId.textContent = currentRoom.roomId;
+    await loadPlayerInfo();
+  }
+
+  async function loadPlayerInfo() {
+    try {
+      const currentUser = await userService.getCurrentUser();
+      console.log('Current user:', currentUser);
+      console.log('Current room players:', currentRoom?.players);
+      if (!currentUser || !currentRoom?.players) return;
+
+      const myId = currentUser.id;
+      console.log('My ID:', myId);
+      console.log('Players in room:', currentRoom.players);
       
-      if (readyPlayerIds.includes(readyPlayerId)) {
-        if (roomStatus) {
-          roomStatus.textContent = `${readyPlayerIds.length}/${totalPlayers} players ready`;
-        }
+      const otherPlayerId = currentRoom.players.find(id => id !== myId);
+      console.log('Other player ID:', otherPlayerId);
+
+      // Load current user info
+      if (player1Name) player1Name.textContent = currentUser.username;
+      if (player1Avatar && currentUser.avatar) {
+        player1Avatar.src = currentUser.avatar;
       }
+
+      // Load opponent info if available
+      if (otherPlayerId) {
+        const opponent = await userService.getUserById(otherPlayerId);
+        console.log('Opponent:', opponent);
+        if (opponent) {
+          if (player2Name) player2Name.textContent = opponent.username;
+          if (player2Avatar && opponent.avatar) {
+            player2Avatar.src = opponent.avatar;
+          }
+        }
+      } else {
+        console.log('No other player found in room');
+      }
+    } catch (e) {
+      console.error('Error loading player info:', e);
     }
   }
 
+  function updateLobbyStatus(data: any) {
+    const readyCount = data.readyPlayers?.length || 0;
+    const totalPlayers = data.totalPlayers || 2;
+    
+    if (roomStatus) {
+      roomStatus.textContent = `${readyCount}/${totalPlayers} players ready`;
+    }
+  }
 }
 
