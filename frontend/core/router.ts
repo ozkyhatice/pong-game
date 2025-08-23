@@ -1,4 +1,6 @@
 import { AuthGuard } from './auth-guard.js';
+import { notify } from './notify.js';
+import { WebSocketManager } from './WebSocketManager.js';
 
 class Router {
   private container: HTMLElement;
@@ -12,14 +14,20 @@ class Router {
     this.navigate(initialPage);
   }
 
-  navigate(pageName: string) {
+  navigate(pageName: string): void {
     console.log(`Navigating to: ${pageName}`);
-    
-    // Auth kontrolü ve yönlendirme
-    AuthGuard.checkAuth(pageName, this);
     
     // Sayfa değişikliği gerekli mi?
     if (pageName === this.currentPage) return;
+    
+    // Auth kontrolü ve yönlendirme
+    const redirectPage = AuthGuard.getRedirectPage(pageName);
+    if (redirectPage && redirectPage !== pageName) {
+      if (!AuthGuard.isAuthenticated() && pageName !== 'landing') {
+        notify('Please login to access this page!');
+      }
+      return this.navigate(redirectPage);
+    }
     
     // History state güncelle (URL değişmeden)
     window.history.pushState({ page: pageName }, '', window.location.href);
@@ -87,6 +95,9 @@ class Router {
 
       const html = await response.text();
 
+      // Clean up existing event listeners and components
+      this.cleanupCurrentPage();
+      
       // Container'ı temizle ve yeni içeriği ekle
       this.container.innerHTML = html;
 
@@ -114,6 +125,28 @@ class Router {
         </div>
       </div>
     `;
+  }
+
+  private cleanupCurrentPage() {
+    // General cleanup for any page
+    const allEventElements = this.container.querySelectorAll('[data-event-listener]');
+    allEventElements.forEach(element => {
+      // Remove custom event listeners if marked
+      element.removeAttribute('data-event-listener');
+    });
+
+    // AGGRESSIVE: Clear ALL WebSocket listeners when changing any page
+    // This prevents duplicate event listeners from accumulating
+    const wsManager = WebSocketManager.getInstance();
+    wsManager.clearAllListeners();
+
+    // Babylon.js specific cleanup
+    if (this.currentPage === 'landing') {
+      this.cleanupBabylonjs();
+    }
+
+    // Clear any running intervals or timeouts
+    // Components should handle their own cleanup, but this is a safety net
   }
 
   private cleanupBabylonjs() {

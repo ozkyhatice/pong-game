@@ -91,34 +91,31 @@ export function init() {
       const currentUser = await userService.getCurrentUser();
       console.log('Current user:', currentUser);
       console.log('Current room players:', currentRoom?.players);
-      if (!currentUser || !currentRoom?.players) return;
+      if (!currentUser || !currentRoom?.players || currentRoom.players.length < 2) return;
 
-      const myId = currentUser.id;
-      console.log('My ID:', myId);
-      console.log('Players in room:', currentRoom.players);
-      
-      const otherPlayerId = currentRoom.players.find(id => id !== myId);
-      console.log('Other player ID:', otherPlayerId);
+      const [playerId1, playerId2] = currentRoom.players;
+      console.log('Player 1 ID:', playerId1);
+      console.log('Player 2 ID:', playerId2);
 
-      // Load current user info
-      if (player1Name) player1Name.textContent = currentUser.username;
-      if (player1Avatar && currentUser.avatar) {
-        player1Avatar.src = currentUser.avatar;
+      // Load both players based on their position in the array (like end-game)
+      const [player1, player2] = await Promise.all([
+        userService.getUserById(playerId1),
+        userService.getUserById(playerId2)
+      ]);
+
+      // Player 1 (Sol)
+      if (player1Name) player1Name.textContent = player1?.username || `Player ${playerId1}`;
+      if (player1Avatar && player1?.avatar) {
+        player1Avatar.src = player1.avatar;
       }
 
-      // Load opponent info if available
-      if (otherPlayerId) {
-        const opponent = await userService.getUserById(otherPlayerId);
-        console.log('Opponent:', opponent);
-        if (opponent) {
-          if (player2Name) player2Name.textContent = opponent.username;
-          if (player2Avatar && opponent.avatar) {
-            player2Avatar.src = opponent.avatar;
-          }
-        }
-      } else {
-        console.log('No other player found in room');
+      // Player 2 (Sağ) 
+      if (player2Name) player2Name.textContent = player2?.username || `Player ${playerId2}`;
+      if (player2Avatar && player2?.avatar) {
+        player2Avatar.src = player2.avatar;
       }
+
+      console.log('Player positions set - Left:', player1?.username, 'Right:', player2?.username);
     } catch (e) {
       console.error('Error loading player info:', e);
     }

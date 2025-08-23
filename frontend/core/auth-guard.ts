@@ -2,7 +2,7 @@ import { notify } from './notify.js';
 import { WebSocketManager } from './WebSocketManager.js';
 
 export class AuthGuard {
-  private static isAuthenticated(): boolean {
+  public static isAuthenticated(): boolean {
     return !!localStorage.getItem('authToken');
   }
 

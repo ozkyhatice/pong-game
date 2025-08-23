@@ -16,6 +16,10 @@ export async function init() {
     return;
   }
 
+  // Clear existing components to prevent duplicates
+  profileContainer.innerHTML = '';
+  gameAreaContainer.innerHTML = '';
+
   // Game Area component'ini olustur
   
   try {

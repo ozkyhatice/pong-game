@@ -1,20 +1,30 @@
 import { getApiUrl, API_CONFIG } from '../../../../config.js';
 import { notify } from '../../../../core/notify.js';
 import { AppState } from '../../../../core/AppState.js';
+import { GameService } from '../../../../services/GameService.js';
+import { UserInfo, UserService } from '../../../../services/UserService.js';
 
 export class FriendsTab {
   private element: HTMLElement;
   private friends: any[] = [];
+  private gameService: GameService = new GameService();
+  private userService: UserService = new UserService();
+  private me: UserInfo | null = null;
 
   constructor() {
     this.element = document.createElement('div');
     this.element.className = 'h-full';
     this.setupEvents();
-    // loadFriends will be called when tab is switched
+    
+    this.loadCurrentUser();
   }
 
-  private getAvatarURL(username: string): string {
-    return `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(username)}`;
+  private async loadCurrentUser(): Promise<void> {
+    try {
+      this.me = await this.userService.getCurrentUser();
+    } catch (error) {
+      console.error('Error loading current user:', error);
+    }
   }
 
   private render(): void {
@@ -35,7 +45,7 @@ export class FriendsTab {
         ${this.friends.map(friend => `
           <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div class="flex items-center">
-              <img src="${this.getAvatarURL(friend.friendInfo.username)}" alt="Avatar" class="w-8 h-8 rounded-full mr-3">
+              <img src="${friend.friendInfo.avatar}" alt="Avatar" class="w-8 h-8 rounded-full mr-3">
               <span class="text-sm font-medium">${friend.friendInfo.username}</span>
             </div>
             <div class="flex space-x-2">
@@ -44,7 +54,9 @@ export class FriendsTab {
                       data-username="${friend.friendInfo.username}">
                 Chat
               </button>
-              <button class="play-btn px-3 py-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200">
+              <button class="play-btn px-3 py-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200"
+                      data-user-id="${friend.friendInfo.id}" 
+                      data-username="${friend.friendInfo.username}">
                 Play
               </button>
             </div>
@@ -69,7 +81,7 @@ export class FriendsTab {
       }
 
       if (target.closest('.play-btn')) {
-        notify('Game feature coming soon!');
+        this.handlePlayButton(target);
         return;
       }
     };
@@ -92,6 +104,24 @@ export class FriendsTab {
     } catch (error) {
       console.error('Error loading friends:', error);
       notify('Failed to load friends', 'red');
+    }
+  }
+
+  private async handlePlayButton(target: HTMLElement): Promise<void> {
+    try {
+      const btn = target.closest('.play-btn');
+      const friendUserId = btn?.getAttribute('data-user-id');
+      const friendUsername = btn?.getAttribute('data-username');
+
+      if (friendUserId && this.me && friendUsername) {
+        this.gameService.sendGameInvite(parseInt(friendUserId), this.me.username);
+        notify(`Game invitation sent to ${friendUsername}!`);
+      } else {
+        notify('Unable to send invitation', 'red');
+      }
+    } catch (error) {
+      console.error('Error sending game invitation:', error);
+      notify('Failed to send game invitation', 'red');
     }
   }
 

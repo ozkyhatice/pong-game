@@ -127,14 +127,24 @@ export class WebSocketManager {
     this.listeners.get(event)?.push(callback);
   }
 
-  off(event: string, callback: Function): void {
-    const callbacks = this.listeners.get(event);
-    if (callbacks) {
+  off(event: string, callback?: Function): void {
+    if (!this.listeners.has(event)) return;
+    
+    if (callback) {
+      // Remove specific callback
+      const callbacks = this.listeners.get(event)!;
       const index = callbacks.indexOf(callback);
-      if (index > -1) {
+      if (index !== -1) {
         callbacks.splice(index, 1);
       }
+    } else {
+      // Remove all callbacks for event
+      this.listeners.set(event, []);
     }
+  }
+
+  clearAllListeners(): void {
+    this.listeners.clear();
   }
 
   private emit(event: string, data: any): void {

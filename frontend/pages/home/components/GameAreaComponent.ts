@@ -40,6 +40,10 @@ export class GameAreaComponent extends Component {
             </div>
           </div>
 
+          <hr>
+          <b>oyun istekleri soldaki menude ve chatde calisiyor!!</b>
+          <hr><br>
+
           <!-- Friend Invite Section -->
           <div class="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
             <h3 class="text-lg font-semibold text-green-800 mb-3">👥 Invite Friend</h3>
