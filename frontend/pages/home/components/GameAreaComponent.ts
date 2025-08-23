@@ -70,21 +70,6 @@ export class GameAreaComponent extends Component {
           </div>
         </div>
       </div>
-
-      <div class="m-4">
-        <button id="lobby-btn" class="px-3 py-1 bg-gray-400 text-black rounded">
-          lobby 
-        </button>
-
-        <button id="end-game-btn" class="px-3 py-1 bg-gray-400 text-black rounded">
-          End Game
-        </button>
-
-        <button id="user-profile-btn" class="px-3 py-1 bg-gray-400 text-black rounded" userId="2">
-          User Profile
-        </button>
-      </div>
-
     `);
   }
 
@@ -93,25 +78,10 @@ export class GameAreaComponent extends Component {
     const leaveBtn = this.element.querySelector('#leave-matchmaking-btn');
     const sendBtn = this.element.querySelector('#send-invite-btn');
     const usernameInput = this.element.querySelector('#friend-username-input');
-    const lobbyBtn = this.element.querySelector('#lobby-btn'); //test
-    const endGameBtn = this.element.querySelector('#end-game-btn'); //test
     
     joinBtn?.addEventListener('click', this.handleJoinMatchmaking.bind(this));
     leaveBtn?.addEventListener('click', this.handleLeaveMatchmaking.bind(this));
     sendBtn?.addEventListener('click', this.handleSendInvite.bind(this));
-    lobbyBtn?.addEventListener('click', () => { (window as any).router.navigate('game-lobby'); }); //test
-    endGameBtn?.addEventListener('click', () => { (window as any).router.navigate('end-game'); }); //test
-    
-    
-    const userProfileBtn = this.element.querySelector('#user-profile-btn'); //test
-    userProfileBtn?.addEventListener('click', () => {
-      const appState = AppState.getInstance();
-      const userId = userProfileBtn.getAttribute('userId');
-      if (userId) {
-        appState.setViewingUser({ id: Number(userId), username: 'User' });
-        (window as any).router.navigate('user-profile');
-      }
-    }); //test
   }
 
   private handleJoinMatchmaking(): void {
