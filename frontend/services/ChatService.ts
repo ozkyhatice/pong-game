@@ -1,5 +1,6 @@
 import { WebSocketManager } from '../core/WebSocketManager.js';
 import { ChatMessage } from '../core/types.js';
+import { API_CONFIG, getApiUrl } from '../config.js';
 
 export class ChatService {
   private wsManager: WebSocketManager;
@@ -41,5 +42,37 @@ export class ChatService {
 
   removeListener(event: string, callback: Function): void {
     this.wsManager.off(event, callback);
+  }
+
+  async getChatHistory(userId: number): Promise<ChatMessage[]> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return [];
+
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.HISTORY(userId.toString())), {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  }
+
+  async markMessagesAsReadHTTP(userId: number): Promise<boolean> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return false;
+
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.MARK_READ(userId.toString())), {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      return response.ok;
+    } catch {
+      return false;
+    }
   }
 }

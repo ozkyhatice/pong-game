@@ -50,8 +50,17 @@ export const API_CONFIG = {
       // Headers: { Authorization: Bearer <token> }
       UPDATE: '/users/me',
 
+      // PUT /users/me/avatar
+      // Body: FormData with avatar file
+      // Headers: { Authorization: Bearer <token> }
+      UPDATE_AVATAR: '/users/me/avatar',
+
+      // GET /users/id/:id
+      // Headers: { Authorization: Bearer <token> }
+      BY_ID: (id: string) => `/users/id/${id}`,
+
       // GET /users/:username
-      // Function usage: getApiUrl(API_CONFIG.ENDPOINTS.USER.BY_USERNAME('can'))
+      // Headers: { Authorization: Bearer <token> }
       BY_USERNAME: (username: string) => `/users/${username}`
     },
 
@@ -84,6 +93,16 @@ export const API_CONFIG = {
         // GET /friends/requests/sent
         SENT: '/friends/requests/sent'
       }
+    },
+
+    CHAT: {
+      // GET /chat/history/:userId
+      // Headers: { Authorization: Bearer <token> }
+      HISTORY: (userId: string) => `/chat/history/${userId}`,
+
+      // PUT /chat/mark-read/:userId
+      // Headers: { Authorization: Bearer <token> }
+      MARK_READ: (userId: string) => `/chat/mark-read/${userId}`
     }
   }
 };
