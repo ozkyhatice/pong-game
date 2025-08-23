@@ -21,14 +21,9 @@ export class ProfileHeader {
     this.setupEvents();
   }
 
-  private getAvatarURL(): string {
-    const name = this.profile.username;
-    if (!name) return 'https://api.dicebear.com/9.x/bottts/svg';
-    return `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(name)}`;
-  }
-
   private render(): void {
     const username = this.profile.username || 'Unknown';
+    const avatar = this.profile.avatar || `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(username)}`;
     const wins = this.profile.wins || 0;
     const losses = this.profile.losses || 0;
     const winRate = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
@@ -51,7 +46,7 @@ export class ProfileHeader {
 
       <!-- Profile Photo -->
       <div class="mb-4">
-        <img src="${this.getAvatarURL()}" alt="Avatar" class="w-20 h-20 rounded-full mx-auto border-3 border-white/50 shadow-lg">
+        <img src="${avatar}" alt="Avatar" class="w-20 h-20 rounded-full mx-auto border-3 border-white/50 shadow-lg">
       </div>
 
       <!-- Username -->

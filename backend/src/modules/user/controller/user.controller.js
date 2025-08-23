@@ -87,7 +87,7 @@ export async function updateMyAvatar(request, reply) {
     fs.writeFileSync(filePath, buffer);
 
     // Veritabanında avatar yolunu güncelle
-    const avatarUrl = `/uploads/avatars/${fileName}`;
+    const avatarUrl = `${process.env.BACKEND_URL || 'http://localhost:3000'}/uploads/avatars/${fileName}`;
     const updatedUser = await updateAvatar(userId, avatarUrl);
 
     reply.send({ 

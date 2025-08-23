@@ -11,10 +11,6 @@ export class RequestsTab {
     this.setupEvents();
   }
 
-  private getAvatarURL(username: string): string {
-    return `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(username)}`;
-  }
-
   private render(): void {
     if (this.requests.length === 0) {
       this.element.innerHTML = `
@@ -33,7 +29,7 @@ export class RequestsTab {
         ${this.requests.map(request => `
           <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
             <div class="flex items-center">
-              <img src="${this.getAvatarURL(request.senderInfo.username)}" alt="Avatar" class="w-8 h-8 rounded-full mr-3">
+              <img src="${request.senderInfo.avatar || `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(request.senderInfo.username)}`}" alt="Avatar" class="w-8 h-8 rounded-full mr-3">
               <span class="text-sm font-medium">${request.senderInfo.username}</span>
             </div>
             <div class="flex space-x-2">
