@@ -144,13 +144,14 @@ export async function handlePlayerMove(data, userId) {
     
     // Oyuncunun paddle'ını güncelle
     if (room.state.paddles[userId]) {
+        const oldY = room.state.paddles[userId].y;
         room.state.paddles[userId].y = data.y;
-        console.log(`User ${userId} moved paddle to y=${data.y}`);
+        console.log(`User ${userId} moved paddle from y=${oldY} to y=${data.y}`);
         
         // Oyun durumunu güncelle ve tüm oyunculara gönder
         await stateGame(data, userId);
     } else {
-        console.error(`Paddle not found for user ${userId}`);
+        console.error(`Paddle not found for user ${userId}. Available paddles:`, Object.keys(room.state.paddles));
     }
 }
 export async function stateGame(data, userId) {

@@ -104,3 +104,45 @@ export async function getUsersPublicInfo(ids) {
   return users;
 }
 
+export async function updateUserStats(userId, isWinner) {
+  const db = await initDB();
+  
+  if (isWinner) {
+    // Kazanan kullanıcının wins değerini artır
+    await db.run('UPDATE users SET wins = COALESCE(wins, 0) + 1 WHERE id = ?', [userId]);
+    console.log(`User ${userId} wins updated (+1)`);
+  } else {
+    // Kaybeden kullanıcının losses değerini artır
+    await db.run('UPDATE users SET losses = COALESCE(losses, 0) + 1 WHERE id = ?', [userId]);
+    console.log(`User ${userId} losses updated (+1)`);
+  }
+}
+
+export async function updateMultipleUserStats(players) {
+  const db = await initDB();
+  
+  try {
+    // Transaction ile tüm güncellemeleri yap
+    await db.run('BEGIN TRANSACTION');
+    
+    for (const player of players) {
+      const { userId, isWinner } = player;
+      
+      if (isWinner) {
+        await db.run('UPDATE users SET wins = COALESCE(wins, 0) + 1 WHERE id = ?', [userId]);
+        console.log(`User ${userId} wins updated (+1)`);
+      } else {
+        await db.run('UPDATE users SET losses = COALESCE(losses, 0) + 1 WHERE id = ?', [userId]);
+        console.log(`User ${userId} losses updated (+1)`);
+      }
+    }
+    
+    await db.run('COMMIT');
+    console.log('User stats updated successfully');
+  } catch (error) {
+    await db.run('ROLLBACK');
+    console.error('Error updating user stats:', error);
+    throw error;
+  }
+}
+

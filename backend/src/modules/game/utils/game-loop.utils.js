@@ -9,10 +9,10 @@ export function startGameLoop(room, connection) {
         stopGameLoop(room); // Eğer varolan bir loop varsa önce onu temizle
     }
     
-    room.loop = setInterval(() => {
+    room.loop = setInterval(async () => {
         try {
             if (shouldUpdateGame(room)) {
-                updateGameState(room, connection);
+                await updateGameState(room, connection);
             }
         } catch (error) {
             console.error('Error in game loop:', error);
@@ -46,7 +46,7 @@ function shouldUpdateGame(room) {
     return !room.state.gameOver && !room.state.paused && room.started;
 }
 
-function updateGameState(room, connection) {
-    updateBall(room, connection);
-    stateGame({ roomId: room.id }, Array.from(room.players)[0]); // İlk player'ı kullan
+async function updateGameState(room, connection) {
+    await updateBall(room, connection);
+    await stateGame({ roomId: room.id }, Array.from(room.players)[0]); // İlk player'ı kullan
 }

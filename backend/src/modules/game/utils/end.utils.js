@@ -1,6 +1,7 @@
 import { sendMessage } from '../utils/join.utils.js';
 import { saveGametoDbServices } from '../services/game.service.js';
 import { rooms, userRoom } from '../controller/game.controller.js';
+import { updateMultipleUserStats } from '../../user/service/user.service.js';
 export async function broadcastGameOver(room, userId) {
     if (!room || !room.started) {
         console.error(`Room not found or game not started for user ${userId}`);
@@ -107,6 +108,19 @@ export async function clearAll(userId, message) {
                 if (players.length === 2) {
                     room.winnerId = user2;
                     await saveGametoDbServices(room);
+                    
+                    // Update user stats - winner gets +1 win, leaver gets +1 loss
+                    try {
+                        const playerStats = [
+                            { userId: user2, isWinner: true },    // Kalan oyuncu kazanır
+                            { userId: userId, isWinner: false }   // Çıkan oyuncu kaybeder
+                        ];
+                        
+                        await updateMultipleUserStats(playerStats);
+                        console.log('User stats updated after player left');
+                    } catch (error) {
+                        console.error('Error updating user stats after leave:', error);
+                    }
                 }
             }
             await broadcastLeft(room, userId);
