@@ -25,13 +25,13 @@ export async function createRoom(userId, connection, rooms) {
         sockets: new Map([[userId, connection]]),
         state: {
             ball: {
-                x: 400,                  // Ortada başlat
-                y: 300,
-                vx: 5,                   // Hız (velocity X)
-                vy: 5                    // Hız (velocity Y)
+                x: 400,                  // Canvas center X (800/2)
+                y: 200,                  // Canvas center Y (400/2) 
+                vx: 5,                   // Ball starts moving right
+                vy: 0                    // Ball starts horizontal
             },
             paddles: {
-                [userId]: { y: 250 }    // İlk oyuncunun paddle'ı
+                [userId]: { y: 150 }    // Paddle center (400/2 - 100/2 = 150)
             },               // userId -> { y: konum }
             score: {
                 [userId]: 0             // İlk oyuncunun skoru
@@ -66,7 +66,7 @@ export async function addPlayerToRoom(room, userId, connection) {
   
   // initialize paddle and score for the new player
   if (!room.state.paddles[userId]) {
-    room.state.paddles[userId] = { y: 250 };
+    room.state.paddles[userId] = { y: 150 }; // Paddle center (400/2 - 100/2 = 150)
   }
   
   if (!room.state.score[userId]) {
