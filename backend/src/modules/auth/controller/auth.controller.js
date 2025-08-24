@@ -84,7 +84,7 @@ export async function googleCallbackHandler(request, reply) {
 
     if (user.isTwoFAEnabled) {
       console.log('2FA is enabled for Google user:', user.id);
-      return reply.redirect(`http://localhost:8080?oauth=2fa_required&userId=${user.id}`);
+      return reply.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8080'}?oauth=2fa_required&userId=${user.id}`);
     }
 
     // JWT token oluştur
@@ -95,10 +95,10 @@ export async function googleCallbackHandler(request, reply) {
     });
 
     // Frontend'e başarılı redirect
-    reply.redirect(`http://localhost:8080?token=${jwtToken}&oauth=success`);
+    reply.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8080'}?token=${jwtToken}&oauth=success`);
   } catch (error) {
     console.error('Google OAuth error:', error);
-    reply.redirect(`http://localhost:8080?error=oauth_failed`);
+    reply.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8080'}?error=oauth_failed`);
   }
 }
 
