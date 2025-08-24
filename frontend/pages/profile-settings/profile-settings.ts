@@ -1,8 +1,6 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
 
-const API_BASE = 'http://localhost:3000';
-
 interface User {
     id: number;
     username: string;
@@ -39,7 +37,7 @@ async function loadProfile(): Promise<void> {
     if (!token) return notify('No token found', 'red');
 
     try {
-        const response = await fetch(`${API_BASE}/users/me`, {
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data: ProfileResponse = await response.json();
@@ -200,7 +198,7 @@ export async function updateProfile(): Promise<void> {
     if (email) updateData.email = email;
 
     try {
-        const response = await fetch(`${API_BASE}/users/me`, {
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -235,7 +233,7 @@ export async function uploadAvatar(): Promise<void> {
     formData.append('file', file);
 
     try {
-        const response = await fetch(`${API_BASE}/users/me/avatar`, {
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.UPDATE_AVATAR), {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData

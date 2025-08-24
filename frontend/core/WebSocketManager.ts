@@ -1,6 +1,7 @@
 import { WSMessage } from './types.js';
 import { AppState } from './AppState.js';
 import { notify } from './notify.js';
+import { getWsUrl } from '../config.js';
 
 export class WebSocketManager {
   private static instance: WebSocketManager;
@@ -21,10 +22,11 @@ export class WebSocketManager {
     return WebSocketManager.instance;
   }
 
-  connect(token: string, url: string = 'ws://localhost:3000/ws'): void {
-    console.log('🔌 WS: Connecting to', url);
+  connect(token: string, url?: string): void {
+    const wsUrl = url || getWsUrl();
+    console.log('🔌 WS: Connecting to', wsUrl);
     this.token = token;
-    this.url = url;
+    this.url = wsUrl;
     this.shouldReconnect = true;
     this.reconnectAttempts = 0;
     this.createConnection();

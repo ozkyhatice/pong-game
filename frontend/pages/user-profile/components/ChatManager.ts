@@ -2,6 +2,7 @@ import { ChatService } from '../../../services/ChatService.js';
 import { WebSocketManager } from '../../../core/WebSocketManager.js';
 import { notify } from '../../../core/notify.js';
 import { GameInviteManager } from './GameInviteManager.js';
+import { getApiUrl, API_CONFIG } from '../../../config.js';
 
 interface ApiMessage {
   id: number;
@@ -75,7 +76,7 @@ export class ChatManager {
     
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3000/chat/history/${this.friendUserId}`, {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.HISTORY(this.friendUserId.toString())), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
