@@ -48,7 +48,6 @@ export async function init() {
 
       if (response.ok && data.token) {
         localStorage.setItem('authToken', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
         notify(`Login successful! Welcome ${data.user.username}!`, 'green');
 
         router.navigate('home');
