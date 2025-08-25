@@ -1,4 +1,6 @@
 monitoring/data
+data/*
+*.pem
 
 
 # Dependencies

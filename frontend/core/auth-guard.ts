@@ -41,7 +41,6 @@ export class AuthGuard {
 
   public static logout(): void {
     localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
     sessionStorage.removeItem('tempUserId');
     sessionStorage.removeItem('pendingOAuthUserId');
 

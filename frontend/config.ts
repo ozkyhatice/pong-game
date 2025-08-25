@@ -1,109 +1,112 @@
 // API Configuration
 export const API_CONFIG = {
+  // BASE_URL: 'https://pong.com',
+  // WS_URL: 'wss://pong.com/ws',
+
   BASE_URL: 'http://localhost:3000',
   WS_URL: 'ws://localhost:3000/ws',
 
   ENDPOINTS: {
     AUTH: {
-      // POST /auth/register
+      // POST /api/auth/register
       // Body: { username, email, password }
-      REGISTER: '/auth/register',
+      REGISTER: '/api/auth/register',
 
-      // POST /auth/login
+      // POST /api/auth/login
       // Body: { email, password }
-      LOGIN: '/auth/login',
+      LOGIN: '/api/auth/login',
 
-      // GET /auth/me
+      // GET /api/auth/me
       // Headers: { Authorization: Bearer <token> }
-      ME: '/auth/me',
+      ME: '/api/auth/me',
 
-      // GET /auth/google
+      // GET /api/auth/google
       // OAuth login redirect (no fetch needed from frontend)
-      GOOGLE: '/auth/google'
+      GOOGLE: '/api/auth/google'
     },
 
     TWOFA: {
-      // GET /2fa/setup
+      // GET /api/2fa/setup
       // Headers: { Authorization: Bearer <token> }
-      SETUP: '/2fa/setup',
+      SETUP: '/api/2fa/setup',
       
-      // PATCH /2fa/disable
+      // PATCH /api/2fa/disable
       // Headers: { Authorization: Bearer <token> }
-      DISABLE: '/2fa/disable',
+      DISABLE: '/api/2fa/disable',
       
-      // POST /2fa/verify
+      // POST /api/2fa/verify
       // Body: { token }
       // Headers: { Authorization: Bearer <token> }
-      VERIFY: '/2fa/verify',
+      VERIFY: '/api/2fa/verify',
       
-      // POST /2fa/verify-login
+      // POST /api/2fa/verify-login
       // Body: { userId, token }
-      VERIFY_LOGIN: '/2fa/verify-login'
+      VERIFY_LOGIN: '/api/2fa/verify-login'
     },
 
     USER: {
-      // GET /users/me
+      // GET /api/users/me
       // Headers: { Authorization: Bearer <token> }
-      ME: '/users/me',
+      ME: '/api/users/me',
 
-      // PUT /users/me
+      // PUT /api/users/me
       // Body: { username?, email?, avatar? }
       // Headers: { Authorization: Bearer <token> }
-      UPDATE: '/users/me',
+      UPDATE: '/api/users/me',
 
-      // PUT /users/me/avatar
+      // PUT /api/users/me/avatar
       // Body: FormData with avatar file
       // Headers: { Authorization: Bearer <token> }
-      UPDATE_AVATAR: '/users/me/avatar',
+      UPDATE_AVATAR: '/api/users/me/avatar',
 
-      // GET /users/id/:id
+      // GET /api/users/id/:id
       // Headers: { Authorization: Bearer <token> }
-      BY_ID: (id: string) => `/users/id/${id}`,
+      BY_ID: (id: string) => `/api/users/id/${id}`,
 
-      // GET /users/:username
+      // GET /api/users/:username
       // Headers: { Authorization: Bearer <token> }
-      BY_USERNAME: (username: string) => `/users/${username}`
+      BY_USERNAME: (username: string) => `/api/users/${username}`
     },
 
     FRIENDS: {
-      // GET /friends
-      LIST: '/friends',
+      // GET /api/friends
+      LIST: '/api/friends',
 
-      // POST /friends/add/:targetId
-      ADD: (targetId: string) => `/friends/add/${targetId}`,
+      // POST /api/friends/add/:targetId
+      ADD: (targetId: string) => `/api/friends/add/${targetId}`,
 
-      // POST /friends/:targetId/accept
-      ACCEPT: (targetId: string) => `/friends/${targetId}/accept`,
+      // POST /api/friends/:targetId/accept
+      ACCEPT: (targetId: string) => `/api/friends/${targetId}/accept`,
 
-      // POST /friends/:targetId/reject
-      REJECT: (targetId: string) => `/friends/${targetId}/reject`,
+      // POST /api/friends/:targetId/reject
+      REJECT: (targetId: string) => `/api/friends/${targetId}/reject`,
 
-      // DELETE /friends/:targetId/remove
-      REMOVE: (targetId: string) => `/friends/${targetId}/remove`,
+      // DELETE /api/friends/:targetId/remove
+      REMOVE: (targetId: string) => `/api/friends/${targetId}/remove`,
 
-      // POST /friends/:id/block
-      BLOCK: (id: string) => `/friends/${id}/block`,
+      // POST /api/friends/:id/block
+      BLOCK: (id: string) => `/api/friends/${id}/block`,
 
-      // POST /friends/:id/unblock
-      UNBLOCK: (id: string) => `/friends/${id}/unblock`,
+      // POST /api/friends/:id/unblock
+      UNBLOCK: (id: string) => `/api/friends/${id}/unblock`,
 
       REQUESTS: {
-        // GET /friends/requests/incoming
-        INCOMING: '/friends/requests/incoming',
+        // GET /api/friends/requests/incoming
+        INCOMING: '/api/friends/requests/incoming',
 
-        // GET /friends/requests/sent
-        SENT: '/friends/requests/sent'
+        // GET /api/friends/requests/sent
+        SENT: '/api/friends/requests/sent'
       }
     },
 
     CHAT: {
-      // GET /chat/history/:userId
+      // GET /api/chat/history/:userId
       // Headers: { Authorization: Bearer <token> }
-      HISTORY: (userId: string) => `/chat/history/${userId}`,
+      HISTORY: (userId: string) => `/api/chat/history/${userId}`,
 
-      // PUT /chat/mark-read/:userId
+      // PUT /api/chat/mark-read/:userId
       // Headers: { Authorization: Bearer <token> }
-      MARK_READ: (userId: string) => `/chat/mark-read/${userId}`
+      MARK_READ: (userId: string) => `/api/chat/mark-read/${userId}`
     }
   }
 };

@@ -1,25 +1,11 @@
-FROM node:18-alpine AS build
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY . .
 
 RUN npm install
 
-COPY . .
-
 RUN npm run build
 
-
-FROM nginx:alpine AS production
-
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Set correct permissions for nginx
-RUN chmod -R 755 /usr/share/nginx/html
-
-# COPY nginx.conf /etc/nginx/nginx.conf
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD cp -r /app/dist/* /app/output/

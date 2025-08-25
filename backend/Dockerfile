@@ -4,11 +4,11 @@ RUN apk update && apk upgrade
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY . .
 
 RUN npm install
 
-COPY . .
+RUN mkdir -p uploads db 
 
 EXPOSE 3000
 

@@ -22,6 +22,7 @@ clean:
 	@cd frontend && rm -rf node_modules dist
 	@echo "\033[31m🗑️  Removing database file...\033[0m"
 	@rm -rf backend/db/*
+	@rm -rf backend/uploads/*
 	@echo "\033[32m✅ Cleanup completed!\033[0m"
 
 kill:
@@ -37,36 +38,22 @@ kill:
 	-lsof -ti:8081 | xargs kill -9 2>/dev/null || true
 	@echo "\033[32m🎉 All processes killed successfully!\033[0m"
 
-clean-db:
-	@echo "\033[31m🗑️  Removing database file...\033[0m"
-	@rm -rf backend/db/*
-	@echo "\033[32m✅ Database cleaned!\033[0m"
-
 fclean: kill clean
 	@echo "\033[35m🌟 Full cleanup completed! Ready for fresh start! 🌟\033[0m"
+
+re: fclean all
+	@echo "\033[35m🔄 Rebuilding and restarting all services...\033[0m"
 
 help:
 	@echo "\033[35m🎮 PONG GAME DEVELOPMENT COMMANDS 🎮\033[0m"
 	@echo "\033[32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 	@echo "\033[36m🚀 make all           \033[0m- Start all services in background"
-	@echo "\033[32m🔧 make backend       \033[0m- Start only backend server (foreground)"
 	@echo "\033[32m🔧 make backend-bg    \033[0m- Start only backend server (background)"
-	@echo "\033[34m🎨 make frontend      \033[0m- Start only frontend server (background)"
 	@echo "\033[34m🎨 make frontend-bg   \033[0m- Start only frontend server (background)"
 	@echo "\033[33m🧹 make clean         \033[0m- Remove node_modules and dist folders"
-	@echo "\033[31m🗑️  make clean-db      \033[0m- Remove database file only"
 	@echo "\033[31m💀 make kill          \033[0m- Kill all running processes"
-	@echo "\033[36m📊 make status        \033[0m- Check running services status"
 	@echo "\033[35m🌟 make fclean        \033[0m- Full cleanup (kill + clean)"
 	@echo "\033[36m❓ make help          \033[0m- Show this help message"
-	@echo "\033[32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-	@echo "\033[36m📊 MONITORING COMMANDS 📊\033[0m"
-	@echo "\033[32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-	@echo "\033[36m📈 make monitoring-up     \033[0m- Start Prometheus & Grafana"
-	@echo "\033[31m📉 make monitoring-down   \033[0m- Stop monitoring services"
-	@echo "\033[33m🔄 make monitoring-restart\033[0m- Restart monitoring services"
-	@echo "\033[35m📋 make monitoring-logs   \033[0m- Show monitoring logs"
-	@echo "\033[36m📊 make monitoring-status \033[0m- Check monitoring status"
 	@echo "\033[32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 	@echo "\033[36m🐳 DOCKER COMMANDS 🐳\033[0m"
 	@echo "\033[32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
@@ -78,41 +65,17 @@ help:
 	@echo "\033[35m📋 make docker-logs      \033[0m- Show Docker services logs"
 	@echo "\033[36m📊 make docker-status    \033[0m- Check Docker services status"
 	@echo "\033[31m🧹 make docker-clean     \033[0m- Clean Docker containers & images"
-	@echo "\033[35m🌟 make docker-full-up   \033[0m- Start ALL (App + Monitoring)"
-	@echo "\033[31m🌟 make docker-full-down \033[0m- Stop ALL (App + Monitoring)"
+	@echo "\033[33m🔒 make generate-ssl     \033[0m- Generate SSL certificates"
 	@echo "\033[32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 
-re: fclean all
-	@echo "\033[35m🔄 Rebuilding and restarting all services...\033[0m"
+# SSL certificate generation --------------------------------------------------
+generate-ssl:
+	@echo "\033[33m🔒 Generating SSL certificates...\033[0m"
+	@cd nginx/ssl && chmod +x generate-ssl.sh && ./generate-ssl.sh
+	@echo "\033[32m✅ SSL certificates generated!\033[0m"
 
-# Monitoring commands
-monitoring-up:
-	@echo "\033[36m📊 Starting monitoring services (Prometheus & Grafana)...\033[0m"
-	@cd monitoring && docker-compose up -d
-	@echo "\033[32m✅ Monitoring services started!\033[0m"
-	@echo "\033[36m📈 Prometheus: http://localhost:9090\033[0m"
-	@echo "\033[36m📊 Grafana: http://localhost:3001 (admin/admin)\033[0m"
-
-monitoring-down:
-	@echo "\033[31m📊 Stopping monitoring services...\033[0m"
-	@cd monitoring && docker-compose down
-	@echo "\033[32m✅ Monitoring services stopped!\033[0m"
-
-monitoring-logs:
-	@echo "\033[36m📋 Showing monitoring services logs...\033[0m"
-	@cd monitoring && docker-compose logs -f
-
-monitoring-restart:
-	@echo "\033[33m🔄 Restarting monitoring services...\033[0m"
-	@cd monitoring && docker-compose restart
-	@echo "\033[32m✅ Monitoring services restarted!\033[0m"
-
-monitoring-status:
-	@echo "\033[36m📊 Checking monitoring services status...\033[0m"
-	@cd monitoring && docker-compose ps
-
-# Docker commands
-docker-up:
+# Docker commands -------------------------------------------------------------
+docker-up: generate-ssl
 	@echo "\033[36m🐳 Starting all services with Docker...\033[0m"
 	@echo "\033[33m📋 Ensuring db directory exists...\033[0m"
 	@mkdir -p backend/db
@@ -140,7 +103,7 @@ docker-build:
 	@docker-compose build
 	@echo "\033[32m✅ All Docker images built!\033[0m"
 
-docker-rebuild:
+docker-rebuild: generate-ssl
 	@echo "\033[33m🔨 Rebuilding and starting all Docker services...\033[0m"
 	@docker-compose down
 	@docker-compose build --no-cache
@@ -157,23 +120,4 @@ docker-clean:
 	@docker system prune -f
 	@echo "\033[32m✅ Docker cleanup completed!\033[0m"
 
-# Full Docker + Monitoring
-docker-full-up:
-	@echo "\033[35m🚀 Starting ALL services (App + Monitoring) with Docker...\033[0m"
-	@echo "\033[36m🐳 Starting main application...\033[0m"
-	@docker-compose up -d
-	@echo "\033[36m📊 Starting monitoring services...\033[0m"
-	@cd monitoring && docker-compose up -d
-	@echo "\033[32m✅ All services started!\033[0m"
-	@echo "\033[34m🎮 Frontend: http://localhost:8080\033[0m"
-	@echo "\033[32m🔧 Backend: http://localhost:3000\033[0m"
-	@echo "\033[36m📈 Prometheus: http://localhost:9090\033[0m"
-	@echo "\033[36m📊 Grafana: http://localhost:3001 (admin/admin)\033[0m"
-
-docker-full-down:
-	@echo "\033[31m🛑 Stopping ALL services (App + Monitoring)...\033[0m"
-	@docker-compose down
-	@cd monitoring && docker-compose down
-	@echo "\033[32m✅ All services stopped!\033[0m"
-
-.PHONY: all backend backend-bg frontend frontend-bg clean clean-db kill status fclean help re monitoring-up monitoring-down monitoring-logs monitoring-restart monitoring-status docker-up docker-down docker-logs docker-restart docker-build docker-rebuild docker-status docker-clean docker-full-up docker-full-down
+.PHONY: all backend backend-bg frontend frontend-bg clean kill status fclean help re docker-up docker-down docker-logs docker-restart docker-build docker-rebuild docker-status docker-clean generate-ssl
