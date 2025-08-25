@@ -37,7 +37,7 @@ export default async function authRoutes(app, options) {
           auth: fastifyOauth2.GOOGLE_CONFIGURATION
         },
         startRedirectPath: '/google',
-        callbackUri: `${process.env.BACKEND_URL || 'http://localhost:3000'}/auth/google/callback`
+        callbackUri: `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/google/callback`
       });
 
       // Google OAuth callback route

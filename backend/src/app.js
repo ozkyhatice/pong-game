@@ -28,8 +28,8 @@ app.addHook('onRequest', async (request, reply) => {
 app.addHook('onSend', async (request, reply, payload) => {
   const route = request.routeOptions?.url || request.url.split('?')[0];
   
-  // /metrics endpoint'ini metrik toplamasından hariç tut
-  if (route === '/metrics') {
+  // /api/metrics endpoint'ini metrik toplamasından hariç tut
+  if (route === '/api/metrics') {
     return payload;
   }
 
@@ -68,7 +68,7 @@ await app.register(metricsPlugin);
 // Static files - avatar resimleri için
 await app.register(fastifyStatic, {
   root: path.join(process.cwd(), 'uploads'),
-  prefix: '/uploads/',
+  prefix: '/api/uploads/',
 });
 
 // main route
@@ -76,11 +76,11 @@ app.get('/', async (request, reply) => {
   reply.send({ message: 'Welcome to the Pong Game API!' });
 });
 
-await app.register(authRoutes, { prefix: '/auth' });
-await app.register(twoFARoutes, { prefix: '/2fa' });
-await app.register(friendRoutes, { prefix: '/friends' });
-await app.register(userRoutes, { prefix: '/users' });
-await app.register(chatRoutes, { prefix: '/chat' });
+await app.register(authRoutes, { prefix: '/api/auth' });
+await app.register(twoFARoutes, { prefix: '/api/2fa' });
+await app.register(friendRoutes, { prefix: '/api/friends' });
+await app.register(userRoutes, { prefix: '/api/users' });
+await app.register(chatRoutes, { prefix: '/api/chat' });
 app.get('/ws', { websocket: true }, websocketHandler);
 
 

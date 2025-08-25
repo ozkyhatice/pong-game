@@ -37,7 +37,7 @@ export const metrics = {
 
 export default async function metricsPlugin(fastify, options) {
 
-  fastify.get('/metrics', async (request, reply) => {
+  fastify.get('/api/metrics', async (request, reply) => {
     reply.type('text/plain');
     return promClient.register.metrics();
   });
