@@ -1,15 +1,96 @@
-<div class="h-screen flex items-center justify-center">
-  <div class="bg-white/50 backdrop-blur-md rounded-2xl shadow-2xl px-16 py-12 text-center border border-white/30">
-    <h1 class="text-5xl font-bold mb-12">PONG</h1>
-    <div class="flex flex-row items-center justify-center gap-8">
-      <div class="space-y-4">
-        <button onclick="window.closeBabylonGame && window.closeBabylonGame(); router.navigate('game')" class="block w-40 bg-blue-500 text-white py-3 rounded hover:bg-blue-600">
-          Play
-        </button>
-        <button onclick="window.closeBabylonGame && window.closeBabylonGame(); router.navigate('login')" class="block w-40 bg-gray-500 text-white py-3 rounded hover:bg-gray-600">
-          Login
-        </button>
-      </div>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+  :root { --neon: #39FF14; --neon-glow: rgba(57,255,20,0.25); }
+
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: 'Orbitron', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    background: radial-gradient(ellipse at center, #010912 0%, #041025 60%);
+    color: var(--neon);
+  }
+
+  .landing-title {
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    line-height: 0.9;
+    font-weight: 900;
+    text-shadow:
+      0 0 6px var(--neon),
+      0 0 18px var(--neon-glow),
+      0 6px 30px rgba(0,0,0,0.6);
+    -webkit-text-stroke: 0.5px rgba(0,0,0,0.35);
+    margin: 0 auto;
+  }
+
+  /* Typing effect sadece caret için CSS */
+  .typing-text {
+    display: inline-block;
+    white-space: nowrap;
+    padding-right: 12px;
+    border-right: 4px solid var(--neon);
+    box-sizing: content-box;
+    animation: caret-blink 1s step-end infinite;
+  }
+  @keyframes caret-blink { 50% { border-color: transparent; } }
+
+  /* Responsive font sizes */
+  @media (max-width: 640px) { .landing-title { font-size: 5rem; } }
+  @media (min-width: 641px) and (max-width: 1024px) { .landing-title { font-size: 8rem; } }
+  @media (min-width: 1025px) { .landing-title { font-size: 12rem; } }
+
+  /* Neon buttons */
+  .neon-btn {
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(57,255,20,0.12);
+    color: var(--neon) !important;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.6), 0 0 18px var(--neon-glow);
+    backdrop-filter: blur(6px);
+    transition: transform 0.2s;
+  }
+  .neon-btn:hover { transform: translateY(-3px) scale(1.05); }
+
+  .or-divider {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--neon);
+    opacity: 0.7;
+  }
+  .or-divider::before,
+  .or-divider::after {
+    content: '';
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--neon), transparent);
+    box-shadow: 0 0 8px var(--neon-glow);
+  }
+</style>
+
+<div class="h-screen flex flex-col items-center justify-center">
+  <!-- PONG Başlık -->
+  <h1 id="landing-title" class="landing-title" style="margin-bottom: 4rem;" aria-label="PONG">
+    <span class="typing-text"></span>
+  </h1>
+
+  <!-- Butonlar -->
+  <div class="flex flex-row items-center justify-center gap-8 flex-wrap">
+    <button
+      onclick="window.closeBabylonGame && window.closeBabylonGame(); router.navigate('game')"
+      class="w-48 rounded-md neon-btn py-3 text-lg sm:text-xl font-bold">
+      PLAY NOW!
+    </button>
+
+    <div class="or-divider">
+      <span class="text-sm uppercase tracking-wider">or</span>
     </div>
+
+    <button
+      onclick="window.closeBabylonGame && window.closeBabylonGame(); router.navigate('login')"
+      class="w-48 rounded-md neon-btn py-3 text-lg sm:text-xl font-bold">
+      LOGIN
+    </button>
   </div>
 </div>
