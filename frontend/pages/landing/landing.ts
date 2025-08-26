@@ -4,8 +4,30 @@ const PADSPEED = 0.09;
 const BALLSPEEDXDEFAULT = 0.09;
 const BALLSPEEDZDEFAULT = 0.07;
 
+function startTypingEffect() {
+  const typingElement = document.querySelector('.typing-text') as HTMLElement;
+  if (!typingElement) return;
+
+  const text = 'PONG';
+  typingElement.textContent = '';
+  let i = 0;
+
+  function typeChar() {
+    if (i < text.length && typingElement) {
+      typingElement.textContent += text[i];
+      i++;
+      setTimeout(typeChar, 250);
+    }
+  }
+  
+  setTimeout(typeChar, 500);
+}
+
 export function init() {
   console.log('Landing page loaded');
+
+  // Typing efekti başlat
+  startTypingEffect();
 
   // Use Babylon.js from window (CDN loaded in index.html)
   const BABYLON = (window as any).BABYLON;
@@ -105,24 +127,24 @@ export function init() {
   table.position.y = -0.05;
 
   const borderThickness = 0.12;
-  // Left border (red neon)
+  // Left border (neon green)
   const leftBorder = BABYLON.MeshBuilder.CreateBox('leftBorder', { width: borderThickness, height: 0.13, depth: 4.1 }, scene);
   leftBorder.position.x = -4 + borderThickness/2;
   leftBorder.position.y = 0.01;
   const leftMat = new BABYLON.StandardMaterial('leftMat', scene);
-  leftMat.emissiveColor = new BABYLON.Color3(1, 0, 0);
-  leftMat.diffuseColor = new BABYLON.Color3(0.2, 0, 0);
-  leftMat.specularColor = new BABYLON.Color3(1,0,0);
+  leftMat.emissiveColor = new BABYLON.Color3(0.22, 1, 0.08); // neon green
+  leftMat.diffuseColor = new BABYLON.Color3(0.1, 0.4, 0.02);
+  leftMat.specularColor = new BABYLON.Color3(0.22, 1, 0.08);
   leftMat.alpha = 0.85;
   leftBorder.material = leftMat;
-  // Right border (blue neon)
+  // Right border (neon green)
   const rightBorder = BABYLON.MeshBuilder.CreateBox('rightBorder', { width: borderThickness, height: 0.13, depth: 4.1 }, scene);
   rightBorder.position.x = 4 - borderThickness/2;
   rightBorder.position.y = 0.01;
   const rightMat = new BABYLON.StandardMaterial('rightMat', scene);
-  rightMat.emissiveColor = new BABYLON.Color3(0, 0.5, 1);
-  rightMat.diffuseColor = new BABYLON.Color3(0, 0, 0.2);
-  rightMat.specularColor = new BABYLON.Color3(0,0.5,1);
+  rightMat.emissiveColor = new BABYLON.Color3(0.22, 1, 0.08); // neon green
+  rightMat.diffuseColor = new BABYLON.Color3(0.1, 0.4, 0.02);
+  rightMat.specularColor = new BABYLON.Color3(0.22, 1, 0.08);
   rightMat.alpha = 0.85;
   rightBorder.material = rightMat;
   // Top border (white neon)
@@ -144,30 +166,31 @@ export function init() {
   bottomMat.alpha = 0.7;
   bottomBorder.material = bottomMat;
 
-  // Paddles
+  // Paddles (neon green)
   const paddleWidth = 0.2, paddleHeight = 0.5, paddleDepth = 0.9;
   const paddle1 = BABYLON.MeshBuilder.CreateBox('paddle1', { width: paddleWidth, height: paddleHeight, depth: paddleDepth }, scene);
   const paddle2 = BABYLON.MeshBuilder.CreateBox('paddle2', { width: paddleWidth, height: paddleHeight, depth: paddleDepth }, scene);
   const paddle1Mat = new BABYLON.StandardMaterial('paddle1Mat', scene);
-  paddle1Mat.diffuseColor = new BABYLON.Color3(0.7, 0, 0);
-  paddle1Mat.emissiveColor = new BABYLON.Color3(1, 0, 0);
-  paddle1Mat.specularColor = new BABYLON.Color3(1, 0.2, 0.2);
+  paddle1Mat.diffuseColor = new BABYLON.Color3(0.1, 0.4, 0.02);
+  paddle1Mat.emissiveColor = new BABYLON.Color3(0.22, 1, 0.08); // neon green
+  paddle1Mat.specularColor = new BABYLON.Color3(0.22, 1, 0.08);
   paddle1Mat.alpha = 0.95;
   paddle1.material = paddle1Mat;
   const paddle2Mat = new BABYLON.StandardMaterial('paddle2Mat', scene);
-  paddle2Mat.diffuseColor = new BABYLON.Color3(0, 0, 0.7);
-  paddle2Mat.emissiveColor = new BABYLON.Color3(0, 0.5, 1);
-  paddle2Mat.specularColor = new BABYLON.Color3(0.2, 0.2, 1);
+  paddle2Mat.diffuseColor = new BABYLON.Color3(0.1, 0.4, 0.02);
+  paddle2Mat.emissiveColor = new BABYLON.Color3(0.22, 1, 0.08); // neon green
+  paddle2Mat.specularColor = new BABYLON.Color3(0.22, 1, 0.08);
   paddle2Mat.alpha = 0.95;
   paddle2.material = paddle2Mat;
   paddle1.position.x = -3.7;
   paddle2.position.x = 3.7;
   paddle1.position.y = paddle2.position.y = paddleHeight/2 - 0.05;
 
-  // Ball (random color)
+  // Ball (white)
   const ball = BABYLON.MeshBuilder.CreateSphere('pongBall', { diameter: 0.3 }, scene);
   const ballMat = new BABYLON.StandardMaterial('ballMat', scene);
-  ballMat.diffuseColor = new BABYLON.Color3(1, 0.8, 0.2);
+  ballMat.diffuseColor = new BABYLON.Color3(1, 1, 1); // beyaz
+  ballMat.emissiveColor = new BABYLON.Color3(0.9, 0.9, 0.9); // hafif glow
   ball.material = ballMat;
   ball.position.y = paddleHeight/2;
 
@@ -262,22 +285,22 @@ export function init() {
     const rightOut = ball.position.x > 3.85 && !(ball.position.x > paddle2.position.x - paddleWidth/2 - paddleMargin && ball.position.x < paddle2.position.x + paddleMargin && Math.abs(ball.position.z - paddle2.position.z) < paddleHeight/2);
     if (!paddleHit && (leftOut || rightOut)) {
       const borderX = ball.position.x < 0 ? -3.85 : 3.85;
-      const particleSystem = new BABYLON.ParticleSystem("borderHit", 300, scene);
+      const particleSystem = new BABYLON.ParticleSystem("borderHit", 80, scene); // daha az partikül
       particleSystem.particleTexture = new BABYLON.Texture("https://playground.babylonjs.com/textures/flare.png", scene);
       particleSystem.emitter = new BABYLON.Vector3(borderX, ball.position.y, ball.position.z);
-      particleSystem.minEmitBox = new BABYLON.Vector3(-0.2, -0.2, -0.5);
-      particleSystem.maxEmitBox = new BABYLON.Vector3(0.2, 0.2, 0.5);
+      particleSystem.minEmitBox = new BABYLON.Vector3(-0.1, -0.1, -0.2); // küçük alan
+      particleSystem.maxEmitBox = new BABYLON.Vector3(0.1, 0.1, 0.2); // küçük alan
       particleSystem.color1 = borderX < 0 ? new BABYLON.Color4(1, 0.2, 0.2, 1) : new BABYLON.Color4(0.2, 0.6, 1, 1);
       particleSystem.color2 = borderX < 0 ? new BABYLON.Color4(1, 0.5, 0.5, 1) : new BABYLON.Color4(0.5, 0.8, 1, 1);
-      particleSystem.minSize = 0.3;
-      particleSystem.maxSize = 0.8;
-      particleSystem.minLifeTime = 0.5;
-      particleSystem.maxLifeTime = 1.2;
-      particleSystem.emitRate = 250;
-      particleSystem.direction1 = new BABYLON.Vector3(borderX < 0 ? 2 : -2, 0.5, 0.5);
-      particleSystem.direction2 = new BABYLON.Vector3(borderX < 0 ? 2 : -2, -0.5, -0.5);
-      particleSystem.gravity = new BABYLON.Vector3(0, -1, 0);
-      particleSystem.targetStopDuration = 0.8;
+      particleSystem.minSize = 0.1; // küçük partikül
+      particleSystem.maxSize = 0.3; // küçük partikül
+      particleSystem.minLifeTime = 0.3; // kısa süre
+      particleSystem.maxLifeTime = 0.6; // kısa süre
+      particleSystem.emitRate = 120; // daha az yoğunluk
+      particleSystem.direction1 = new BABYLON.Vector3(borderX < 0 ? 1 : -1, 0.3, 0.3); // daha yumuşak
+      particleSystem.direction2 = new BABYLON.Vector3(borderX < 0 ? 1 : -1, -0.3, -0.3); // daha yumuşak
+      particleSystem.gravity = new BABYLON.Vector3(0, -0.5, 0); // daha hafif
+      particleSystem.targetStopDuration = 0.4; // daha kısa
       particleSystem.start();
       // Neon flash light
       const flash = new BABYLON.PointLight("borderFlash", new BABYLON.Vector3(borderX, 1, ball.position.z), scene);
