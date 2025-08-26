@@ -13,14 +13,14 @@ export class SocialTabs {
   constructor() {
     this.element = document.createElement('div');
     this.element.className = 'flex-1 bg-white rounded-t-xl flex flex-col min-h-0';
-    
+
     this.friendsTab = new FriendsTab();
     this.requestsTab = new RequestsTab();
     this.addFriendTab = new AddFriendTab();
-    
+
     this.render();
     this.setupEvents();
-    
+
     // Load initial tab data
     this.friendsTab.loadFriends();
   }
@@ -42,21 +42,26 @@ export class SocialTabs {
             <span>Friends</span>
           </div>
         </button>
-        
+
         <button class="tab-btn flex-1 px-3 py-3 text-center text-xs font-medium transition-colors ${
           this.activeTab === 'requests' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'
         }" data-tab="requests">
           <div class="flex flex-col items-center">
             <div class="mb-1">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z"/>
-                <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z"/>
+              ${this.activeTab === 'requests' ? `
+                <path d="M19.5 22.5a3 3 0 0 0 3-3v-8.174l-6.879 4.022 3.485 1.876a.75.75 0 1 1-.712 1.321l-5.683-3.06a1.5 1.5 0 0 0-1.422 0l-5.683 3.06a.75.75 0 0 1-.712-1.32l3.485-1.877L1.5 11.326V19.5a3 3 0 0 0 3 3h15Z" />
+                <path d="M1.5 9.589v-.745a3 3 0 0 1 1.578-2.642l7.5-4.038a3 3 0 0 1 2.844 0l7.5 4.038A3 3 0 0 1 22.5 8.844v.745l-8.426 4.926-.652-.351a3 3 0 0 0-2.844 0l-.652.351L1.5 9.589Z" />
+                ` : `
+                <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+                `}
               </svg>
             </div>
             <span>Requests</span>
           </div>
         </button>
-        
+
         <button class="tab-btn flex-1 px-3 py-3 text-center text-xs font-medium transition-colors ${
           this.activeTab === 'add' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'
         }" data-tab="add">
@@ -70,7 +75,7 @@ export class SocialTabs {
           </div>
         </button>
       </div>
-      
+
       <!-- Tab Content -->
       <div class="flex-1 p-3 overflow-y-auto" id="tab-content">
         <!-- Content will be inserted here -->
@@ -98,7 +103,7 @@ export class SocialTabs {
   private switchTab(tab: 'friends' | 'requests' | 'add'): void {
     this.activeTab = tab;
     this.render();
-    
+
     // Always load fresh data when switching tabs
     if (tab === 'friends') {
       this.friendsTab.loadFriends();
@@ -109,7 +114,7 @@ export class SocialTabs {
 
   private showTabContent(): void {
     this.contentContainer.innerHTML = '';
-    
+
     switch (this.activeTab) {
       case 'friends':
         this.contentContainer.appendChild(this.friendsTab.getElement());
