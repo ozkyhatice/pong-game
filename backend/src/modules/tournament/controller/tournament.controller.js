@@ -1,4 +1,6 @@
-import { createTournamentService } from '../service/tournament.service.js';
+import { sendMessage } from '../../chat/service/websocket.service.js';
+import { createTournamentService, joinTournamentService, getTournamentPlayers } from '../service/tournament.service.js';
+import { broadcastToAll, sendToUser } from '../../../websocket/services/client.service.js';
 export async function handleTournamentMessage(msgObj, userId, connection) {
   const { event, data} = msgObj;
   const handler = eventHandlers[event];
@@ -10,9 +12,24 @@ export async function handleTournamentMessage(msgObj, userId, connection) {
 
 const eventHandlers = {
     'create': createTournament,
+    'join': joinTournament,
 }
+
+
 
 export async function createTournament(data, userId, connection) {
     await createTournamentService(data, userId);
+    const message = {
+        type: 'tournament',
+        event: 'created',
+        data: { userId, ...data }
+    };
+    await broadcastToAll(message);
 
+}
+export async function joinTournament(data, userId, connection) {
+    await joinTournamentService(data, userId);
+    
+    // Sadece o turnuvadaki oyunculara broadcast yap
+    
 }
