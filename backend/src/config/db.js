@@ -87,12 +87,12 @@ export const initDB = async () => {
     CREATE TABLE IF NOT EXISTS tournaments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      startAt DATETIME NOT NULL,
-      endAt DATETIME NOT NULL,
+      startAt DATETIME NULL,
+      endAt DATETIME NULL,
       maxPlayers INTEGER NOT NULL DEFAULT 8,
       status TEXT NOT NULL DEFAULT 'pending',
-      winnerId INTEGER,
-      FOREIGN KEY (winnerId) REFERENCES users(id) ON DELETE SET NULL,
+      winnerId INTEGER NULL,
+      FOREIGN KEY (winnerId) REFERENCES users(id) ON DELETE SET NULL
     )`);
 
   return db;
