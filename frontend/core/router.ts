@@ -23,7 +23,8 @@ class Router {
     // Auth kontrolü ve yönlendirme
     const redirectPage = AuthGuard.getRedirectPage(pageName);
     if (redirectPage && redirectPage !== pageName) {
-      if (!AuthGuard.isAuthenticated() && pageName !== 'landing') {
+      // Sadece gerçekten login gereken sayfalar için hata mesajı göster
+      if (!AuthGuard.isAuthenticated() && pageName !== 'landing' && pageName !== 'game' && pageName !== 'login' && pageName !== 'register') {
         notify('Please login to access this page!');
       }
       return this.navigate(redirectPage);
@@ -73,7 +74,13 @@ class Router {
 
       if (error === 'oauth_failed') return 'login';
       if (oauth === '2fa_required') return '2fa-code';
-      if (oauth === 'success' && token) return 'home';
+      if (oauth === 'success' && token) {
+        // OAuth success durumunda token'ı localStorage'a kaydet
+        localStorage.setItem('authToken', token);
+        // URL'den parametreleri temizle
+        window.history.replaceState({}, '', window.location.pathname);
+        return 'home';
+      }
     }
 
     // History state'den sayfa al veya default landing

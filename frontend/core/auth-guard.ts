@@ -17,10 +17,10 @@ export class AuthGuard {
       return null; // Diğer sayfalar için yönlendirme yok
     }
     
-    // Auth token yoksa
+    // Auth token yoksa - game sayfasını public sayfa olarak izin ver
     if (!isAuth) {
-      if (requestedPage !== 'landing' && requestedPage !== 'login' && requestedPage !== 'register' && requestedPage !== '2fa-code') {
-        return 'landing'; // Unauthenticated user'ları landing'e yönlendir
+      if (requestedPage !== 'landing' && requestedPage !== 'login' && requestedPage !== 'register' && requestedPage !== '2fa-code' && requestedPage !== 'game') {
+        return 'landing'; // Unauthenticated user'ları landing'e yönlendir (game hariç)
       }
       return null; // Public sayfalar için yönlendirme yok
     }
