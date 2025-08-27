@@ -19,7 +19,10 @@ export const initDB = async () => {
       isGoogleAuth BOOLEAN DEFAULT FALSE,
       avatar TEXT,
       wins INTEGER DEFAULT 0,
-      losses INTEGER DEFAULT 0
+      losses INTEGER DEFAULT 0,
+      currentTournamentId INTEGER NULL,
+      isEliminated BOOLEAN DEFAULT 0,
+      FOREIGN KEY (currentTournamentId) REFERENCES tournaments(id) ON DELETE SET NULL
     )
   `);
 
@@ -70,12 +73,26 @@ export const initDB = async () => {
       player1Score INTEGER DEFAULT 0,
       player2Score INTEGER DEFAULT 0,
       winnerId INTEGER,
+      tournamentId INTEGER NULL,           
+      round INTEGER NULL,                   
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       startedAt DATETIME,
       endedAt DATETIME,
       FOREIGN KEY (player1Id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (player2Id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (winnerId) REFERENCES users(id) ON DELETE SET NULL
+      FOREIGN KEY (winnerId) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY (tournamentId) REFERENCES tournaments(id) ON DELETE CASCADE
+    )`);
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS tournaments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      startAt DATETIME NOT NULL,
+      endAt DATETIME NOT NULL,
+      maxPlayers INTEGER NOT NULL DEFAULT 8,
+      status TEXT NOT NULL DEFAULT 'pending',
+      winnerId INTEGER,
+      FOREIGN KEY (winnerId) REFERENCES users(id) ON DELETE SET NULL,
     )`);
 
   return db;
