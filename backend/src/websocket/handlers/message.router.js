@@ -22,7 +22,14 @@ export async function routeMessage(message, userId, connection) {
         console.error('Error handling game message:', err);
       }
       break;
-    
+    case 'tournament':
+      const { handleTournamentMessage } = await import('../../modules/tournament/controller/tournament.controller.js');
+      try {
+        await handleTournamentMessage(msgObj, userId, connection);
+      } catch (err) {
+        console.error('Error handling tournament message:', err);
+      }
+      break;
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
