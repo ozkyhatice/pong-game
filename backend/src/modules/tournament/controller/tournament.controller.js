@@ -1,6 +1,18 @@
+import { createTournamentService } from '../service/tournament.service.js';
 export async function handleTournamentMessage(msgObj, userId, connection) {
-  // Tournament ile ilgili mesajları burada işle
-  console.log('Tournament message received:', msgObj, 'from user:', userId);
-  // Örnek: Turnuva oluşturma, katılma, sonuç bildirme vb. işlemler burada yapılabilir.
-  // Bu fonksiyonun içeriği, turnuva modülünün gereksinimlerine göre doldurulmalıdır.
+  const { event, data} = msgObj;
+  const handler = eventHandlers[event];
+  if (!handler) {
+    throw new Error(`Unknown tournament event: ${event}`);
+  }
+  return await handler(data, userId, connection);
+}
+
+const eventHandlers = {
+    'create': createTournament,
+}
+
+export async function createTournament(data, userId, connection) {
+    await createTournamentService(data, userId);
+
 }
