@@ -42,6 +42,7 @@ export class GameAreaComponent extends Component {
 
           <hr>
           <b>oyun istekleri soldaki menude ve chatde calisiyor!!</b>
+          <i> Deploy TEST </i>
           <hr><br>
 
           <!-- Friend Invite Section -->
