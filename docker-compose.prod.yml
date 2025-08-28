@@ -1,0 +1,36 @@
+services:
+  # Backend Service
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pong-backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./data/uploads:/app/uploads
+      - ./data/db:/app/db
+    networks:
+      - pong-network
+    restart: unless-stopped
+
+  # Frontend Build Service
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - API_BASE_URL=https://pong.cant.tr
+        - API_WS_URL=wss://pong.cant.tr/ws
+    container_name: pong-frontend
+    volumes:
+      - /var/www/pong-game/frontend:/app/output
+    networks:
+      - pong-network
+    restart: "no"
+
+networks:
+  pong-network:
+    driver: bridge
