@@ -1,0 +1,37 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          cd /var/www/pong-game
+          
+          # Git pull latest changes
+          git pull origin main
+          
+          # Stop containers
+          docker-compose -f docker-compose.prod.yml down
+          
+          # Build and start containers
+          docker-compose -f docker-compose.prod.yml up -d --build
+          
+          # Clean up unused images
+          docker image prune -f
+          
+          echo "Deploy completed successfully!"
