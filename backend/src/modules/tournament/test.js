@@ -12,8 +12,8 @@ ws2.onopen = () => {
   setTimeout(() => {
     const joinMsg = {
       type: "tournament",
-      event: "join",
-      data: { tournamentId: 1 } // İlk tournament'ın ID'si muhtemelen 1 olacak
+      event: "create",
+      data: { name: "My First Tournament", maxPlayers: 5}
     };
     
     console.log('WS2 Sending tournament join message:', joinMsg);
@@ -40,7 +40,7 @@ ws.onopen = () => {
     const tournamentMsg = {
       type: "tournament",
       event: "create",
-      data: { name: "My First Tournament", maxPlayers: 5}
+      data: { name: "My Second Tournament", maxPlayers: 5}
     };
 
     console.log('WS1 Sending tournament create message:', tournamentMsg);

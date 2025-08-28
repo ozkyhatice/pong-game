@@ -1,6 +1,5 @@
 import { initDB } from '../../../config/db.js';
 export async function createTournamentService(data, userId, connection) {
-    // Tournament oluşturma işlemleri
     const db = await initDB();
     const tournamentName = data.name;
     const maxPlayers = data.maxPlayers || 8;
@@ -26,6 +25,8 @@ export async function createTournamentService(data, userId, connection) {
     console.log(`User ${userId} is creating a tournament with data:`, data);
     // Burada veritabanı işlemleri yapılabilir
 }
+
+
 
 
 export async function joinTournamentService(data, userId, connection) {

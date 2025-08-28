@@ -32,3 +32,21 @@ export async function saveGametoDbServices(room) {
         console.error('Error saving match result:', error);
     }
 }
+
+export async function getMatchHistoryByUserId(userId) {
+    const db = await initDB();
+    const sql = `
+        SELECT * FROM matches
+        WHERE player1Id = ? OR player2Id = ?
+        ORDER BY endedAt DESC
+        LIMIT 10
+    `;
+    try {
+        const matches = await db.all(sql, [userId, userId]);
+        return matches;
+    }catch (error) {
+        console.error('Error fetching match history:', error);
+        throw error;
+    }
+}
+
