@@ -1,4 +1,7 @@
 import { initDB } from '../../../config/db.js';
+import { sendMessage } from '../../chat/service/websocket.service.js';
+import { getActiveTournamentId, broadcastToAllPlayersInTournament} from '../utils/tournament.utils.js';
+
 export async function createTournamentService(data, userId, connection) {
     const db = await initDB();
     const tournamentName = data.name;
@@ -22,21 +25,37 @@ export async function createTournamentService(data, userId, connection) {
         console.error('Error creating tournament:', error);
         throw error;
     }
-    console.log(`User ${userId} is creating a tournament with data:`, data);
-    // Burada veritabanı işlemleri yapılabilir
+    const currentTournament = await getActiveTournamentId();
+    await joinTournamentService({ tournamentId: currentTournament }, userId, connection);
+    console.log(`TournamentID "${currentTournament}" Tournament "${tournamentName}" created by user ${userId} with max players ${maxPlayers}`);
 }
 
 
 
-
+// Kullanıcıyı turnuvaya katma
+//event: 'join'
+//data: { tournamentId }
+//userId: katılacak kullanıcı
+//connection: kullanıcının WebSocket bağlantısı
 export async function joinTournamentService(data, userId, connection) {
-    console.log(`User ${userId} is joining tournament with data:`, data);
-}
-export async function getTournamentPlayers(tournamentId) {
+    const tournamentId = data.tournamentId;
     const db = await initDB();
-    // const players = await db.all(
-        
-    // );
-    // console.log('Tournament players:', players);
-    // return players.map(player => player.userId);
+    // user tablosunda currentTournamentId alanını güncelle
+    const sql = `
+        UPDATE users SET currentTournamentId = ? WHERE id = ?
+    `;
+    try {
+        const result = await db.run(sql, [tournamentId, userId]);
+        broadcastToAllPlayersInTournament(tournamentId, {
+            type: 'tournament',
+            event: 'playerJoined',
+            data: { userId, tournamentId }
+        });
+        console.log(`User ${userId} joined tournament ${tournamentId}`);
+        return result;
+    } catch (error) {
+        console.error('Error joining tournament:', error);
+        throw error;
+    }
+    
 }

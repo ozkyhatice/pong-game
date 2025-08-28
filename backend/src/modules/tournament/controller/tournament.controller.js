@@ -1,7 +1,7 @@
-import { sendMessage } from '../../chat/service/websocket.service.js';
-import { createTournamentService, joinTournamentService, getTournamentPlayers } from '../service/tournament.service.js';
-import { broadcastToAll, sendToUser } from '../../../websocket/services/client.service.js';
-import { getActiveTournamentId, isExistActiveTournament } from '../utils/tournament.utils.js';
+import { createTournamentService, joinTournamentService} from '../service/tournament.service.js';
+import { broadcastToAll } from '../../../websocket/services/client.service.js';
+import { countTournamentPlayers, getActiveTournamentId, } from '../utils/tournament.utils.js';
+import { getStatusOfTournament, isUserInTournament} from '../utils/tournament.utils.js';
 
 export async function handleTournamentMessage(msgObj, userId, connection) {
   const { event, data} = msgObj;
@@ -39,7 +39,25 @@ export async function createTournament(data, userId, connection) {
 
 }
 export async function joinTournament(data, userId, connection) {
+    const countOfPlayers = await countTournamentPlayers(data.tournamentId);
+    const tournamentId = data.tournamentId;
+    if (countOfPlayers.length > data.maxPlayers) {
+        throw new Error('Tournament is full. Cannot join.');
+    }
+    if (!tournamentId) {
+        throw new Error('Tournament ID is required to join a tournament');
+    }
+    if (await getActiveTournamentId(tournamentId) !== tournamentId) {
+        throw new Error('Tournament does not active');
+    }
+    if (await isUserInTournament(userId, tournamentId)) {
+        throw new Error('User is already in the tournament');
+    }
+    if (await getStatusOfTournament(tournamentId) !== 'pending') {
+        throw new Error('Cannot join a tournament that is not pending');
+    }
     await joinTournamentService(data, userId);
+    
     
     // Sadece o turnuvadaki oyunculara broadcast yap
     

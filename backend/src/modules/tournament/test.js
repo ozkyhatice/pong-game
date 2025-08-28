@@ -12,8 +12,8 @@ ws2.onopen = () => {
   setTimeout(() => {
     const joinMsg = {
       type: "tournament",
-      event: "create",
-      data: { name: "My First Tournament", maxPlayers: 5}
+      event: "join",
+      data: { tournamentId: 26}
     };
     
     console.log('WS2 Sending tournament join message:', joinMsg);
@@ -39,11 +39,11 @@ ws.onopen = () => {
     // Örnek turnuva create mesajı
     const tournamentMsg = {
       type: "tournament",
-      event: "create",
-      data: { name: "My Second Tournament", maxPlayers: 5}
+      event: "join",
+      data: { tournamentId: 26 }
     };
 
-    console.log('WS1 Sending tournament create message:', tournamentMsg);
+    console.log('WS1 Sending tournament join message:', tournamentMsg);
     ws.send(JSON.stringify(tournamentMsg));
   }, 1000);
 };
