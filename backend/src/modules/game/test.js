@@ -1,4 +1,5 @@
 import WebSocket from 'ws';
+import { getMatchHistoryByUserId } from './services/game.service.js';
 
 const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJvemt5eWhhdGljZUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6ImhvemtheWEiLCJpYXQiOjE3NTM2MTg0OTd9.CgIEoR3nUyhUZkUAw_BMIv5oIT5lulMhqsyU52_-MKg';
 const ws1 = new WebSocket('ws://localhost:3000/ws', token);
@@ -55,6 +56,21 @@ function joinWs2ToRoom() {
     // Skor testini başlat
     setTimeout(startScoreTest, 1000);
   }, 1000);
+  
+  // Match history test - oyun başladıktan sonra
+  setTimeout(async () => {
+    try {
+      console.log('📈 Fetching match history for User 1...');
+      const user1History = await getMatchHistoryByUserId(1);
+      console.log('📈 User 1 Match History:', user1History);
+      
+      console.log('📈 Fetching match history for User 2...');
+      const user2History = await getMatchHistoryByUserId(2);
+      console.log('📈 User 2 Match History:', user2History);
+    } catch (err) {
+      console.error('❌ Error fetching match history:', err);
+    }
+  }, 2000);
 }
 
 // --- WS1 MESSAGE ---
@@ -122,6 +138,14 @@ function startScoreTest() {
 
   const scoreInterval = setInterval(() => {
     if (!gameStarted) {
+      console.log('🛑 Stopping score test - game ended');
+      clearInterval(scoreInterval);
+      return;
+    }
+
+    // Kazanan skora ulaşıldıysa durdur
+    if (user1Score >= WINNING_SCORE || user2Score >= WINNING_SCORE) {
+      console.log('🛑 Stopping score test - winning score reached');
       clearInterval(scoreInterval);
       return;
     }
@@ -189,14 +213,34 @@ function checkGameEnd() {
   if (user1Score >= WINNING_SCORE || user2Score >= WINNING_SCORE) {
     const winner = user1Score >= WINNING_SCORE ? 'User1' : 'User2';
     console.log(`🏁 Local check: Game should end! Winner: ${winner} (${user1Score}-${user2Score})`);
-    // Server zaten game-over gönderecek, sadece log yapıyoruz
+    
+    // Oyunu manuel olarak sonlandır
+    gameStarted = false;
+    console.log('🎮 Game manually ended due to score limit');
+    
+    // Biraz bekleyip endGame fonksiyonunu çağır
+    setTimeout(() => {
+      endGame();
+    }, 1000);
   }
 }
 
 // --- Oyunun bittiği zaman yapılacaklar ---
-function endGame() {
+async function endGame() {
   console.log('🎮 Game officially ended');
   gameStarted = false;
+  
+  // Oyun bittiğinde son match history'yi al
+  try {
+    console.log('📈 Final match history check...');
+    const user1FinalHistory = await getMatchHistoryByUserId(1);
+    const user2FinalHistory = await getMatchHistoryByUserId(2);
+    
+    console.log('📈 User 1 Final Match History:', user1FinalHistory);
+    console.log('📈 User 2 Final Match History:', user2FinalHistory);
+  } catch (err) {
+    console.error('❌ Error fetching final match history:', err);
+  }
 
   setTimeout(() => {
     console.log('🔚 Closing connections and exiting...');
