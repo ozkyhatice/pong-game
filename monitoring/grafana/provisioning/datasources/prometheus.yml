@@ -4,7 +4,7 @@ datasources:
   - name: Prometheus
     type: prometheus
     access: proxy
-    url: ${MONITORING_URL}
+    url: http://prometheus:9090
     isDefault: true
     basicAuth: false
     editable: true

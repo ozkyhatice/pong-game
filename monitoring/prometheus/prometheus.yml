@@ -18,16 +18,3 @@ scrape_configs:
       - targets: ['backend:3000']
     metrics_path: '/api/metrics'
     scrape_interval: 5s
-
-  # Nginx metrikleri (nginx-prometheus-exporter gerekebilir)
-  - job_name: 'nginx'
-    static_configs:
-      - targets: ['nginx:80']
-    metrics_path: '/health'
-    scrape_interval: 30s
-
-  # Node Exporter (sistem metrikleri için - isteğe bağlı)
-  - job_name: 'node-exporter'
-    static_configs:
-      - targets: ['node-exporter:9100']
-    scrape_interval: 5s
