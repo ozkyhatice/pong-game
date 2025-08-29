@@ -25,8 +25,6 @@ export async function createTournamentService(data, userId, connection) {
         console.error('Error creating tournament:', error);
         throw error;
     }
-    const currentTournament = await getActiveTournamentId();
-    await joinTournamentService({ tournamentId: currentTournament }, userId, connection);
     console.log(`TournamentID "${currentTournament}" Tournament "${tournamentName}" created by user ${userId} with max players ${maxPlayers}`);
 }
 
