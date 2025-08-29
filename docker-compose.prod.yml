@@ -59,6 +59,8 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - MONITORING_URL=${MONITORING_URL:-http://prometheus:9090}
+      - GF_SERVER_ROOT_URL=https://pong.cant.tr/monitoring/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
