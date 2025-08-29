@@ -17,7 +17,7 @@ export async function sendMessage(connection, type, event, data = {}) {
 }
 
 
-export async function createRoom(userId, connection, rooms) {
+export async function createRoom(userId, connection, rooms, tournamentId = null, round = null) {
     const roomId = await generateRoomId();
     const room = {
         id: roomId,
@@ -39,11 +39,14 @@ export async function createRoom(userId, connection, rooms) {
             gameOver: false,           // Oyun durumu
             paused: false,
         },
-        loop: null,                  // setInterval ID’si, oyun döngüsünü durdurmak için
+        loop: null,                  // setInterval ID'si, oyun döngüsünü durdurmak için
         createdAt: Date.now(),       // Oda oluşturulma zamanı
         started: false,
         endDate: null,               // Oyun bitiş tarihi
-        winnerId: null               // Oyun kazananı
+        winnerId: null,              // Oyun kazananı
+        tournamentId: tournamentId,  // Turnuva ID'si (turnuva maçıysa)
+        round: round,                // Round bilgisi (turnuva maçıysa)
+        matchId: null                // Match ID (DB'ye kayıt sonrası set edilir)
     };
     rooms.set(roomId, room);
     userRoom.set(userId, roomId); // Kullanıcı ve oda ilişkisi->connection close için

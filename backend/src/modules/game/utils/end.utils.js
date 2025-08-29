@@ -2,6 +2,7 @@ import { sendMessage } from '../utils/join.utils.js';
 import { saveGametoDbServices } from '../services/game.service.js';
 import { rooms, userRoom } from '../controller/game.controller.js';
 import { updateMultipleUserStats } from '../../user/service/user.service.js';
+import { processTournamentMatchResult } from '../../tournament/service/tournament.service.js';
 export async function broadcastGameOver(room, userId) {
     if (!room || !room.started) {
         console.error(`Room not found or game not started for user ${userId}`);
@@ -27,6 +28,12 @@ export async function broadcastGameOver(room, userId) {
             });
         }
         await saveGametoDbServices(room, userId); //db kaydet
+        
+        // Eğer bu bir turnuva maçıysa, turnuva ilerlemesini kontrol et
+        if (room.tournamentId && room.winnerId) {
+            await processTournamentMatchResult(room.matchId, room.winnerId);
+        }
+        
         console.log(`Game over broadcasted for room ${room.id}`);   
     }catch (error) {
         console.error('Error broadcasting game over:', error);
@@ -108,6 +115,11 @@ export async function clearAll(userId, message) {
                 if (players.length === 2) {
                     room.winnerId = user2;
                     await saveGametoDbServices(room);
+                    
+                    // Eğer bu bir turnuva maçıysa, turnuva ilerlemesini kontrol et
+                    if (room.tournamentId && room.winnerId) {
+                        await processTournamentMatchResult(room.matchId, room.winnerId);
+                    }
                     
                     // Update user stats - winner gets +1 win, leaver gets +1 loss
                     try {

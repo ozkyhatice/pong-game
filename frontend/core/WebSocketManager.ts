@@ -68,6 +68,16 @@ export class WebSocketManager {
           if (message.event) {
             this.emit(message.event, message.data || message);
           }
+        } else if (message.type === 'tournament') {
+          console.log('🏆 WS: Tournament received ->', {
+            event: message.event,
+            data: message.data
+          });
+          // Emit both the general 'tournament' event and the specific event
+          this.emit(message.type, message.data || message);
+          if (message.event) {
+            this.emit(`tournament:${message.event}`, message.data || message);
+          }
         } else {
           console.log('📡 WS:', message.type, message.data || message);
           this.emit(message.type, message);

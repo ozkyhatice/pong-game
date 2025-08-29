@@ -13,6 +13,10 @@ export async function websocketHandler(connection, request) {
     // Bağlantı başarılı olduğunda direkt reconnection'ı kontrol et
     await handleReconnection(connection, userId);
     
+    // Pending tournament maçlarını kontrol et
+    const { checkPendingTournamentMatches } = await import('../modules/tournament/services/match.service.js');
+    await checkPendingTournamentMatches(userId);
+    
     // Handle incoming messages
     connection.on('message', async (message) => {
       try {

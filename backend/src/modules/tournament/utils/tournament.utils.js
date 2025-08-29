@@ -88,3 +88,9 @@ export async function broadcastToAllPlayersInTournament(tournamentId, message) {
     });
     console.log(`Broadcasted message to all players in tournament ${tournamentId}`);
 }
+
+// Alias for consistency
+export const broadcastToTournamentPlayers = broadcastToAllPlayersInTournament;
+
+// Turnuva katılımcılarını getirme
+export const getTournamentParticipants = getTournamentPlayers;

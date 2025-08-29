@@ -2,6 +2,7 @@ import { sendMessage } from "./join.utils.js";
 import { saveGametoDbServices } from "../services/game.service.js";
 import { userRoom } from "../controller/game.controller.js";
 import { updateMultipleUserStats } from "../../user/service/user.service.js";
+import { processTournamentMatchResult } from "../../tournament/service/tournament.service.js";
 
 // Game constants
 const CANVAS_WIDTH = 800;
@@ -131,6 +132,12 @@ async function endGame(room, winnerId) {
         // Save to database
         await saveGametoDbServices(room);
         
+        // Eğer bu bir turnuva maçıysa, turnuva ilerlemesini kontrol et
+        if (room.tournamentId && room.winnerId) {
+            console.log(`🏆 Processing tournament match result: matchId=${room.matchId}, winnerId=${room.winnerId}`);
+            await processTournamentMatchResult(room.matchId, room.winnerId);
+        }
+        
         // Update player stats
         const players = Array.from(room.players);
         const playerStats = players.map(playerId => ({
@@ -150,7 +157,10 @@ async function endGame(room, winnerId) {
             roomId: room.id,
             winner: winnerId,
             finalScore: room.state.score,
-            message: `Player ${winnerId} wins!`
+            message: `Player ${winnerId} wins!`,
+            isTournamentMatch: !!room.tournamentId,
+            tournamentId: room.tournamentId,
+            round: room.round
         });
     }
     

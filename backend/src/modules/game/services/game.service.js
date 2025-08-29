@@ -12,20 +12,25 @@ export async function saveGametoDbServices(room) {
     
     const sql = `
         INSERT INTO matches (
-        player1Id, player2Id, player1Score, player2Score, winnerId, startedAt, endedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        player1Id, player2Id, player1Score, player2Score, winnerId, tournamentId, round, startedAt, endedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     try {
-        await db.run(sql, [
+        const result = await db.run(sql, [
         player1Id,
         player2Id,
         player1Score,
         player2Score,
         winnerUserId,
+        room.tournamentId || null,
+        room.round || null,
         startedAt,
         endedAt
         ]);
+        
+        // Match ID'yi room'a kaydet (turnuva progression için)
+        room.matchId = result.lastID;
         console.log('Match result saved to DB');
         console.log(`Winner: ${winnerUserId}, Started: ${startedAt}, Ended: ${endedAt}`);
     } catch (error) {
