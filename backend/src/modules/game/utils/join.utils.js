@@ -9,10 +9,10 @@ export async function sendMessage(connection, type, event, data = {}) {
     if (connection && connection.readyState === connection.OPEN) {
       connection.send(JSON.stringify({ type, event, data }));
     } else {
-      console.warn(' Tried to send message to closed or invalid connection:', { type, event, data });
+      console.warn(`🔴 WS SEND FAILED: Connection closed -> Type: ${type}, Event: ${event}`);
     }
   } catch (error) {
-    console.error('Error sending message:', error, { type, event, data });
+    console.error(`🔴 WS SEND ERROR: ${error.message} -> Type: ${type}, Event: ${event}`);
   }
 }
 
@@ -83,28 +83,28 @@ export async function checkJoinable(data, room, userId, connection) {
         await sendMessage(connection, 'game', 'room-not-found', {
             roomId: data.roomId
         });
-        console.warn(`Room not found for user ${userId}`);
+        console.warn(`🔍 ROOM ERROR: Room not found -> User: ${userId}`);
         return false;
     }
     if (room.players.has(userId)) {
         await sendMessage(connection, 'game', 'already-joined', {
             roomId: room.id
         });
-        console.warn(`User ${userId} already joined room ${room.id}`);
+        console.warn(`🔄 JOIN ERROR: User already in room -> User: ${userId}, Room: ${room.id}`);
         return false
     }
     if (room.players.size >= 2) {
         await sendMessage(connection, 'game', 'room-full', {
             roomId: room.id
         });
-        console.warn(`Room ${room.id} is full for user ${userId}`);
+        console.warn(`🚫 JOIN ERROR: Room full -> User: ${userId}, Room: ${room.id}`);
         return false;
     }
     if (room.started) {
         await sendMessage(connection, 'game', 'game-already-started', {
             roomId: room.id
         });
-        console.warn(`Game already started in room ${room.id} for user ${userId}`);
+        console.warn(`⏰ JOIN ERROR: Game already started -> User: ${userId}, Room: ${room.id}`);
         return false;
     }
     

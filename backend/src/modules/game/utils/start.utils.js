@@ -16,12 +16,12 @@ const WINNING_SCORE = 5;
 
 export async function updateBall(room, connection) {
     const ball = room.state.ball;
-    const [player1Id, player2Id] = Array.from(room.players);
-    const paddle1 = room.state.paddles[player1Id]; // Left paddle
-    const paddle2 = room.state.paddles[player2Id]; // Right paddle
+    const playerIds = Array.from(room.players).sort((a, b) => a - b); // Consistent sorting by ID
+    const [player1Id, player2Id] = playerIds;
+    const paddle1 = room.state.paddles[player1Id]; // Left paddle (lowest ID)
+    const paddle2 = room.state.paddles[player2Id]; // Right paddle (highest ID)
     
     if (!paddle1 || !paddle2) {
-        console.error('Paddles not found for players:', player1Id, player2Id);
         return;
     }
     
@@ -55,7 +55,6 @@ export async function updateBall(room, connection) {
         const normalizedOffset = hitOffset / (PADDLE_HEIGHT / 2); // -1 to 1
         ball.vy = normalizedOffset * BALL_SPEED * 0.5; // Add vertical component
         
-        console.log(`Left paddle hit! Ball bouncing right`);
     }
     
     // Right paddle collision (player2)
@@ -75,20 +74,19 @@ export async function updateBall(room, connection) {
         const normalizedOffset = hitOffset / (PADDLE_HEIGHT / 2); // -1 to 1
         ball.vy = normalizedOffset * BALL_SPEED * 0.5; // Add vertical component
         
-        console.log(`Right paddle hit! Ball bouncing left`);
     }
     
     // Scoring - ball goes off screen
     if (ball.x < -BALL_RADIUS) {
         // Ball went off left side - Player 2 (right) scores
         room.state.score[player2Id] += 1;
-        console.log(`GOAL! Player ${player2Id} scores! Score: ${room.state.score[player1Id]} - ${room.state.score[player2Id]}`);
+        console.log(`⚽ GAME SCORE: Goal scored -> Player: ${player2Id}, Score: ${room.state.score[player1Id]}-${room.state.score[player2Id]}`);
         await resetBallAndCheck(room, ball, player2Id);
     } 
     else if (ball.x > CANVAS_WIDTH + BALL_RADIUS) {
         // Ball went off right side - Player 1 (left) scores  
         room.state.score[player1Id] += 1;
-        console.log(`GOAL! Player ${player1Id} scores! Score: ${room.state.score[player1Id]} - ${room.state.score[player2Id]}`);
+        console.log(`⚽ GAME SCORE: Goal scored -> Player: ${player1Id}, Score: ${room.state.score[player1Id]}-${room.state.score[player2Id]}`);
         await resetBallAndCheck(room, ball, player1Id);
     }
 }
@@ -99,7 +97,8 @@ async function resetBallAndCheck(room, ball, scoringPlayerId) {
     ball.y = CANVAS_HEIGHT / 2;
     
     // Ball starts moving towards the player who was scored on
-    const [player1Id, player2Id] = Array.from(room.players);
+    const playerIds = Array.from(room.players).sort((a, b) => a - b); // Consistent sorting
+    const [player1Id, player2Id] = playerIds;
     const ballDirection = scoringPlayerId === player1Id ? 1 : -1; // If player1 scored, ball goes right
     
     // Random angle but not too steep
@@ -107,7 +106,6 @@ async function resetBallAndCheck(room, ball, scoringPlayerId) {
     ball.vx = ballDirection * BALL_SPEED * Math.cos(angle);
     ball.vy = BALL_SPEED * Math.sin(angle);
     
-    console.log(`Ball reset. Direction: ${ballDirection > 0 ? 'right' : 'left'}`);
     
     // Check if game is over
     if (room.state.score[scoringPlayerId] >= WINNING_SCORE) {
@@ -120,7 +118,9 @@ async function endGame(room, winnerId) {
     room.winnerId = winnerId;
     room.endDate = new Date();
     
-    console.log(`🏆 GAME OVER! Player ${winnerId} wins ${room.state.score[winnerId]}-${room.state.score[Array.from(room.players).find(p => p !== winnerId)]}`);
+    const players = Array.from(room.players).sort((a, b) => a - b); // Consistent sorting
+    const loserScore = room.state.score[players.find(p => p !== winnerId)] || 0;
+    console.log(`🏆 GAME END: Match completed -> Winner: ${winnerId}, Score: ${room.state.score[winnerId]}-${loserScore}, Room: ${room.id}`);
     
     // Stop game loop
     if (room.loop) {
@@ -134,21 +134,21 @@ async function endGame(room, winnerId) {
         
         // Eğer bu bir turnuva maçıysa, turnuva ilerlemesini kontrol et
         if (room.tournamentId && room.winnerId) {
-            console.log(`🏆 Processing tournament match result: matchId=${room.matchId}, winnerId=${room.winnerId}`);
+            console.log(`🏆 TOURNAMENT RESULT: Processing match result -> Match: ${room.matchId}, Winner: ${room.winnerId}, Tournament: ${room.tournamentId}`);
             await processTournamentMatchResult(room.matchId, room.winnerId);
         }
         
         // Update player stats
-        const players = Array.from(room.players);
+        const players = Array.from(room.players).sort((a, b) => a - b); // Consistent sorting
         const playerStats = players.map(playerId => ({
             userId: playerId,
             isWinner: playerId === winnerId
         }));
         await updateMultipleUserStats(playerStats);
         
-        console.log('Game saved to database and stats updated');
+        console.log(`💾 GAME DB: Match saved to database -> Room: ${room.id}, Players: ${players.join(', ')}`);
     } catch (error) {
-        console.error('Error saving game:', error);
+        console.error(`🔴 GAME DB ERROR: Failed to save match -> Room: ${room.id}, Error: ${error.message}`);
     }
     
     // Broadcast game over to all players

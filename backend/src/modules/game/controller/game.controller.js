@@ -62,7 +62,6 @@ export async function joinGame(data, userId, connection) {
         await sendMessage(connection, 'game', 'room-created', {
             roomId: room.id
         });
-        console.log(rooms);
 
         return;
     }
@@ -81,7 +80,7 @@ export async function joinGame(data, userId, connection) {
         message: `User ${userId} joined the game`
     });
     if (room.players.size === 2 && !room.started) {
-        console.log('the game will start');
+        console.log(`🎮 GAME READY: 2 players joined -> Room: ${room.id}`);
     }
     // Display the current state of the room for debugging
     await displayRoomState(room);
@@ -96,68 +95,104 @@ export async function joinGame(data, userId, connection) {
 
 export async function startGame(data, userId, connection) {
     const room = rooms.get(data.roomId);
-    // Check if the room exists and is not already started
-    if (!room || room.started) {
+    
+    // Check if the room exists
+    if (!room) {
         await sendMessage(connection, 'game', 'error', {
-            message: `Cannot start game: room not found or already started`
+            message: `Cannot start game: room not found`
+        });
+        console.warn(`🔍 START ERROR: Room not found -> User: ${userId}, Room: ${data.roomId}`);
+        return;
+    }
+    
+    // Check if already started (race condition protection)
+    if (room.started) {
+        console.log(`⚠️ START WARNING: Game already started -> User: ${userId}, Room: ${room.id}`);
+        // Don't send error to user, just broadcast current state
+        await sendMessage(connection, 'game', 'game-started', {
+            roomId: room.id,
+            players: Array.from(room.players),
+            message: `Game already in progress`
         });
         return;
     }
+    
+    // Check player count
     if (room.players.size < 2) {
         await sendMessage(connection, 'game', 'error', {
             message: `Cannot start game: not enough players`
         });
+        console.warn(`👥 START ERROR: Not enough players -> Room: ${room.id}, Players: ${room.players.size}`);
         return;
     }
     
+    // Check if user is in the room
+    if (!room.players.has(userId)) {
+        await sendMessage(connection, 'game', 'error', {
+            message: `Cannot start game: you are not in this room`
+        });
+        console.warn(`🚫 START ERROR: User not in room -> User: ${userId}, Room: ${room.id}`);
+        return;
+    }
+    
+    // Set started flag and start game
     room.started = true;
+    console.log(`🎮 GAME START: Game started -> User: ${userId}, Room: ${room.id}, Players: ${Array.from(room.players).join(', ')}`);
+    
     startGameLoop(room, connection);
     
-    await sendMessage(connection, 'game', 'game-started', {
-        roomId: room.id,
-        players: Array.from(room.players),
-        message: `Game started by user ${userId}`
-    });
+    // Broadcast to all players in the room
+    for (const [playerId, socket] of room.sockets) {
+        await sendMessage(socket, 'game', 'game-started', {
+            roomId: room.id,
+            players: Array.from(room.players),
+            message: `Game started by user ${userId}`
+        });
+    }
 }
 
 export async function scoreGame(data, userId, connection) {
-    console.log(`User ${userId} scored:`, data);
     const room = rooms.get(data.roomId);
     if (!room) return;
     
-    console.log('room state before score:', room.state);
     
     // Skoru güncelle (+1 artır)
     room.state.score[userId] = room.state.score[userId] + 1;
     
-    console.log(`User ${userId} new score: ${room.state.score[userId]}`);
-    console.log(`All scores:`, room.state.score);
     
   
 }
 export async function handlePlayerMove(data, userId) {
     const room = rooms.get(data.roomId);
     if (!room) {
-        console.error(`Room not found for user ${userId}`);
         return;
     }
     
     // Oyuncunun paddle'ını güncelle
     if (room.state.paddles[userId]) {
         const oldY = room.state.paddles[userId].y;
-        room.state.paddles[userId].y = data.y;
-        console.log(`User ${userId} moved paddle from y=${oldY} to y=${data.y}`);
         
-        // Oyun durumunu güncelle ve tüm oyunculara gönder
-        await stateGame(data, userId);
+        // Game constants (should match frontend and game logic)
+        const CANVAS_HEIGHT = 400;
+        const PADDLE_HEIGHT = 100;
+        
+        // Clamp paddle position within bounds
+        const newY = Math.max(0, Math.min(CANVAS_HEIGHT - PADDLE_HEIGHT, data.y));
+        
+        room.state.paddles[userId].y = newY;
+        
+        // Only update game state if position actually changed
+        if (oldY !== newY) {
+            // Oyun durumunu güncelle ve tüm oyunculara gönder
+            await stateGame(data, userId);
+        }
     } else {
-        console.error(`Paddle not found for user ${userId}. Available paddles:`, Object.keys(room.state.paddles));
+        console.log(`❌ MOVE ERROR: Paddle not found for user ${userId}`);
     }
 }
 export async function stateGame(data, userId) {
     const room = rooms.get(data.roomId);
     if (!room) {
-        console.error(`Room not found for user ${userId}`);
         return;
     }
     
@@ -207,7 +242,7 @@ export async function handlePlayerReady(data, userId, connection) {
 
     // Mark player as ready
     room.readyPlayers.add(userId);
-    console.log(`User ${userId} is ready in room ${roomId}`);
+    console.log(`✅ GAME READY: Player ready -> User: ${userId}, Room: ${roomId}`);
 
     // Broadcast ready status to all players
     for (const [playerId, socket] of room.sockets) {
@@ -221,7 +256,7 @@ export async function handlePlayerReady(data, userId, connection) {
 
     // Check if all players are ready (and we have 2 players)
     if (room.readyPlayers.size === 2 && room.players.size === 2) {
-        console.log(`All players ready in room ${roomId}. Game can start.`);
+        console.log(`🎮 GAME START: All players ready -> Room: ${roomId}`);
         
         // Broadcast that game can start
         for (const [playerId, socket] of room.sockets) {
@@ -237,13 +272,13 @@ export async function handlePlayerReady(data, userId, connection) {
 export async function handleReconnection(connection, userId) {
     const roomId = userRoom.get(userId);
     if (!roomId) {
-        console.warn(`User ${userId} is not in any room.`);
+        console.warn(`🔍 RECONNECT ERROR: User not in room -> User: ${userId}`);
         return;
     }
     
     const room = rooms.get(roomId);
     if (!room) {
-        console.warn(`Room ${roomId} not found for user ${userId}.`);
+        console.warn(`🔍 RECONNECT ERROR: Room not found -> User: ${userId}, Room: ${roomId}`);
         return;
     }
     
@@ -252,14 +287,14 @@ export async function handleReconnection(connection, userId) {
     
     // Cancel disconnection timeout if it exists
     if (room.disconnectionTimeout) {
-        console.log(`🔄 Player ${userId} reconnected! Cancelling timeout for room ${roomId}`);
+        console.log(`🔄 GAME RECONNECT: Player reconnected -> User: ${userId}, Room: ${roomId}`);
         clearTimeout(room.disconnectionTimeout);
         room.disconnectionTimeout = null;
     }
     
     // Eğer oyun başlamışsa ve durdurulmuşsa, oyunu tekrar başlat
     if (room.started && room.state.paused) {
-        console.log(`▶️ Resuming game in room ${roomId} after player ${userId} reconnected`);
+        console.log(`▶️ GAME RESUME: Game resuming after reconnect -> User: ${userId}, Room: ${roomId}`);
         resumeGame(room);
         
         // Game loop'u yeniden başlat
@@ -311,13 +346,13 @@ export async function handleGameInvite(data, userId, connection) {
     };
     
     recipientClient.send(JSON.stringify(inviteMessage));
-    console.log(`Game invitation sent from ${userId} to ${receiverId}`);
+    console.log(`📨 GAME INVITE: Invitation sent -> From: ${userId}, To: ${receiverId}`);
 }
 
 export async function handleInviteAccepted(data, userId, connection) {
     const { senderId } = data;
     
-    console.log(`User ${userId} accepted game invite from ${senderId}`);
+    console.log(`✅ GAME INVITE: Invitation accepted -> From: ${senderId}, By: ${userId}`);
     
     // Check if both users are still online
     const senderClient = getClientById(senderId);
@@ -374,5 +409,5 @@ export async function handleInviteAccepted(data, userId, connection) {
         message: 'Your game invitation was accepted! Room created.'
     });
     
-    console.log(`Room ${roomId} created for users ${userId} and ${senderId}`);
+    console.log(`🏠 ROOM CREATED: Invite room created -> Users: ${userId}, ${senderId}, Room: ${roomId}`);
 }
