@@ -39,12 +39,15 @@ export function init() {
   let currentTournament: TournamentData | null = null;
   let currentUser: any = null;
   let currentMatch: MatchDetails | null = null;
+  let retryCount = 0;
+  const MAX_RETRIES = 3;
 
   // DOM elements
   const tournamentStatus = document.getElementById('tournament-status');
   const participantCount = document.getElementById('participant-count');
   const participantsGrid = document.getElementById('participants-grid');
   const waitingMessage = document.getElementById('waiting-message');
+  const waitingText = document.getElementById('waiting-text');
   const currentMatchInfo = document.getElementById('current-match-info');
   const matchDetails = document.getElementById('match-details');
   const startMatchBtn = document.getElementById('start-match-btn');
@@ -55,8 +58,19 @@ export function init() {
   const returnHomeBtn = document.getElementById('return-home-btn');
   const roundTransition = document.getElementById('round-transition');
   const transitionMessage = document.getElementById('transition-message');
+  const countdownTimer = document.getElementById('countdown-timer');
+  const countdownDisplay = document.getElementById('countdown-display');
+  const countdownMessage = document.getElementById('countdown-message');
   const countdownBar = document.getElementById('countdown-bar');
   const countdownText = document.getElementById('countdown-text');
+  const roundCountdownBar = document.getElementById('round-countdown-bar');
+  const roundCountdownText = document.getElementById('round-countdown-text');
+  const connectionStatus = document.getElementById('connection-status');
+  const connectionIndicator = document.getElementById('connection-indicator');
+  const connectionText = document.getElementById('connection-text');
+
+  let countdownInterval: number | null = null;
+  let wsReconnectInterval: number | null = null;
 
   // Initialize
   initPage();
@@ -71,14 +85,17 @@ export function init() {
         return;
       }
 
-      // Tournament durumunu kontrol et
-      await loadTournamentData();
+      // Tournament durumunu kontrol et - sadece initial request
+      requestInitialTournamentData();
       
       // Event listeners'ı kurulum
       setupEventListeners();
       
       // Tournament service listeners
       setupTournamentListeners();
+      
+      // WebSocket reconnection handling
+      setupWebSocketReconnection();
       
     } catch (error) {
       console.error('Error initializing tournament page:', error);
@@ -87,21 +104,21 @@ export function init() {
     }
   }
 
-  async function loadTournamentData() {
-    console.log('🔄 TOURNAMENT PAGE: Loading tournament data...');
+  function requestInitialTournamentData() {
+    console.log('🔄 TOURNAMENT PAGE: Requesting initial tournament data...');
     
     if (!currentUser) {
       console.error('❌ TOURNAMENT PAGE: No current user, cannot load tournament data');
       return;
     }
     
-    // Tournament details'i backend'den al
-    console.log('📡 TOURNAMENT PAGE: Requesting tournament details...');
+    // Initial request for tournament details - only once at startup
+    console.log('📡 TOURNAMENT PAGE: Requesting initial tournament details...');
     tournamentService.getTournamentDetails();
     
     // Also request bracket information
     setTimeout(() => {
-      console.log('📡 TOURNAMENT PAGE: Requesting tournament bracket...');
+      console.log('📡 TOURNAMENT PAGE: Requesting initial tournament bracket...');
       tournamentService.getTournamentBracket();
     }, 500);
   }
@@ -127,17 +144,22 @@ export function init() {
       
       if (!currentTournament) {
         console.log('❌ TOURNAMENT PAGE: No tournament data received');
-        // Tournament sayfasındaysak ve kullanıcı tournament'ta ise bekle
-        if (currentUser) {
-          console.log('⏳ TOURNAMENT PAGE: User exists, retrying tournament data in 2 seconds...');
+        // Tournament sayfasındaysak ve kullanıcı tournament'ta ise bekle (max 3 retry)
+        if (currentUser && retryCount < MAX_RETRIES) {
+          retryCount++;
+          console.log(`⏳ TOURNAMENT PAGE: User exists, retrying tournament data in 2 seconds... (${retryCount}/${MAX_RETRIES})`);
           setTimeout(() => {
             tournamentService.getTournamentDetails();
           }, 2000);
           return;
         }
+        console.log('❌ TOURNAMENT PAGE: Max retries reached or no user, navigating to home');
         (window as any).router.navigate('home');
         return;
       }
+      
+      // Reset retry count on successful data
+      retryCount = 0;
       
       console.log(`📊 TOURNAMENT PAGE: Tournament ${currentTournament.id} status: ${currentTournament.status}, participants: ${currentTournament.participants?.length || 0}`);
       
@@ -160,8 +182,9 @@ export function init() {
       console.log('🎯 Player joined:', data);
       if (currentTournament) {
         currentTournament.currentPlayers = data.currentPlayers;
+        // Update display without making new requests
+        updateTournamentDisplay();
       }
-      loadTournamentData(); // Refresh participants
       notify(`Player joined tournament (${data.currentPlayers}/4)`);
     });
 
@@ -169,15 +192,17 @@ export function init() {
       console.log('🎯 Player left:', data);
       if (currentTournament) {
         currentTournament.currentPlayers = data.currentPlayers;
+        // Update display without making new requests
+        updateTournamentDisplay();
       }
-      loadTournamentData(); // Refresh participants
       notify(`Player left tournament (${data.currentPlayers}/4)`);
     });
 
     // Tournament started
     tournamentService.onTournamentStarted((data) => {
       console.log('🏆 Tournament started:', data);
-      currentTournament = data;
+      // Update tournament with complete data from the event
+      currentTournament = data.tournament || data;
       updateTournamentDisplay();
       notify('Tournament has started! Matches begin now.');
     });
@@ -219,7 +244,11 @@ export function init() {
     // Next round started
     tournamentService.onTournamentNextRound((data) => {
       console.log('🏆 Next round started:', data);
-      loadTournamentData(); // Refresh tournament data
+      // Update tournament data from the received event data
+      if (data.tournament) {
+        currentTournament = data.tournament;
+        updateTournamentDisplay();
+      }
       notify(`${data.roundName || `Round ${data.round}`} has begun!`);
     });
 
@@ -238,6 +267,15 @@ export function init() {
         (window as any).router.navigate('home');
       }
     });
+
+    // Tournament bracket updates
+    tournamentService.onTournamentBracket((data) => {
+      console.log('📊 TOURNAMENT PAGE: Bracket data received:', data);
+      if (data.tournament) {
+        currentTournament = { ...currentTournament, ...data.tournament };
+        updateTournamentDisplay();
+      }
+    });
   }
 
   function showPendingBracket() {
@@ -245,64 +283,102 @@ export function init() {
     
     // 4 kişi var ama henüz başlamamış, bracket şablonunu göster
     bracketContainer.innerHTML = `
-      <div class="space-y-6">
-        <div>
-          <h3 class="text-lg font-bold text-white mb-3 flex items-center">
-            <span class="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center text-sm mr-2">1</span>
-            Semifinals
-          </h3>
-          <div class="grid grid-cols-1 gap-3">
-            <div class="border border-gray-600 rounded-lg p-4 bg-gray-700">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">?</div>
-                  <span class="font-medium text-white">Random Player 1</span>
+      <div class="space-y-12 font-mono">
+        <!-- Semifinals Section -->
+        <div class="w-full">
+          <div class="text-center mb-8">
+            <h3 class="text-2xl font-bold text-green-300 mb-2 tracking-wider">⚔️ SEMIFINALS ⚔️</h3>
+            <div class="w-24 h-1 bg-gradient-to-r from-green-500 to-green-400 mx-auto rounded-full"></div>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <!-- Semifinal 1 -->
+            <div class="bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-green-400/60 rounded-xl p-6 shadow-2xl">
+              <div class="text-center">
+                <div class="text-xs text-green-400 font-bold mb-3 tracking-widest">SEMIFINAL #1</div>
+                
+                <div class="space-y-4">
+                  <div class="flex items-center justify-center space-x-4 p-3 bg-green-600/20 rounded-lg border border-green-400/50">
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-400 rounded-full flex items-center justify-center text-white font-bold text-lg border-2 border-green-300 shadow-lg">?</div>
+                    <span class="text-green-100 font-bold text-lg">WARRIOR #1</span>
+                  </div>
+                  
+                  <div class="text-green-400 font-bold text-xl animate-pulse">⚡ VS ⚡</div>
+                  
+                  <div class="flex items-center justify-center space-x-4 p-3 bg-green-600/20 rounded-lg border border-green-400/50">
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-400 rounded-full flex items-center justify-center text-white font-bold text-lg border-2 border-green-300 shadow-lg">?</div>
+                    <span class="text-green-100 font-bold text-lg">WARRIOR #2</span>
+                  </div>
                 </div>
-                <div class="text-center px-4"><span class="text-gray-400 text-sm">VS</span></div>
-                <div class="flex items-center space-x-3">
-                  <span class="font-medium text-white">Random Player 2</span>
-                  <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold">?</div>
+                
+                <div class="mt-4 p-2 bg-yellow-500/20 border border-yellow-400 rounded-lg">
+                  <span class="text-yellow-300 text-sm font-bold animate-pulse">⚡ BATTLE INCOMING ⚡</span>
                 </div>
               </div>
-              <div class="text-center mt-2 text-sm"><span class="text-yellow-400">Starting soon...</span></div>
             </div>
             
-            <div class="border border-gray-600 rounded-lg p-4 bg-gray-700">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">?</div>
-                  <span class="font-medium text-white">Random Player 3</span>
+            <!-- Semifinal 2 -->
+            <div class="bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-green-400/60 rounded-xl p-6 shadow-2xl">
+              <div class="text-center">
+                <div class="text-xs text-green-400 font-bold mb-3 tracking-widest">SEMIFINAL #2</div>
+                
+                <div class="space-y-4">
+                  <div class="flex items-center justify-center space-x-4 p-3 bg-green-600/20 rounded-lg border border-green-400/50">
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-400 rounded-full flex items-center justify-center text-white font-bold text-lg border-2 border-green-300 shadow-lg">?</div>
+                    <span class="text-green-100 font-bold text-lg">WARRIOR #3</span>
+                  </div>
+                  
+                  <div class="text-green-400 font-bold text-xl animate-pulse">⚡ VS ⚡</div>
+                  
+                  <div class="flex items-center justify-center space-x-4 p-3 bg-green-600/20 rounded-lg border border-green-400/50">
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-400 rounded-full flex items-center justify-center text-white font-bold text-lg border-2 border-green-300 shadow-lg">?</div>
+                    <span class="text-green-100 font-bold text-lg">WARRIOR #4</span>
+                  </div>
                 </div>
-                <div class="text-center px-4"><span class="text-gray-400 text-sm">VS</span></div>
-                <div class="flex items-center space-x-3">
-                  <span class="font-medium text-white">Random Player 4</span>
-                  <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold">?</div>
+                
+                <div class="mt-4 p-2 bg-yellow-500/20 border border-yellow-400 rounded-lg">
+                  <span class="text-yellow-300 text-sm font-bold animate-pulse">⚡ BATTLE INCOMING ⚡</span>
                 </div>
               </div>
-              <div class="text-center mt-2 text-sm"><span class="text-yellow-400">Starting soon...</span></div>
             </div>
           </div>
         </div>
         
-        <div>
-          <h3 class="text-lg font-bold text-white mb-3 flex items-center">
-            <span class="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center text-sm mr-2">2</span>
-            Final
-          </h3>
-          <div class="grid grid-cols-1 gap-3">
-            <div class="border border-dashed border-gray-600 rounded-lg p-4 bg-gray-800/50">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold">?</div>
-                  <span class="font-medium text-gray-400">Winner of Match 1</span>
+        <!-- Connection Arrow -->
+        <div class="flex justify-center">
+          <div class="text-green-400 text-3xl animate-bounce">⬇️</div>
+        </div>
+        
+        <!-- Final Section -->
+        <div class="w-full">
+          <div class="text-center mb-8">
+            <h3 class="text-3xl font-bold text-yellow-300 mb-2 tracking-wider">👑 GRAND FINAL 👑</h3>
+            <div class="w-32 h-1 bg-gradient-to-r from-yellow-500 to-yellow-400 mx-auto rounded-full"></div>
+          </div>
+          
+          <div class="flex justify-center">
+            <div class="bg-gradient-to-br from-gray-700 to-gray-800 border-2 border-dashed border-yellow-400/50 rounded-xl p-8 w-full max-w-md shadow-2xl">
+              <div class="text-center">
+                <div class="text-xs text-yellow-400 font-bold mb-4 tracking-widest">CHAMPIONSHIP MATCH</div>
+                
+                <div class="space-y-4">
+                  <div class="flex items-center justify-center space-x-4 p-3 bg-gray-600/30 rounded-lg border border-gray-500">
+                    <div class="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center text-gray-400 font-bold text-lg border-2 border-gray-500">?</div>
+                    <span class="text-gray-400 font-bold text-lg">SEMIFINAL WINNER</span>
+                  </div>
+                  
+                  <div class="text-gray-500 font-bold text-xl">⚡ VS ⚡</div>
+                  
+                  <div class="flex items-center justify-center space-x-4 p-3 bg-gray-600/30 rounded-lg border border-gray-500">
+                    <div class="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center text-gray-400 font-bold text-lg border-2 border-gray-500">?</div>
+                    <span class="text-gray-400 font-bold text-lg">SEMIFINAL WINNER</span>
+                  </div>
                 </div>
-                <div class="text-center px-4"><span class="text-gray-400 text-sm">VS</span></div>
-                <div class="flex items-center space-x-3">
-                  <span class="font-medium text-gray-400">Winner of Match 2</span>
-                  <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-bold">?</div>
+                
+                <div class="mt-4 p-2 bg-gray-600/20 border border-gray-500 rounded-lg">
+                  <span class="text-gray-400 text-sm font-bold">🏆 AWAITING CHAMPIONS 🏆</span>
                 </div>
               </div>
-              <div class="text-center mt-2 text-sm"><span class="text-gray-400">Awaiting semifinal winners</span></div>
             </div>
           </div>
         </div>
@@ -336,40 +412,49 @@ export function init() {
     updateCurrentMatchInfo();
   }
 
-  function updateParticipantsGrid() {
+  async function updateParticipantsGrid() {
     if (!participantsGrid || !currentTournament) return;
 
     let html = '';
     
-    // Show current participants
-    currentTournament.participants.forEach((participant, index) => {
+    // Show current participants with avatars
+    for (const participant of currentTournament.participants) {
       const isCurrentUser = participant.id === currentUser?.id;
-      const borderClass = isCurrentUser ? 'border-purple-400 bg-purple-500/10' : 'border-gray-600';
+      const borderClass = isCurrentUser ? 'border-green-400 bg-green-500/10' : 'border-gray-600';
+      
+      // Fetch user details for avatar
+      let avatarUrl = '';
+      try {
+        const userDetails = await userService.getUserById(participant.id);
+        avatarUrl = userDetails?.avatar || '';
+      } catch (error) {
+        console.log('Could not fetch user details for avatar');
+      }
       
       html += `
-        <div class="flex items-center space-x-3 p-3 border ${borderClass} rounded-lg">
-          <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
-            ${participant.username[0].toUpperCase()}
+        <div class="flex items-center space-x-3 p-3 border ${borderClass} rounded-lg bg-gray-800/50 font-mono">
+          <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold border border-green-400">
+            ${avatarUrl ? `<img src="${avatarUrl}" alt="${participant.username}" class="w-full h-full rounded-full object-cover">` : participant.username[0].toUpperCase()}
           </div>
           <div class="flex-1">
-            <p class="font-medium text-white">${participant.username}</p>
-            <p class="text-xs text-gray-400">${isCurrentUser ? 'You' : 'Player'}</p>
+            <p class="font-medium text-green-100">${participant.username}</p>
+            <p class="text-xs text-green-400">${isCurrentUser ? 'YOU' : 'PLAYER'}</p>
           </div>
-          ${isCurrentUser ? '<span class="text-purple-400 text-sm">👤</span>' : ''}
+          ${isCurrentUser ? '<span class="text-green-400 text-sm">👤</span>' : ''}
         </div>
       `;
-    });
+    }
 
     // Show empty slots
     const emptySlots = 4 - currentTournament.participants.length;
     for (let i = 0; i < emptySlots; i++) {
       html += `
-        <div class="flex items-center space-x-3 p-3 border border-dashed border-gray-600 rounded-lg opacity-50">
-          <div class="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center text-gray-400">
+        <div class="flex items-center space-x-3 p-3 border border-dashed border-gray-600 rounded-lg opacity-50 bg-gray-800/30 font-mono">
+          <div class="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center text-gray-400 border border-gray-500">
             ?
           </div>
           <div class="flex-1">
-            <p class="text-gray-400">Waiting for player...</p>
+            <p class="text-gray-400">WAITING FOR PLAYER...</p>
           </div>
         </div>
       `;
@@ -379,23 +464,15 @@ export function init() {
   }
 
   function updateWaitingMessage() {
-    if (!waitingMessage || !currentTournament) return;
+    if (!waitingMessage || !waitingText || !currentTournament) return;
 
     if (currentTournament.status === 'pending') {
       const remaining = 4 - currentTournament.currentPlayers;
       if (remaining > 0) {
-        waitingMessage.innerHTML = `
-          <p class="text-yellow-400 text-sm text-center">
-            Waiting for ${remaining} more player${remaining !== 1 ? 's' : ''} to join...
-          </p>
-        `;
+        waitingText.textContent = `WAITING FOR ${remaining} MORE PLAYER${remaining !== 1 ? 'S' : ''} TO JOIN...`;
         waitingMessage.classList.remove('hidden');
       } else {
-        waitingMessage.innerHTML = `
-          <p class="text-green-400 text-sm text-center">
-            Tournament is full! Starting soon...
-          </p>
-        `;
+        waitingText.textContent = 'TOURNAMENT IS FULL! STARTING SOON...';
         waitingMessage.classList.remove('hidden');
       }
     } else {
@@ -412,12 +489,12 @@ export function init() {
         showPendingBracket();
       } else {
         bracketContainer.innerHTML = `
-          <div class="flex items-center justify-center h-64 text-gray-400">
-            <div class="text-center">
-              <div class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div class="flex items-center justify-center h-64 text-green-400">
+            <div class="text-center font-mono">
+              <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-400 animate-pulse">
                 <span class="text-xl">⏳</span>
               </div>
-              <p>Tournament bracket will appear when all 4 players join</p>
+              <p class="text-green-300">TOURNAMENT BRACKET WILL APPEAR WHEN ALL 4 PLAYERS JOIN</p>
             </div>
           </div>
         `;
@@ -427,10 +504,10 @@ export function init() {
 
     if (!currentTournament.matches || currentTournament.matches.length === 0) {
       bracketContainer.innerHTML = `
-        <div class="flex items-center justify-center h-64 text-gray-400">
-          <div class="text-center">
-            <div class="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-            <p>Loading matches...</p>
+        <div class="flex items-center justify-center h-64 text-green-400">
+          <div class="text-center font-mono">
+            <div class="animate-spin w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+            <p class="text-green-300">LOADING MATCHES...</p>
           </div>
         </div>
       `;
@@ -446,73 +523,97 @@ export function init() {
       rounds[match.round].push(match);
     });
 
-    let html = '<div class="space-y-6">';
+    // Create enhanced tournament bracket
+    let html = '<div class="space-y-12 font-mono">';
     
     Object.keys(rounds).forEach(roundKey => {
       const round = parseInt(roundKey);
       const roundMatches = rounds[round];
-      const roundName = round === 1 ? 'Semifinals' : round === 2 ? 'Final' : `Round ${round}`;
+      const roundName = round === 1 ? '⚔️ SEMIFINALS ⚔️' : round === 2 ? '👑 GRAND FINAL 👑' : `🏆 ROUND ${round} 🏆`;
+      const roundColor = round === 2 ? 'text-yellow-300' : 'text-green-300';
+      const borderColor = round === 2 ? 'from-yellow-500 to-yellow-400' : 'from-green-500 to-green-400';
       
       html += `
-        <div>
-          <h3 class="text-lg font-bold text-white mb-3 flex items-center">
-            <span class="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center text-sm mr-2">
-              ${round}
-            </span>
-            ${roundName}
-          </h3>
-          <div class="grid grid-cols-1 gap-3">
+        <div class="w-full">
+          <div class="text-center mb-8">
+            <h3 class="text-2xl font-bold ${roundColor} mb-2 tracking-wider">${roundName}</h3>
+            <div class="w-24 h-1 bg-gradient-to-r ${borderColor} mx-auto rounded-full"></div>
+          </div>
+          <div class="${round === 1 ? 'grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto' : 'flex justify-center'}">
       `;
       
-      roundMatches.forEach(match => {
+      roundMatches.forEach((match, index) => {
         const isCompleted = match.winnerId !== null;
         const isUserInMatch = match.player1Id === currentUser?.id || match.player2Id === currentUser?.id;
         const winner = match.winnerId === match.player1Id ? match.player1Username : match.player2Username;
         
-        let statusClass = 'bg-gray-700 border-gray-600';
+        let statusClass = 'bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-green-400/60';
+        let statusText = '';
+        let statusBg = '';
+        
         if (isCompleted) {
-          statusClass = 'bg-green-800/30 border-green-500';
+          statusClass = 'bg-gradient-to-br from-green-800 to-green-900 border-2 border-green-400';
+          statusText = `🏆 WINNER: ${winner.toUpperCase()} 🏆`;
+          statusBg = 'bg-green-500/30 border-green-400 text-green-200';
         } else if (isUserInMatch) {
-          statusClass = 'bg-purple-800/30 border-purple-400 ring-1 ring-purple-400/50';
+          statusClass = 'bg-gradient-to-br from-green-700 to-green-800 border-2 border-green-300 ring-2 ring-green-400/50';
+          statusText = '⚡ YOUR BATTLE ⚡';
+          statusBg = 'bg-green-600/40 border-green-300 text-green-100 animate-pulse';
+        } else {
+          statusText = '⚔️ BATTLE IN PROGRESS ⚔️';
+          statusBg = 'bg-yellow-500/20 border-yellow-400 text-yellow-300 animate-pulse';
         }
         
+        const matchNumber = round === 1 ? `#${index + 1}` : '';
+        const matchLabel = round === 1 ? `SEMIFINAL ${matchNumber}` : 'CHAMPIONSHIP MATCH';
+        
         html += `
-          <div class="border ${statusClass} rounded-lg p-4">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                  ${match.player1Username[0].toUpperCase()}
+          <div class="${statusClass} rounded-xl p-6 shadow-2xl ${round === 2 ? 'w-full max-w-md' : ''}">
+            <div class="text-center">
+              <div class="text-xs text-green-400 font-bold mb-4 tracking-widest">${matchLabel}</div>
+              
+              <div class="space-y-4">
+                <div class="flex items-center justify-center space-x-4 p-4 bg-green-600/20 rounded-lg border border-green-400/50">
+                  <div class="w-14 h-14 bg-gradient-to-r from-green-500 to-green-400 rounded-full flex items-center justify-center text-white font-bold text-xl border-2 border-green-300 shadow-lg">
+                    ${match.player1Username[0].toUpperCase()}
+                  </div>
+                  <div class="flex-1 text-center">
+                    <span class="font-bold text-green-100 text-lg block">${match.player1Username}</span>
+                    ${match.winnerId === match.player1Id ? '<div class="text-yellow-400 text-2xl">👑</div>' : ''}
+                  </div>
                 </div>
-                <span class="font-medium text-white">${match.player1Username}</span>
-                ${match.winnerId === match.player1Id ? '<span class="text-yellow-400">👑</span>' : ''}
+                
+                <div class="text-green-400 font-bold text-2xl animate-pulse">⚡ VS ⚡</div>
+                
+                <div class="flex items-center justify-center space-x-4 p-4 bg-green-600/20 rounded-lg border border-green-400/50">
+                  <div class="flex-1 text-center">
+                    <span class="font-bold text-green-100 text-lg block">${match.player2Username}</span>
+                    ${match.winnerId === match.player2Id ? '<div class="text-yellow-400 text-2xl">👑</div>' : ''}
+                  </div>
+                  <div class="w-14 h-14 bg-gradient-to-r from-green-500 to-green-400 rounded-full flex items-center justify-center text-white font-bold text-xl border-2 border-green-300 shadow-lg">
+                    ${match.player2Username[0].toUpperCase()}
+                  </div>
+                </div>
               </div>
               
-              <div class="text-center px-4">
-                <span class="text-gray-400 text-sm">VS</span>
+              <div class="mt-6 p-3 ${statusBg} rounded-lg border">
+                <span class="font-bold text-sm">${statusText}</span>
               </div>
-              
-              <div class="flex items-center space-x-3">
-                ${match.winnerId === match.player2Id ? '<span class="text-yellow-400">👑</span>' : ''}
-                <span class="font-medium text-white">${match.player2Username}</span>
-                <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                  ${match.player2Username[0].toUpperCase()}
-                </div>
-              </div>
-            </div>
-            
-            <div class="text-center mt-2 text-sm">
-              ${isCompleted 
-                ? `<span class="text-green-400">Winner: ${winner}</span>`
-                : isUserInMatch 
-                  ? '<span class="text-purple-400">Your match</span>'
-                  : '<span class="text-gray-400">In progress...</span>'
-              }
             </div>
           </div>
         `;
       });
       
       html += '</div></div>';
+      
+      // Add connection arrow between rounds
+      if (round === 1 && rounds[2]) {
+        html += `
+          <div class="flex justify-center">
+            <div class="text-green-400 text-3xl animate-bounce">⬇️</div>
+          </div>
+        `;
+      }
     });
     
     html += '</div>';
@@ -534,23 +635,23 @@ export function init() {
         
         if (matchDetails) {
           matchDetails.innerHTML = `
-            <div class="text-center">
-              <p class="text-lg font-semibold text-white mb-2">${roundName}</p>
+            <div class="text-center font-mono">
+              <p class="text-lg font-semibold text-green-100 mb-2">${roundName.toUpperCase()}</p>
               <div class="flex items-center justify-center space-x-6">
                 <div class="text-center">
-                  <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2">
+                  <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2 border border-green-400">
                     ${currentUser?.username[0].toUpperCase()}
                   </div>
-                  <p class="text-sm text-purple-200">${currentUser?.username}</p>
+                  <p class="text-sm text-green-200 font-bold">${currentUser?.username}</p>
                 </div>
                 
-                <div class="text-2xl font-bold text-white">VS</div>
+                <div class="text-2xl font-bold text-green-100">VS</div>
                 
                 <div class="text-center">
-                  <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2">
+                  <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2 border border-green-400">
                     ${opponent[0].toUpperCase()}
                   </div>
-                  <p class="text-sm text-red-200">${opponent}</p>
+                  <p class="text-sm text-green-200 font-bold">${opponent}</p>
                 </div>
               </div>
             </div>
@@ -584,50 +685,55 @@ export function init() {
   }
 
   function showMatchPairingsCountdown(data: any) {
-    // Show match pairings with countdown
-    if (roundTransition && transitionMessage && countdownText && countdownBar) {
+    // Show 6-second countdown with new design
+    if (countdownTimer && countdownDisplay && countdownMessage && countdownBar) {
       const pairingsText = data.pairings.map((p: any) => `${p.player1} vs ${p.player2}`).join(' | ');
       
-      transitionMessage.textContent = `${data.roundName} Pairings!`;
-      countdownText.textContent = `${pairingsText} | Matches start in ${data.startsIn}s`;
+      countdownMessage.textContent = `${data.roundName.toUpperCase()} STARTING`;
+      if (countdownText) countdownText.textContent = 'GET READY!';
       
-      roundTransition.classList.remove('hidden');
+      // Hide waiting message and show countdown
       waitingMessage?.classList.add('hidden');
+      countdownTimer.classList.remove('hidden');
       
-      // Reset and animate countdown bar
-      if (countdownBar) {
-        (countdownBar as HTMLElement).style.width = '0%';
-        setTimeout(() => {
-          (countdownBar as HTMLElement).style.width = '100%';
-        }, 100);
-      }
+      // Reset countdown bar
+      (countdownBar as HTMLElement).style.width = '0%';
       
-      // Start countdown
-      let timeLeft = data.startsIn || 5;
-      const countdownInterval = setInterval(() => {
-        timeLeft--;
-        if (countdownText) {
-          countdownText.textContent = `${pairingsText} | Matches start in ${timeLeft}s`;
+      // Start 6-second countdown
+      let timeLeft = 6;
+      if (countdownInterval) clearInterval(countdownInterval);
+      
+      countdownInterval = setInterval(() => {
+        if (countdownDisplay) {
+          countdownDisplay.textContent = timeLeft.toString();
+        }
+        if (countdownBar) {
+          const progress = ((6 - timeLeft) / 6) * 100;
+          (countdownBar as HTMLElement).style.width = `${progress}%`;
         }
         
-        if (timeLeft <= 0) {
-          clearInterval(countdownInterval);
-          if (transitionMessage) transitionMessage.textContent = 'Matches Starting!';
-          if (countdownText) countdownText.textContent = 'Get ready to play!';
+        timeLeft--;
+        
+        if (timeLeft < 0) {
+          clearInterval(countdownInterval!);
+          countdownInterval = null;
+          
+          if (countdownMessage) countdownMessage.textContent = 'MATCHES STARTING!';
+          if (countdownText) countdownText.textContent = 'BATTLE TIME!';
+          if (countdownDisplay) countdownDisplay.textContent = 'GO!';
+          
+          // Hide countdown after 2 seconds
+          setTimeout(() => {
+            countdownTimer?.classList.add('hidden');
+            if (countdownBar) {
+              (countdownBar as HTMLElement).style.width = '0%';
+            }
+          }, 2000);
         }
       }, 1000);
-      
-      // Hide after matches start
-      setTimeout(() => {
-        roundTransition.classList.add('hidden');
-        if (countdownBar) {
-          (countdownBar as HTMLElement).style.width = '0%';
-        }
-      }, (data.startsIn || 5) * 1000 + 2000);
     }
     
-    // Update display with pairings
-    loadTournamentData();
+    // Display will be updated by WebSocket events - no need for additional requests
   }
 
   function showEliminationStatus() {
@@ -673,41 +779,44 @@ export function init() {
 
   function showRoundCompletionDisplay(data: any) {
     // Show round completion info in sidebar
-    if (roundTransition && transitionMessage && countdownText && countdownBar) {
+    if (roundTransition && transitionMessage && roundCountdownText && roundCountdownBar) {
       const winnersList = data.winners.map((w: any) => w.username).join(', ');
       
-      transitionMessage.textContent = `${data.roundName} Complete!`;
-      countdownText.textContent = `Winners: ${winnersList} | ${data.nextRoundName} starts in ${data.nextRoundStartsIn}s`;
+      transitionMessage.textContent = `${data.roundName.toUpperCase()} COMPLETE!`;
+      roundCountdownText.textContent = `WINNERS: ${winnersList.toUpperCase()} | ${data.nextRoundName.toUpperCase()} STARTS IN ${data.nextRoundStartsIn}S`;
       
       roundTransition.classList.remove('hidden');
       
-      // Animate countdown bar
+      // Reset and animate countdown bar
+      (roundCountdownBar as HTMLElement).style.width = '0%';
       setTimeout(() => {
-        if (countdownBar) {
-          (countdownBar as HTMLElement).style.width = '100%';
+        if (roundCountdownBar) {
+          (roundCountdownBar as HTMLElement).style.width = '100%';
         }
       }, 100);
       
       // Start countdown text
       let timeLeft = data.nextRoundStartsIn || 5;
-      const countdownInterval = setInterval(() => {
+      if (countdownInterval) clearInterval(countdownInterval);
+      
+      countdownInterval = setInterval(() => {
         timeLeft--;
-        if (countdownText) {
-          countdownText.textContent = `Winners: ${winnersList} | ${data.nextRoundName} starts in ${timeLeft}s`;
+        if (roundCountdownText) {
+          roundCountdownText.textContent = `WINNERS: ${winnersList.toUpperCase()} | ${data.nextRoundName.toUpperCase()} STARTS IN ${timeLeft}S`;
         }
         
         if (timeLeft <= 0) {
-          clearInterval(countdownInterval);
-          roundTransition.classList.add('hidden');
-          if (countdownBar) {
-            (countdownBar as HTMLElement).style.width = '0%';
+          clearInterval(countdownInterval!);
+          countdownInterval = null;
+          roundTransition?.classList.add('hidden');
+          if (roundCountdownBar) {
+            (roundCountdownBar as HTMLElement).style.width = '0%';
           }
         }
       }, 1000);
     }
     
-    // Update bracket to highlight winners
-    loadTournamentData();
+    // Bracket will be updated by WebSocket events - no need for additional requests
   }
 
   function showTournamentEndModal(data: any) {
@@ -721,4 +830,65 @@ export function init() {
     tournamentResultText.textContent = message;
     tournamentEndModal.classList.remove('hidden');
   }
+
+  function setupWebSocketReconnection() {
+    // Check WebSocket connection status via WebSocketManager
+    const checkConnection = () => {
+      const wsManager = tournamentService['wsManager'] as any;
+      const isConnected = wsManager?.isConnected() || false;
+      
+      if (connectionStatus && connectionIndicator && connectionText) {
+        if (!isConnected) {
+          connectionStatus.classList.remove('hidden');
+          connectionIndicator.className = 'w-3 h-3 bg-red-500 rounded-full animate-pulse';
+          connectionText.textContent = 'RECONNECTING...';
+          
+          // Try to reconnect via WebSocketManager
+          if (wsManager?.reconnect) {
+            wsManager.reconnect();
+          }
+        } else {
+          connectionIndicator.className = 'w-3 h-3 bg-green-500 rounded-full';
+          connectionText.textContent = 'CONNECTED';
+          
+          // Hide connection status after 2 seconds when connected
+          setTimeout(() => {
+            connectionStatus.classList.add('hidden');
+          }, 2000);
+          
+          // Request fresh data only once when reconnected
+          console.log('🔄 TOURNAMENT PAGE: Reconnected, requesting fresh tournament data');
+          tournamentService.getTournamentDetails();
+        }
+      }
+    };
+
+    // Check connection every 5 seconds
+    wsReconnectInterval = setInterval(checkConnection, 5000);
+    
+    // Also check on page visibility change
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        checkConnection();
+      }
+    });
+    
+    // Initial connection check
+    setTimeout(checkConnection, 1000);
+  }
+
+  // Cleanup function
+  function cleanup() {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+    if (wsReconnectInterval) {
+      clearInterval(wsReconnectInterval);
+      wsReconnectInterval = null;
+    }
+  }
+
+  // Add cleanup on page unload
+  window.addEventListener('beforeunload', cleanup);
 }

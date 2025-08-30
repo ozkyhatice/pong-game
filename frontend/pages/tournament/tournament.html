@@ -1,29 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tournament | Pong Game</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="../../assets/css/styles.css">
-</head>
-<body class="bg-gray-900 text-white min-h-screen flex flex-col">
-  
   <!-- Tournament Header -->
-  <div class="bg-gradient-to-r from-purple-800 to-indigo-900 p-6 shadow-lg">
+  <div class="bg-gradient-to-r from-green-800 to-green-900 p-6 shadow-lg border-b-2 border-green-400">
     <div class="container mx-auto max-w-6xl">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-bold text-white">🏆 Tournament</h1>
-          <p class="text-purple-200 mt-1" id="tournament-subtitle">Battle for supremacy</p>
+          <h1 class="text-3xl font-bold text-green-100 tracking-wide">🏆 TOURNAMENT MODE</h1>
+          <p class="text-green-300 mt-1 font-mono text-sm" id="tournament-subtitle">COMPETE FOR GLORY</p>
         </div>
         <div class="flex items-center space-x-4">
-          <div class="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-            <span class="text-sm text-purple-200">Status:</span>
-            <span class="ml-2 font-semibold text-white" id="tournament-status">Loading...</span>
+          <div class="bg-black/30 backdrop-blur-sm rounded-lg px-4 py-2 border border-green-400/30">
+            <span class="text-sm text-green-300 font-mono">STATUS:</span>
+            <span class="ml-2 font-bold text-green-100 font-mono" id="tournament-status">LOADING...</span>
           </div>
-          <button id="leave-tournament-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition-colors">
-            Leave Tournament
+          <button id="leave-tournament-btn" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg font-mono font-medium transition-all border border-red-400 shadow-lg hover:shadow-red-500/25">
+            EXIT TOURNAMENT
           </button>
         </div>
       </div>
@@ -31,72 +20,90 @@
   </div>
 
   <!-- Tournament Content -->
-  <div class="flex-1 container mx-auto max-w-6xl p-6">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      
-      <!-- Left Panel: Participants -->
-      <div class="lg:col-span-1">
-        <div class="bg-gray-800 rounded-lg p-6 h-fit">
-          <h2 class="text-xl font-bold text-white mb-4 flex items-center">
-            <span class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center mr-3">
-              👥
-            </span>
-            Participants (<span id="participant-count">0</span>/4)
-          </h2>
-          
-          <div id="participants-grid" class="space-y-3">
-            <!-- Participants will be populated here -->
-          </div>
-          
-          <!-- Waiting Message -->
-          <div id="waiting-message" class="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-            <p class="text-yellow-400 text-sm text-center">Waiting for players to join...</p>
-          </div>
-          
-          <!-- Round Transition Info -->
-          <div id="round-transition" class="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg hidden">
-            <div class="text-center">
-              <p class="text-green-400 text-sm font-medium" id="transition-message">Round completed!</p>
-              <div class="mt-2 bg-gray-700 rounded-full h-2 overflow-hidden">
-                <div class="bg-green-500 h-full rounded-full transition-all duration-1000 w-0" id="countdown-bar"></div>
+  <div class="flex-1 bg-black min-h-screen">
+    <div class="container mx-auto max-w-6xl p-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Panel: Participants -->
+        <div class="lg:col-span-1">
+          <div class="bg-gray-900 rounded-lg p-6 border border-green-400/30 shadow-lg">
+            <h2 class="text-xl font-bold text-green-100 mb-4 flex items-center font-mono">
+              <span class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 border border-green-400">
+                👥
+              </span>
+              PLAYERS (<span id="participant-count">0</span>/4)
+            </h2>
+            
+            <div id="participants-grid" class="space-y-3">
+              <!-- Participants will be populated here -->
+            </div>
+            
+            <!-- Waiting Message with pulsing neon effect -->
+            <div id="waiting-message" class="mt-4 p-4 bg-yellow-500/10 border border-yellow-400 rounded-lg">
+              <p class="text-yellow-400 text-sm text-center font-mono animate-pulse">
+                <span class="inline-block animate-ping">⚡</span>
+                <span id="waiting-text">WAITING FOR PLAYERS...</span>
+                <span class="inline-block animate-ping">⚡</span>
+              </p>
+            </div>
+            
+            <!-- Countdown Timer -->
+            <div id="countdown-timer" class="mt-4 p-4 bg-green-500/10 border border-green-400 rounded-lg hidden">
+              <div class="text-center">
+                <p class="text-green-400 text-lg font-mono font-bold mb-2" id="countdown-message">TOURNAMENT STARTING</p>
+                <div class="text-3xl font-mono font-bold text-green-300 mb-2" id="countdown-display">6</div>
+                <div class="bg-gray-800 rounded-full h-3 overflow-hidden border border-green-400/50">
+                  <div class="bg-gradient-to-r from-green-500 to-green-300 h-full rounded-full transition-all duration-1000 w-0" id="countdown-bar"></div>
+                </div>
+                <p class="text-xs text-green-300 mt-2 font-mono" id="countdown-text">GET READY!</p>
               </div>
-              <p class="text-xs text-gray-400 mt-1" id="countdown-text">Next round starts soon...</p>
+            </div>
+            
+            <!-- Round Transition Info -->
+            <div id="round-transition" class="mt-4 p-4 bg-blue-500/10 border border-blue-400 rounded-lg hidden">
+              <div class="text-center">
+                <p class="text-blue-400 text-sm font-mono font-medium" id="transition-message">ROUND COMPLETED</p>
+                <div class="mt-2 bg-gray-800 rounded-full h-2 overflow-hidden border border-blue-400/50">
+                  <div class="bg-gradient-to-r from-blue-500 to-blue-300 h-full rounded-full transition-all duration-1000 w-0" id="round-countdown-bar"></div>
+                </div>
+                <p class="text-xs text-blue-300 mt-1 font-mono" id="round-countdown-text">NEXT ROUND LOADING...</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Right Panel: Tournament Bracket & Matches -->
-      <div class="lg:col-span-2">
-        
-        <!-- Current Match Info -->
-        <div id="current-match-info" class="bg-gradient-to-r from-blue-800 to-purple-800 rounded-lg p-6 mb-6 hidden">
-          <h3 class="text-xl font-bold text-white mb-3">🎮 Your Next Match</h3>
-          <div id="match-details" class="flex items-center justify-center">
-            <!-- Match details will be populated here -->
-          </div>
-          <div class="text-center mt-4">
-            <button id="start-match-btn" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-              Ready to Play
-            </button>
-          </div>
-        </div>
-        
-        <!-- Tournament Bracket -->
-        <div class="bg-gray-800 rounded-lg p-6">
-          <h2 class="text-xl font-bold text-white mb-4 flex items-center">
-            <span class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center mr-3">
-              🏆
-            </span>
-            Tournament Bracket
-          </h2>
+        <!-- Right Panel: Tournament Bracket -->
+        <div class="lg:col-span-2">
           
-          <!-- Bracket Container -->
-          <div id="bracket-container" class="min-h-64">
-            <div class="flex items-center justify-center h-64 text-gray-400">
-              <div class="text-center">
-                <div class="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                <p>Loading tournament bracket...</p>
+          <!-- Current Match Info -->
+          <div id="current-match-info" class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-lg p-6 mb-6 border border-purple-400/30 shadow-lg hidden">
+            <h3 class="text-xl font-bold text-purple-100 mb-4 font-mono">🎮 YOUR MATCH</h3>
+            <div id="match-details" class="flex items-center justify-center">
+              <!-- Match details will be populated here -->
+            </div>
+            <div class="text-center mt-4">
+              <button id="start-match-btn" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-lg font-mono font-medium transition-all border border-green-400 shadow-lg hover:shadow-green-500/25 disabled:opacity-50 disabled:cursor-not-allowed">
+                READY TO BATTLE
+              </button>
+            </div>
+          </div>
+          
+          <!-- Tournament Bracket -->
+          <div class="bg-gray-900 rounded-lg p-6 border border-green-400/30 shadow-lg">
+            <h2 class="text-xl font-bold text-green-100 mb-6 flex items-center font-mono">
+              <span class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 border border-green-400">
+                🏆
+              </span>
+              TOURNAMENT BRACKET
+            </h2>
+            
+            <!-- Bracket Container -->
+            <div id="bracket-container" class="min-h-96">
+              <div class="flex items-center justify-center h-64 text-green-400">
+                <div class="text-center">
+                  <div class="animate-spin w-12 h-12 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p class="font-mono">LOADING BRACKET...</p>
+                </div>
               </div>
             </div>
           </div>
@@ -106,22 +113,25 @@
   </div>
 
   <!-- Tournament End Modal -->
-  <div id="tournament-end-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50">
-    <div class="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4 border border-purple-500/30">
+  <div id="tournament-end-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center hidden z-50">
+    <div class="bg-gray-900 rounded-lg p-8 max-w-md w-full mx-4 border border-green-400 shadow-2xl">
       <div class="text-center">
-        <div class="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span class="text-2xl">🏆</span>
+        <div class="w-20 h-20 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-yellow-300">
+          <span class="text-3xl">🏆</span>
         </div>
-        <h3 class="text-2xl font-bold text-white mb-2">Tournament Complete!</h3>
-        <p id="tournament-result-text" class="text-gray-300 mb-6">Tournament has ended</p>
-        <button id="return-home-btn" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-medium transition-colors">
-          Return to Home
+        <h3 class="text-2xl font-bold text-green-100 mb-2 font-mono">TOURNAMENT COMPLETE</h3>
+        <p id="tournament-result-text" class="text-green-300 mb-6 font-mono">RESULTS LOADING...</p>
+        <button id="return-home-btn" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-lg font-mono font-medium transition-all border border-green-400 shadow-lg hover:shadow-green-500/25">
+          RETURN TO HOME
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script type="module" src="tournament.js"></script>
-</body>
-</html>
+  <!-- Connection Status -->
+  <div id="connection-status" class="fixed bottom-4 right-4 bg-gray-900 border border-green-400/50 rounded-lg p-3 hidden">
+    <div class="flex items-center space-x-2">
+      <div id="connection-indicator" class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+      <span id="connection-text" class="text-green-300 text-sm font-mono">RECONNECTING...</span>
+    </div>
+  </div>
