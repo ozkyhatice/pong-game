@@ -4,6 +4,7 @@ import { AppState } from '../../../core/AppState.js';
 import { GameService } from '../../../services/GameService.js';
 import { UserService } from '../../../services/UserService.js';
 import { TournamentService } from '../../../services/TournamentService.js';
+import { API_CONFIG, getApiUrl } from '../../../config.js';
 
 export class GameAreaComponent extends Component {
   private gameService = new GameService();
@@ -26,110 +27,99 @@ export class GameAreaComponent extends Component {
   private render(): void {
     this.setHTML(`
       <!-- Game Content -->
-      <div class="flex-1 p-6 overflow-y-auto">
-        <div class="bg-white rounded-lg shadow-lg p-6">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">🎮 Choose Game Mode</h2>
-
-          <!-- Matchmaking Section -->
-          <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h3 class="text-lg font-semibold text-blue-800 mb-3">🎯 Random Match</h3>
-            <p class="text-blue-600 text-sm mb-4">System will find you a random opponent</p>
-            <div class="flex space-x-3">
-              <button id="join-matchmaking-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                Find Random Game
-              </button>
-              <button id="leave-matchmaking-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors hidden">
-                Leave Queue
-              </button>
-            </div>
-            <div id="queue-status" class="mt-2 text-sm text-blue-600 hidden">
-              In queue... Looking for opponent...
-            </div>
-          </div>
+      <div class="flex-1 p-6 overflow-y-auto bg-black min-h-screen">
+        <div class="bg-gray-900 rounded-lg shadow-2xl p-6 border border-green-400/30">
+          <h2 class="text-3xl font-bold text-green-100 mb-8 text-center font-mono tracking-wider">
+            <span class="text-green-400">⚡</span> GAME MODES <span class="text-green-400">⚡</span>
+          </h2>
 
           <!-- Tournament Section -->
-          <div class="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <h3 class="text-lg font-semibold text-purple-800 mb-3">🏆 Tournament</h3>
+          <div class="mb-8 p-6 bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-lg border border-green-400/50 shadow-lg">
+            <h3 class="text-xl font-semibold text-green-300 mb-4 font-mono flex items-center">
+              <span class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 border border-green-400">🏆</span>
+              TOURNAMENT ARENA
+            </h3>
             
             <!-- Return to Tournament Button (shown when user is in active tournament) -->
-            <div id="tournament-return" class="mb-4 p-3 bg-green-50 border border-green-300 rounded-lg hidden">
+            <div id="tournament-return" class="mb-4 p-4 bg-gradient-to-r from-green-600/20 to-green-500/20 border border-green-400 rounded-lg hidden">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="font-medium text-green-800">You're in an active tournament!</p>
-                  <p class="text-sm text-green-600">Return to view your progress</p>
+                  <p class="font-medium text-green-200 font-mono">⚡ ACTIVE TOURNAMENT DETECTED</p>
+                  <p class="text-sm text-green-400 font-mono">Return to continue your battle</p>
                 </div>
-                <button id="return-tournament-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                  Return to Tournament
+                <button id="return-tournament-btn" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition-all border border-green-400 shadow-lg hover:shadow-green-500/25 font-mono">
+                  ENTER ARENA
                 </button>
               </div>
             </div>
+            
             <div id="tournament-info" class="mb-4">
-              <div id="no-tournament" class="text-purple-600 text-sm">Loading tournament info...</div>
+              <div id="no-tournament" class="text-green-400 text-sm font-mono text-center animate-pulse">
+                <span class="inline-block animate-spin">⟳</span> SCANNING FOR TOURNAMENTS...
+              </div>
               <div id="tournament-details" class="hidden">
-                <div class="flex justify-between items-center mb-3">
-                  <span class="font-medium">Players: <span id="tournament-players">0</span>/4</span>
-                  <span class="text-sm bg-purple-100 px-2 py-1 rounded" id="tournament-status">pending</span>
+                <div class="flex justify-between items-center mb-4 p-3 bg-black/30 rounded-lg border border-green-400/30">
+                  <span class="font-medium text-green-200 font-mono">PLAYERS: <span class="text-green-400" id="tournament-players">0</span>/4</span>
+                  <span class="text-sm bg-green-600/20 px-3 py-1 rounded-full border border-green-400/50 font-mono text-green-300" id="tournament-status">pending</span>
                 </div>
                 
                 <!-- Participants List -->
-                <div id="tournament-participants" class="mb-3">
-                  <h4 class="font-medium text-sm text-purple-700 mb-2">Participants:</h4>
-                  <div id="participants-list" class="grid grid-cols-2 gap-2">
+                <div id="tournament-participants" class="mb-4">
+                  <h4 class="font-medium text-sm text-green-300 mb-3 font-mono flex items-center">
+                    <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
+                    WARRIORS IN ARENA:
+                  </h4>
+                  <div id="participants-list" class="grid grid-cols-1 gap-2">
                     <!-- Participants will be populated here -->
                   </div>
                 </div>
                 
-                <div class="text-xs text-purple-600 mt-2" id="tournament-waiting">
-                  Waiting for more players to join...
+                <div class="text-xs text-green-400 mt-3 text-center font-mono animate-pulse" id="tournament-waiting">
+                  <span class="inline-block animate-ping">⚡</span> AWAITING MORE WARRIORS... <span class="inline-block animate-ping">⚡</span>
                 </div>
                 
                 <!-- Tournament Bracket Preview -->
-                <div id="tournament-bracket-preview" class="mt-4 hidden">
-                  <h4 class="font-medium mb-2 text-purple-700">Tournament Bracket:</h4>
-                  <div id="bracket-preview-container" class="text-sm bg-purple-50 p-3 rounded border">
-                    <div class="text-center text-gray-600">Bracket will appear when tournament starts</div>
+                <div id="tournament-bracket-preview" class="mt-6 hidden">
+                  <h4 class="font-medium mb-3 text-green-300 font-mono flex items-center">
+                    <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
+                    BATTLE BRACKET:
+                  </h4>
+                  <div id="bracket-preview-container" class="text-sm bg-black/40 p-4 rounded-lg border border-green-400/30">
+                    <div class="text-center text-green-400 font-mono">BRACKET GENERATING...</div>
                   </div>
                 </div>
                 
                 <!-- Match Pairings -->
-                <div id="tournament-matches" class="mt-4 hidden">
-                  <h4 class="font-medium mb-2">Current Round Matches:</h4>
-                  <div id="matches-container" class="space-y-2"></div>
+                <div id="tournament-matches" class="mt-6 hidden">
+                  <h4 class="font-medium mb-3 text-green-300 font-mono flex items-center">
+                    <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
+                    CURRENT BATTLES:
+                  </h4>
+                  <div id="matches-container" class="space-y-3"></div>
                 </div>
               </div>
             </div>
-            <div class="flex space-x-3">
-              <button id="join-tournament-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                Join Tournament
+            
+            <div class="flex space-x-4">
+              <button id="join-tournament-btn" class="flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-3 px-6 rounded-lg transition-all border border-green-400 shadow-lg hover:shadow-green-500/25 font-mono">
+                <span class="mr-2">⚔️</span> JOIN TOURNAMENT
               </button>
-              <button id="leave-tournament-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors hidden">
-                Leave Tournament
-              </button>
-            </div>
-          </div>
-
-          <!-- Friend Invite Section -->
-          <div class="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
-            <h3 class="text-lg font-semibold text-green-800 mb-3">👥 Invite Friend</h3>
-            <p class="text-green-600 text-sm mb-4">Invite your friend to play</p>
-            <div class="flex space-x-3">
-              <input 
-                type="text" 
-                id="friend-username-input" 
-                placeholder="Friend Username" 
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-              <button id="send-invite-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                Send Invite
+              <button id="leave-tournament-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-lg transition-all border border-red-400 shadow-lg hover:shadow-red-500/25 font-mono hidden">
+                <span class="mr-2">🚪</span> RETREAT
               </button>
             </div>
           </div>
 
           <!-- Game Invites -->
-          <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">🎯 Game Invites</h3>
-            <div id="invites-container" class="space-y-2">
-              <div id="no-invites" class="text-gray-500 text-sm text-center py-2">No game invites</div>
+          <div class="p-6 bg-gradient-to-r from-gray-900/50 to-slate-900/50 rounded-lg border border-green-400/30 shadow-lg">
+            <h3 class="text-xl font-semibold text-green-300 mb-4 font-mono flex items-center">
+              <span class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 border border-green-400">🎯</span>
+              BATTLE INVITATIONS
+            </h3>
+            <div id="invites-container" class="space-y-3">
+              <div id="no-invites" class="text-green-400 text-sm text-center py-4 font-mono animate-pulse">
+                <span class="inline-block animate-bounce">📡</span> NO INCOMING CHALLENGES
+              </div>
             </div>
           </div>
         </div>
@@ -138,61 +128,14 @@ export class GameAreaComponent extends Component {
   }
 
   private setupEvents(): void {
-    const joinBtn = this.element.querySelector('#join-matchmaking-btn');
-    const leaveBtn = this.element.querySelector('#leave-matchmaking-btn');
-    const sendBtn = this.element.querySelector('#send-invite-btn');
-    const usernameInput = this.element.querySelector('#friend-username-input');
-    
     // Tournament buttons
     const joinTournamentBtn = this.element.querySelector('#join-tournament-btn');
     const leaveTournamentBtn = this.element.querySelector('#leave-tournament-btn');
     const returnTournamentBtn = this.element.querySelector('#return-tournament-btn');
     
-    joinBtn?.addEventListener('click', this.handleJoinMatchmaking.bind(this));
-    leaveBtn?.addEventListener('click', this.handleLeaveMatchmaking.bind(this));
-    sendBtn?.addEventListener('click', this.handleSendInvite.bind(this));
-    
     joinTournamentBtn?.addEventListener('click', this.handleJoinTournament.bind(this));
     leaveTournamentBtn?.addEventListener('click', this.handleLeaveTournament.bind(this));
     returnTournamentBtn?.addEventListener('click', this.handleReturnToTournament.bind(this));
-  }
-
-  private handleJoinMatchmaking(): void {
-    notify('Matchmaking is not implemented yet');
-  }
-
-  private handleLeaveMatchmaking(): void {
-    notify('Matchmaking is not implemented yet');
-  }
-
-  private async handleSendInvite(): Promise<void> {
-    const input = this.element.querySelector('#friend-username-input') as HTMLInputElement;
-    const username = input?.value.trim();
-    
-    if (!username) {
-      notify('Please enter a username');
-      return;
-    }
-
-    try {
-      const targetUser = await this.userService.getUserByUsername(username);
-      if (!targetUser) {
-        notify('User not found');
-        return;
-      }
-
-      const currentUser = await this.userService.getCurrentUser();
-      if (!currentUser) {
-        notify('Please login');
-        return;
-      }
-
-      this.gameService.sendGameInvite(targetUser.id, currentUser.username);
-      notify(`Game invite sent to ${username}`);
-      input.value = '';
-    } catch (error) {
-      notify('Failed to send invite');
-    }
   }
 
   private loadInvites(): void {
@@ -270,17 +213,24 @@ export class GameAreaComponent extends Component {
 
     invites.forEach(invite => {
       const inviteEl = document.createElement('div');
-      inviteEl.className = 'invite-item flex items-center justify-between p-2 bg-white rounded border border-gray-200';
+      inviteEl.className = 'invite-item flex items-center justify-between p-4 bg-gradient-to-r from-green-800/20 to-green-700/20 rounded-lg border border-green-400/50 shadow-lg';
       inviteEl.innerHTML = `
-        <div class="flex items-center space-x-3">
-          <div class="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center text-white font-bold text-sm">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-green-400 flex items-center justify-center text-white font-bold text-lg border-2 border-green-400 shadow-lg">
             ${invite.senderUsername?.[0]?.toUpperCase() || 'U'}
           </div>
-          <span class="font-medium text-gray-800">${invite.senderUsername || 'Unknown'}</span>
+          <div>
+            <span class="font-medium text-green-200 font-mono text-lg">${invite.senderUsername || 'Unknown'}</span>
+            <div class="text-xs text-green-400 font-mono">⚔️ CHALLENGES YOU TO BATTLE</div>
+          </div>
         </div>
-        <div class="flex space-x-2">
-          <button class="accept-btn px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs">Accept</button>
-          <button class="reject-btn px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">Reject</button>
+        <div class="flex space-x-3">
+          <button class="accept-btn px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-lg font-mono font-medium transition-all border border-green-400 shadow-lg hover:shadow-green-500/25">
+            ⚔️ ACCEPT
+          </button>
+          <button class="reject-btn px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-lg font-mono font-medium transition-all border border-red-400 shadow-lg hover:shadow-red-500/25">
+            🚫 DECLINE
+          </button>
         </div>
       `;
 
@@ -358,7 +308,7 @@ export class GameAreaComponent extends Component {
       }
 
       // Check if user has currentTournamentId in database
-      const response = await fetch(`/api/user/tournament-status/${currentUser.id}`, {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.TOURNAMENT_STATUS(currentUser.id.toString())), {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
       });
       
@@ -707,33 +657,50 @@ export class GameAreaComponent extends Component {
   }
 
   // Katılımcı listesini gösterme
-  private displayTournamentParticipants(participants: any[]): void {
+  private async displayTournamentParticipants(participants: any[]): Promise<void> {
     const container = this.element.querySelector('#participants-list');
     if (!container) return;
 
     let html = '';
     
     // Mevcut katılımcıları göster
-    participants.forEach(participant => {
+    for (const participant of participants) {
+      // Fetch user details for avatar
+      let avatarUrl = '';
+      try {
+        const userDetails = await this.userService.getUserById(participant.id);
+        avatarUrl = userDetails?.avatar || '';
+      } catch (error) {
+        console.log('Could not fetch user details for avatar');
+      }
+      
       html += `
-        <div class="flex items-center space-x-2 p-2 bg-white rounded border">
-          <div class="w-6 h-6 rounded-full bg-purple-400 flex items-center justify-center text-white text-xs font-bold">
-            ${participant.username?.[0]?.toUpperCase() || 'U'}
+        <div class="flex items-center space-x-3 p-3 bg-gradient-to-r from-green-800/30 to-green-700/30 rounded-lg border border-green-400/50">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-400 flex items-center justify-center text-white font-bold border-2 border-green-400">
+            ${avatarUrl ? `<img src="${avatarUrl}" alt="${participant.username}" class="w-full h-full rounded-full object-cover">` : participant.username?.[0]?.toUpperCase() || 'W'}
           </div>
-          <span class="text-sm font-medium">${participant.username}</span>
+          <div class="flex-1">
+            <span class="text-green-200 font-medium font-mono">${participant.username}</span>
+            <div class="text-xs text-green-400 font-mono">⚔️ WARRIOR</div>
+          </div>
+          <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
         </div>
       `;
-    });
+    }
     
     // Boş slotları göster
     const emptySlots = 4 - participants.length;
     for (let i = 0; i < emptySlots; i++) {
       html += `
-        <div class="flex items-center space-x-2 p-2 bg-gray-100 rounded border border-dashed border-gray-300">
-          <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-gray-500 text-xs">
+        <div class="flex items-center space-x-3 p-3 bg-black/30 rounded-lg border border-dashed border-green-400/30">
+          <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 border-2 border-gray-600">
             ?
           </div>
-          <span class="text-sm text-gray-500">Waiting...</span>
+          <div class="flex-1">
+            <span class="text-gray-400 font-mono">AWAITING WARRIOR...</span>
+            <div class="text-xs text-gray-500 font-mono">🔍 SEARCHING</div>
+          </div>
+          <div class="w-3 h-3 bg-gray-600 rounded-full animate-pulse"></div>
         </div>
       `;
     }

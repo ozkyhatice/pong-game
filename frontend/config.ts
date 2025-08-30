@@ -65,7 +65,11 @@ export const API_CONFIG = {
 
       // GET /api/users/:username
       // Headers: { Authorization: Bearer <token> }
-      BY_USERNAME: (username: string) => `/api/users/${username}`
+      BY_USERNAME: (username: string) => `/api/users/${username}`,
+
+      // GET /api/users/tournament-status/:id
+      // Headers: { Authorization: Bearer <token> }
+      TOURNAMENT_STATUS: (id: string) => `/api/users/tournament-status/${id}`
     },
 
     FRIENDS: {
