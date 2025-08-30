@@ -1,6 +1,6 @@
 import { initDB } from '../../../config/db.js';
 import { sendMessage } from '../../chat/service/websocket.service.js';
-import { getActiveTournamentId, broadcastToTournamentPlayers, getTournamentParticipants} from '../utils/tournament.utils.js';
+import { getActiveTournamentId, broadcastToTournamentPlayers, getTournamentParticipants, broadcastTournamentUpdateToAll} from '../utils/tournament.utils.js';
 
 export async function createTournamentService(data, userId, connection) {
     const db = await initDB();
@@ -28,6 +28,19 @@ export async function createTournamentService(data, userId, connection) {
     
     const newTournamentId = await getActiveTournamentId();
     console.log(`Tournament "${tournamentName}" created by user ${userId} with max players ${maxPlayers} (ID: ${newTournamentId})`);
+    
+    // Tüm online kullanıcılara yeni tournament oluşturulduğunu bildir
+    await broadcastTournamentUpdateToAll({
+        type: 'tournament',
+        event: 'newTournamentCreated',
+        data: { 
+            tournamentId: newTournamentId,
+            name: tournamentName,
+            maxPlayers: maxPlayers,
+            createdBy: userId,
+            message: 'New tournament created! Join now!'
+        }
+    });
 }
 
 
@@ -40,13 +53,13 @@ export async function createTournamentService(data, userId, connection) {
 export async function joinTournamentService(data, userId, connection) {
     const tournamentId = data.tournamentId;
     const db = await initDB();
-    // user tablosunda currentTournamentId alanını güncelle
+    // user tablosunda currentTournamentId alanını güncelle ve isEliminated'ı sıfırla
     const sql = `
-        UPDATE users SET currentTournamentId = ? WHERE id = ?
+        UPDATE users SET currentTournamentId = ?, isEliminated = 0 WHERE id = ?
     `;
     try {
         const result = await db.run(sql, [tournamentId, userId]);
-        console.log(`User ${userId} joined tournament ${tournamentId}`);
+        console.log(`User ${userId} joined tournament ${tournamentId} and reset elimination status`);
         return result;
     } catch (error) {
         console.error('Error joining tournament:', error);
@@ -79,13 +92,14 @@ export async function startTournamentService(tournamentId) {
         await startTournamentMatches(tournamentId, 1);
     }, 5000);
     
-    // Tüm katılımcılara turnuva başladığını bildir
-    await broadcastToTournamentPlayers(tournamentId, {
+    // Tüm online kullanıcılara turnuva başladığını bildir (katılımcılara da, sadece izleyenlere de)
+    await broadcastTournamentUpdateToAll({
         type: 'tournament',
         event: 'tournamentStarted',
         data: { 
             tournamentId,
             bracket,
+            participants,
             currentRound: 1,
             message: 'Tournament has started! First round matches are beginning...'
         }
@@ -473,13 +487,14 @@ async function advanceToNextRound(tournamentId, currentRound) {
     // Tournament current round'u güncelle
     await db.run('UPDATE tournaments SET currentRound = ? WHERE id = ?', [nextRound, tournamentId]);
     
-    // Sonraki round için pairings'i güncelle (database'de kaydet)
+    // Sonraki round için pairings'i güncelle (mevcut boş pairing'i update et)
     for (let position = 0; position < nextRoundMatches.length; position++) {
         const match = nextRoundMatches[position];
         await db.run(
-            `INSERT INTO tournament_pairings (tournamentId, round, position, player1Id, player2Id) 
-             VALUES (?, ?, ?, ?, ?)`,
-            [tournamentId, nextRound, position, match.player1.id, match.player2.id]
+            `UPDATE tournament_pairings 
+             SET player1Id = ?, player2Id = ? 
+             WHERE tournamentId = ? AND round = ? AND position = ? AND player1Id IS NULL`,
+            [match.player1.id, match.player2.id, tournamentId, nextRound, position]
         );
     }
     
@@ -558,9 +573,9 @@ async function finalizeTournament(tournamentId, winnerId) {
         [winnerId]
     );
     
-    // Turnuva sonuçlarını bildir
+    // Turnuva sonuçlarını tüm online kullanıcılara bildir
     const winnerUser = await db.get('SELECT username FROM users WHERE id = ?', [winnerId]);
-    await broadcastToTournamentPlayers(tournamentId, {
+    await broadcastTournamentUpdateToAll({
         type: 'tournament',
         event: 'tournamentEnded',
         data: { 
@@ -591,8 +606,7 @@ async function autoCreateNextTournament() {
         const newTournamentId = result.lastID;
         
         // Tüm kullanıcılara yeni turnuva oluşturulduğunu bildir
-        const { broadcastToAll } = await import('../../../websocket/services/client.service.js');
-        await broadcastToAll({
+        await broadcastTournamentUpdateToAll({
             type: 'tournament',
             event: 'newTournamentCreated',
             data: { 

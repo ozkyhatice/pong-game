@@ -23,7 +23,7 @@ export async function startTournamentMatches(tournamentId, round) {
         await createTournamentMatch(match);
     }
     
-    console.log(`Started ${matches.length} matches for tournament ${tournamentId}, round ${round}`);
+    console.log(`🏆 TOURNAMENT: Started ${matches.length} matches -> Tournament: ${tournamentId}, Round: ${round}`);
 }
 
 // Tek bir turnuva maçı için oda oluşturma
@@ -35,7 +35,7 @@ async function createTournamentMatch(match) {
     const player2Connection = clients.get(player2Id);
     
     if (!player1Connection || !player2Connection) {
-        console.log(`One or both players offline for match ${matchId}. Match will start when both players are online.`);
+        console.log(`⏳ TOURNAMENT MATCH: Players offline, waiting -> Match: ${matchId}, Players: ${match.player1Id}, ${match.player2Id}`);
         // Offline oyuncular için match'i pending bırak, online olunca başlayacak
         return;
     }
@@ -51,7 +51,7 @@ async function createTournamentMatch(match) {
     // Match bilgilerini room'a kaydet
     room.matchId = matchId;
     
-    console.log(`🏆 Tournament match setup: Room ${roomId}, Match ${matchId}, Tournament ${tournamentId}, Round ${round}`);
+    console.log(`🏆 TOURNAMENT MATCH: Room created -> Match: ${matchId}, Room: ${roomId}, Players: ${match.player1Id}, ${match.player2Id}`);
     
     // Maçın başladığını veritabanında güncelle
     const db = await initDB();
@@ -79,7 +79,7 @@ async function createTournamentMatch(match) {
         players: [player1Id, player2Id]
     });
     
-    console.log(`Tournament match ${matchId} started in room ${roomId}`);
+    console.log(`🏆 TOURNAMENT MATCH: Match started -> Match: ${matchId}, Room: ${roomId}`);
 }
 
 // Oyuncular online olduğunda bekleyen maçları başlatma

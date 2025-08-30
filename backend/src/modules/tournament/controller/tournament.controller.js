@@ -1,6 +1,6 @@
 import { createTournamentService, joinTournamentService, startTournamentService, getTournamentDetailsService, leaveTournamentService, getTournamentBracketService } from '../service/tournament.service.js';
 import { broadcastToAll } from '../../../websocket/services/client.service.js';
-import { countTournamentPlayers, getActiveTournamentId, broadcastToTournamentPlayers } from '../utils/tournament.utils.js';
+import { countTournamentPlayers, getActiveTournamentId, broadcastToTournamentPlayers, broadcastTournamentUpdateToAll } from '../utils/tournament.utils.js';
 import { getStatusOfTournament, isUserInTournament, getTournamentParticipants } from '../utils/tournament.utils.js';
 import { initDB } from '../../../config/db.js';
 
@@ -71,8 +71,8 @@ export async function joinTournament(data, userId, connection) {
     // Turnuva bilgilerini güncelle
     const newPlayerCount = currentPlayers + 1;
     
-    // Turnuvadaki tüm oyunculara katılım bilgisi gönder
-    await broadcastToTournamentPlayers(tournamentId, {
+    // Tüm online kullanıcılara tournament güncellemesi gönder (sadece katılımcılara değil)
+    await broadcastTournamentUpdateToAll({
         type: 'tournament',
         event: 'playerJoined',
         data: { 
@@ -98,7 +98,8 @@ export async function leaveTournament(data, userId, connection) {
     }
     
     if (!(await isUserInTournament(userId, tournamentId))) {
-        throw new Error('User is not in the tournament');
+        console.log(`⚠️ User ${userId} tried to leave tournament ${tournamentId} but is not in it - ignoring`);
+        return; // Silently ignore instead of throwing error
     }
     
     if (await getStatusOfTournament(tournamentId) !== 'pending') {
@@ -107,8 +108,8 @@ export async function leaveTournament(data, userId, connection) {
     
     await leaveTournamentService(tournamentId, userId);
     
-    // Turnuvadaki diğer oyunculara ayrılma bilgisi gönder
-    await broadcastToTournamentPlayers(tournamentId, {
+    // Tüm online kullanıcılara tournament güncellemesi gönder
+    await broadcastTournamentUpdateToAll({
         type: 'tournament',
         event: 'playerLeft',
         data: { 

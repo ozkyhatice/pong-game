@@ -1,11 +1,11 @@
 import { initDB } from "../../../config/db.js";
 import WebSocket from "ws";
-import { clients } from "../../../websocket/services/client.service.js";
+import { clients, broadcastToAll } from "../../../websocket/services/client.service.js";
 
 export async function getActiveTournament() {
     const db = await initDB();
     const sql = `
-        SELECT * FROM tournaments WHERE status = 'pending' ORDER BY startAt DESC LIMIT 1
+        SELECT * FROM tournaments WHERE status IN ('pending', 'active') ORDER BY startAt DESC LIMIT 1
         `;
     const tournament = await db.get(sql);
     return tournament;
@@ -94,3 +94,9 @@ export const broadcastToTournamentPlayers = broadcastToAllPlayersInTournament;
 
 // Turnuva katılımcılarını getirme
 export const getTournamentParticipants = getTournamentPlayers;
+
+// Tüm online kullanıcılara tournament güncellemesi gönderme
+export async function broadcastTournamentUpdateToAll(message) {
+    await broadcastToAll(message);
+    console.log(`🏆 WS BROADCAST: Tournament update sent to all online users`);
+}

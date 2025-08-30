@@ -5,12 +5,12 @@ export const clients = new Map();
 
 export async function addClient(userId, connection) {
   clients.set(userId, connection);
-  console.log(`Client ${userId} connected and added to client management service`);
+  console.log(`🔌 WS CLIENT: User connected -> User: ${userId}`);
 }
 
 export async function removeClient(userId) {
   clients.delete(userId);
-  console.log(`Client ${userId} removed from client management service`);
+  console.log(`🔌 WS CLIENT: User disconnected -> User: ${userId}`);
 }
 
 export async function isConnected(userId) {
@@ -42,7 +42,7 @@ export async function sendToUser(userId, messageData) {
     const message = JSON.stringify(messageData);
     socket.send(message);
   } else {
-    console.error(`WebSocket connection for user ${userId} is not open or does not exist.`);
+    console.error(`🔴 WS SEND ERROR: Connection not available -> User: ${userId}`);
   }
 }
 
