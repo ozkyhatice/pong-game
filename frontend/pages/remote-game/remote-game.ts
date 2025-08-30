@@ -94,16 +94,28 @@ export function init() {
   });
 
   gameService.onGameOver((data: any) => {
-    // Store game results for end-game page
-    localStorage.setItem('gameResult', JSON.stringify({
-      winner: data.winner,
-      finalScore: data.finalScore,
-      message: data.message,
-      timestamp: Date.now()
-    }));
-    
-    appState.clearCurrentRoom();
-    router.navigate('end-game');
+    // Check if this is a tournament match
+    if (data.isTournamentMatch && data.tournamentId) {
+      // Tournament match completed - return to tournament page
+      console.log('🏆 Tournament match completed:', data);
+      notify(data.message + ' Returning to tournament...');
+      
+      // Update tournament state
+      appState.updateTournamentStatus('active', data.round);
+      appState.clearCurrentRoom();
+      router.navigate('tournament');
+    } else {
+      // Regular match - show end game screen
+      localStorage.setItem('gameResult', JSON.stringify({
+        winner: data.winner,
+        finalScore: data.finalScore,
+        message: data.message,
+        timestamp: Date.now()
+      }));
+      
+      appState.clearCurrentRoom();
+      router.navigate('end-game');
+    }
   });
 
   // Initialize game

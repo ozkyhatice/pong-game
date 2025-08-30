@@ -6,6 +6,7 @@ import {
 } from '../service/user.service.js';
 import fs from 'fs';
 import path from 'path';
+import { initDB } from '../../../config/db.js';
 
 export async function getMyProfile(request, reply) {
   const userId = request.user.id;
@@ -111,6 +112,49 @@ export async function getUserById(request, reply) {
     reply.send({ user });
   } catch (error) {
     console.error('Error getting user by id:', error);
+    reply.code(500).send({ error: 'Internal Server Error' });
+  }
+}
+
+// Check user's tournament status
+export async function getUserTournamentStatus(request, reply) {
+  const { id } = request.params;
+  
+  try {
+    const db = await initDB();
+    const user = await db.get(
+      'SELECT currentTournamentId, isEliminated FROM users WHERE id = ?', 
+      [id]
+    );
+    
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+    
+    if (!user.currentTournamentId) {
+      return reply.send({ 
+        isInTournament: false,
+        isEliminated: false,
+        tournamentId: null,
+        tournamentStatus: null
+      });
+    }
+    
+    // Get tournament info
+    const tournament = await db.get(
+      'SELECT status FROM tournaments WHERE id = ?',
+      [user.currentTournamentId]
+    );
+    
+    reply.send({
+      isInTournament: true,
+      isEliminated: !!user.isEliminated,
+      tournamentId: user.currentTournamentId,
+      tournamentStatus: tournament?.status || 'unknown'
+    });
+    
+  } catch (error) {
+    console.error('Error checking tournament status:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
   }
 }

@@ -20,6 +20,7 @@ export class GameAreaComponent extends Component {
     this.listenForInvites();
     this.setupTournamentListeners();
     this.loadTournamentData();
+    this.checkUserTournamentStatus();
   }
 
   private render(): void {
@@ -49,6 +50,19 @@ export class GameAreaComponent extends Component {
           <!-- Tournament Section -->
           <div class="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
             <h3 class="text-lg font-semibold text-purple-800 mb-3">🏆 Tournament</h3>
+            
+            <!-- Return to Tournament Button (shown when user is in active tournament) -->
+            <div id="tournament-return" class="mb-4 p-3 bg-green-50 border border-green-300 rounded-lg hidden">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-medium text-green-800">You're in an active tournament!</p>
+                  <p class="text-sm text-green-600">Return to view your progress</p>
+                </div>
+                <button id="return-tournament-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                  Return to Tournament
+                </button>
+              </div>
+            </div>
             <div id="tournament-info" class="mb-4">
               <div id="no-tournament" class="text-purple-600 text-sm">Loading tournament info...</div>
               <div id="tournament-details" class="hidden">
@@ -69,15 +83,18 @@ export class GameAreaComponent extends Component {
                   Waiting for more players to join...
                 </div>
                 
+                <!-- Tournament Bracket Preview -->
+                <div id="tournament-bracket-preview" class="mt-4 hidden">
+                  <h4 class="font-medium mb-2 text-purple-700">Tournament Bracket:</h4>
+                  <div id="bracket-preview-container" class="text-sm bg-purple-50 p-3 rounded border">
+                    <div class="text-center text-gray-600">Bracket will appear when tournament starts</div>
+                  </div>
+                </div>
+                
                 <!-- Match Pairings -->
                 <div id="tournament-matches" class="mt-4 hidden">
                   <h4 class="font-medium mb-2">Current Round Matches:</h4>
                   <div id="matches-container" class="space-y-2"></div>
-                </div>
-                
-                <div id="tournament-bracket" class="mt-4 hidden">
-                  <h4 class="font-medium mb-2">Tournament Bracket:</h4>
-                  <div id="bracket-container" class="text-sm"></div>
                 </div>
               </div>
             </div>
@@ -129,6 +146,7 @@ export class GameAreaComponent extends Component {
     // Tournament buttons
     const joinTournamentBtn = this.element.querySelector('#join-tournament-btn');
     const leaveTournamentBtn = this.element.querySelector('#leave-tournament-btn');
+    const returnTournamentBtn = this.element.querySelector('#return-tournament-btn');
     
     joinBtn?.addEventListener('click', this.handleJoinMatchmaking.bind(this));
     leaveBtn?.addEventListener('click', this.handleLeaveMatchmaking.bind(this));
@@ -136,14 +154,15 @@ export class GameAreaComponent extends Component {
     
     joinTournamentBtn?.addEventListener('click', this.handleJoinTournament.bind(this));
     leaveTournamentBtn?.addEventListener('click', this.handleLeaveTournament.bind(this));
+    returnTournamentBtn?.addEventListener('click', this.handleReturnToTournament.bind(this));
   }
 
   private handleJoinMatchmaking(): void {
-    // Random matchmaking join islemi
+    notify('Matchmaking is not implemented yet');
   }
 
   private handleLeaveMatchmaking(): void {
-    // Matchmaking queue'dan cikma islemi
+    notify('Matchmaking is not implemented yet');
   }
 
   private async handleSendInvite(): Promise<void> {
@@ -304,6 +323,14 @@ export class GameAreaComponent extends Component {
 
       this.tournamentService.joinTournament();
       notify('Joining tournament...');
+      
+      // Store tournament state and navigate to tournament page after joining
+      const appState = AppState.getInstance();
+      setTimeout(() => {
+        // Navigate to tournament page - we'll know we're in a tournament from the state
+        (window as any).router.navigate('tournament');
+      }, 500); // Wait a bit for join confirmation
+      
     } catch (error) {
       console.error('Error joining tournament:', error);
       notify('Failed to join tournament');
@@ -313,6 +340,56 @@ export class GameAreaComponent extends Component {
   private handleLeaveTournament(): void {
     this.tournamentService.leaveTournament();
     notify('Leaving tournament...');
+  }
+
+  private handleReturnToTournament(): void {
+    (window as any).router.navigate('tournament');
+  }
+
+  // Check if user is in an active tournament
+  private async checkUserTournamentStatus(): Promise<void> {
+    const returnSection = this.element.querySelector('#tournament-return');
+    
+    try {
+      const currentUser = await this.userService.getCurrentUser();
+      if (!currentUser) {
+        returnSection?.classList.add('hidden');
+        return;
+      }
+
+      // Check if user has currentTournamentId in database
+      const response = await fetch(`/api/user/tournament-status/${currentUser.id}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`🔍 USER TOURNAMENT STATUS: User ${currentUser.id} status:`, data);
+        
+        if (data.isInTournament && !data.isEliminated && data.tournamentStatus !== 'completed') {
+          console.log(`✅ USER TOURNAMENT STATUS: Showing return button for user in active tournament`);
+          returnSection?.classList.remove('hidden');
+          
+          // Store in app state
+          const appState = AppState.getInstance();
+          appState.setCurrentTournament({
+            tournamentId: data.tournamentId,
+            status: data.tournamentStatus,
+            isParticipant: true,
+            joinedAt: Date.now()
+          });
+        } else {
+          console.log(`❌ USER TOURNAMENT STATUS: Hiding return button (not in tournament, eliminated, or tournament completed)`);
+          returnSection?.classList.add('hidden');
+        }
+      } else {
+        console.log(`❌ USER TOURNAMENT STATUS: API call failed, hiding return button`);
+        returnSection?.classList.add('hidden');
+      }
+    } catch (error) {
+      console.error('Error checking tournament status:', error);
+      returnSection?.classList.add('hidden');
+    }
   }
 
   // Tournament data loading
@@ -347,20 +424,31 @@ export class GameAreaComponent extends Component {
       this.displayTournamentStarted(data);
       this.loadTournamentData(); // Güncel tournament details yükle
       notify(data.message || 'Tournament started!');
+      
+      // Eğer kullanıcı turnuvada ise tournament sayfasına yönlendir
+      this.userService.getCurrentUser().then(currentUser => {
+        if (currentUser && data.participants && data.participants.some((p: any) => p.id === currentUser.id)) {
+          console.log('🏆 User is in tournament, staying on current page or going to tournament page');
+          // Tournament sayfasında değilsek yönlendir
+          if (window.location.pathname !== '/tournament') {
+            (window as any).router.navigate('tournament');
+          }
+        }
+      });
     });
 
     // Maç başladığında
     this.tournamentService.onTournamentMatchStarted((data) => {
-      console.log('🎯 Tournament match started event received:', data);
+      console.log('🎮 Tournament match starting from home:', data);
       notify(`Your match started against ${data.opponent}`);
-      // Oyunu başlat
+      // Navigate directly to remote-game for tournaments (skip lobby)
       const appState = AppState.getInstance();
       appState.setCurrentRoom({
         roomId: data.roomId,
-        players: data.players || [], // Backend'den gelen players array'ini kullan
+        players: data.players || [],
         createdAt: Date.now()
       });
-      (window as any).router.navigate('game-lobby');
+      (window as any).router.navigate('remote-game');
     });
 
     // Sonraki round başladığında
@@ -374,6 +462,7 @@ export class GameAreaComponent extends Component {
       notify(data.message || 'Tournament ended!');
       this.resetTournamentDisplay();
       this.loadTournamentData(); // Yeni turnuva yüklenir
+      this.checkUserTournamentStatus(); // Return button'u güncelle
     });
 
     // Yeni turnuva oluşturulduğunda
@@ -387,6 +476,19 @@ export class GameAreaComponent extends Component {
       console.log('🎯 Tournament details received:', data);
       this.currentTournament = data.tournament;
       await this.displayTournamentDetails(data.tournament);
+      
+      // Store tournament state if user is participant
+      const currentUser = await this.userService.getCurrentUser();
+      if (currentUser && data.tournament && data.tournament.participants.some((p: any) => p.id === currentUser.id)) {
+        const appState = AppState.getInstance();
+        appState.setCurrentTournament({
+          tournamentId: data.tournament.id,
+          status: data.tournament.status,
+          isParticipant: true,
+          currentRound: 1,
+          joinedAt: Date.now()
+        });
+      }
     });
 
     // Bracket geldiğinde
@@ -480,12 +582,16 @@ export class GameAreaComponent extends Component {
     // Katılımcı listesini göster
     this.displayTournamentParticipants(tournament.participants || []);
 
-    // Eğer turnuva başlamışsa matches ve bracket'i göster
+    // Eğer turnuva 4 kişi dolmuşsa bracket preview'i göster
+    if (tournament.currentPlayers === 4) {
+      const bracketPreview = this.element.querySelector('#tournament-bracket-preview');
+      bracketPreview?.classList.remove('hidden');
+      this.displayTournamentBracketPreview(tournament);
+    }
+    
+    // Eğer turnuva başlamışsa matches'i göster
     if (tournament.status === 'active' && tournament.matches?.length > 0) {
       this.displayCurrentRoundMatches(tournament.matches);
-      const bracketElement = this.element.querySelector('#tournament-bracket');
-      bracketElement?.classList.remove('hidden');
-      this.displayTournamentMatches(tournament.matches);
     }
   }
 
@@ -681,6 +787,47 @@ export class GameAreaComponent extends Component {
         </div>
       `;
     });
+
+    container.innerHTML = html;
+  }
+
+  // Tournament bracket preview'i gösterme (4 kişi dolduğunda)
+  private displayTournamentBracketPreview(tournament: any): void {
+    const container = this.element.querySelector('#bracket-preview-container');
+    if (!container) return;
+
+    const participants = tournament.participants || [];
+    if (participants.length < 4) return;
+
+    // Shuffle edilmiş görünüm için basic bracket template
+    let html = `
+      <div class="space-y-3">
+        <div class="text-center font-medium text-purple-800 mb-2">Semifinals</div>
+        <div class="grid grid-cols-1 gap-2">
+          <div class="flex items-center justify-between p-2 bg-white rounded border">
+            <span class="text-sm">Player 1</span>
+            <span class="text-xs text-gray-500">vs</span>
+            <span class="text-sm">Player 2</span>
+          </div>
+          <div class="flex items-center justify-between p-2 bg-white rounded border">
+            <span class="text-sm">Player 3</span>
+            <span class="text-xs text-gray-500">vs</span>
+            <span class="text-sm">Player 4</span>
+          </div>
+        </div>
+        
+        <div class="text-center font-medium text-purple-800 mt-3 mb-2">Final</div>
+        <div class="flex items-center justify-between p-2 bg-gray-100 rounded border border-dashed">
+          <span class="text-sm text-gray-500">Winner 1</span>
+          <span class="text-xs text-gray-400">vs</span>
+          <span class="text-sm text-gray-500">Winner 2</span>
+        </div>
+        
+        <div class="text-center text-xs text-purple-600 mt-2">
+          🏆 Tournament will start soon! Players will be randomly matched.
+        </div>
+      </div>
+    `;
 
     container.innerHTML = html;
   }

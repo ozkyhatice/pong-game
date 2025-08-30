@@ -104,10 +104,70 @@ export async function clearAll(userId, message) {
                 room.loop = null;
             }
             room.sockets.delete(userId);
+            
+            // Start 30-second reconnection timer
+            console.log(`🔌 Player ${userId} disconnected from room ${roomId}. Starting 30s reconnection timer...`);
+            
             await broadcast(room, "game", "paused", {
                 reason: "player-disconnected",
-                userId: userId
+                userId: userId,
+                message: `Player ${userId} disconnected. Waiting 30 seconds for reconnection...`,
+                timeoutSeconds: 30
             });
+            
+            // Set timeout to declare opponent winner after 30 seconds
+            room.disconnectionTimeout = setTimeout(async () => {
+                console.log(`⏰ 30s timeout reached for room ${roomId}. Player ${userId} didn't reconnect.`);
+                
+                // Check if room still exists and is still paused
+                const currentRoom = rooms.get(roomId);
+                if (currentRoom && currentRoom.state.paused) {
+                    // Declare opponent as winner
+                    const opponentId = user2;
+                    currentRoom.winnerId = opponentId;
+                    currentRoom.endDate = new Date();
+                    currentRoom.state.gameOver = true;
+                    
+                    console.log(`🏆 Player ${opponentId} wins due to opponent disconnection in room ${roomId}`);
+                    
+                    // Save game and process tournament if applicable
+                    await saveGametoDbServices(currentRoom);
+                    if (currentRoom.tournamentId && currentRoom.winnerId) {
+                        await processTournamentMatchResult(currentRoom.matchId, currentRoom.winnerId);
+                    }
+                    
+                    // Update player stats
+                    try {
+                        const playerStats = [
+                            { userId: opponentId, isWinner: true },   // Kalan oyuncu kazanır
+                            { userId: userId, isWinner: false }       // Disconnect olan oyuncu kaybeder
+                        ];
+                        await updateMultipleUserStats(playerStats);
+                    } catch (error) {
+                        console.error('Error updating stats after disconnect timeout:', error);
+                    }
+                    
+                    // Broadcast game over with disconnect reason
+                    await broadcast(currentRoom, "game", "game-over", {
+                        roomId: roomId,
+                        winner: opponentId,
+                        finalScore: currentRoom.state.score,
+                        message: `Player ${opponentId} wins! Opponent disconnected.`,
+                        reason: 'opponent-disconnected',
+                        isTournamentMatch: !!currentRoom.tournamentId,
+                        tournamentId: currentRoom.tournamentId,
+                        round: currentRoom.round
+                    });
+                    
+                    // Clean up room
+                    clearTimeout(currentRoom.disconnectionTimeout);
+                    for (const playerId of currentRoom.players) {
+                        userRoom.delete(playerId);
+                    }
+                    currentRoom.players.clear();
+                    currentRoom.sockets.clear();
+                }
+            }, 30000); // 30 seconds
           } else if (message === 'leave') {
             if (room.started && !room.state.gameOver) {
                 console.log(`User ${userId} left room ${room.id}`);

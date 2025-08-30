@@ -89,10 +89,30 @@ export const initDB = async () => {
       name TEXT NOT NULL,
       startAt DATETIME NULL,
       endAt DATETIME NULL,
-      maxPlayers INTEGER NOT NULL DEFAULT 8,
+      maxPlayers INTEGER NOT NULL DEFAULT 4,
       status TEXT NOT NULL DEFAULT 'pending',
       winnerId INTEGER NULL,
+      currentRound INTEGER DEFAULT 1,
       FOREIGN KEY (winnerId) REFERENCES users(id) ON DELETE SET NULL
+    )`);
+
+  // Create tournament_pairings table to store all bracket information
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS tournament_pairings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tournamentId INTEGER NOT NULL,
+      round INTEGER NOT NULL,
+      position INTEGER NOT NULL,
+      player1Id INTEGER NULL,
+      player2Id INTEGER NULL,
+      winnerId INTEGER NULL,
+      matchId INTEGER NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tournamentId) REFERENCES tournaments(id) ON DELETE CASCADE,
+      FOREIGN KEY (player1Id) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY (player2Id) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY (winnerId) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY (matchId) REFERENCES matches(id) ON DELETE SET NULL
     )`);
 
   return db;

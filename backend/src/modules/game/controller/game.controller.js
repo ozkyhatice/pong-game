@@ -250,8 +250,16 @@ export async function handleReconnection(connection, userId) {
     // Reconnect the user to the room
     room.sockets.set(userId, connection);
     
+    // Cancel disconnection timeout if it exists
+    if (room.disconnectionTimeout) {
+        console.log(`🔄 Player ${userId} reconnected! Cancelling timeout for room ${roomId}`);
+        clearTimeout(room.disconnectionTimeout);
+        room.disconnectionTimeout = null;
+    }
+    
     // Eğer oyun başlamışsa ve durdurulmuşsa, oyunu tekrar başlat
     if (room.started && room.state.paused) {
+        console.log(`▶️ Resuming game in room ${roomId} after player ${userId} reconnected`);
         resumeGame(room);
         
         // Game loop'u yeniden başlat
@@ -263,7 +271,7 @@ export async function handleReconnection(connection, userId) {
     // Notify all users about reconnection
     broadcast(room, 'game', 'reconnected', {
         userId: userId,
-        message: `User ${userId} has reconnected to the room ${room.id}.`
+        message: `Player ${userId} has reconnected! Game resuming...`
     });
     
     // Send current state to reconnected user

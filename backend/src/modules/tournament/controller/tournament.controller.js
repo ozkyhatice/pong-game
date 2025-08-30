@@ -2,6 +2,7 @@ import { createTournamentService, joinTournamentService, startTournamentService,
 import { broadcastToAll } from '../../../websocket/services/client.service.js';
 import { countTournamentPlayers, getActiveTournamentId, broadcastToTournamentPlayers } from '../utils/tournament.utils.js';
 import { getStatusOfTournament, isUserInTournament, getTournamentParticipants } from '../utils/tournament.utils.js';
+import { initDB } from '../../../config/db.js';
 
 export async function handleTournamentMessage(msgObj, userId, connection) {
   const { event, data} = msgObj;
@@ -118,52 +119,103 @@ export async function leaveTournament(data, userId, connection) {
     });
 }
 
-// Turnuva detaylarını getirme
+// Turnuva detaylarını getirme (herkes görebilir)
 export async function getTournamentDetails(data, userId, connection) {
-    const tournamentId = data.tournamentId || await getActiveTournamentId();
-    
-    if (!tournamentId) {
+    try {
+        const tournamentId = data.tournamentId || await getActiveTournamentId();
+        
+        console.log(`📊 TOURNAMENT DETAILS: Request from user ${userId}, tournamentId: ${tournamentId}`);
+        
+        if (!tournamentId) {
+            console.log(`📊 TOURNAMENT DETAILS: No active tournament found`);
+            const response = {
+                type: 'tournament',
+                event: 'details',
+                data: { tournament: null }
+            };
+            connection.send(JSON.stringify(response));
+            return;
+        }
+        
+        const tournamentDetails = await getTournamentDetailsService(tournamentId);
+        
+        console.log(`📊 TOURNAMENT DETAILS: Retrieved tournament data:`, {
+            id: tournamentDetails?.id,
+            status: tournamentDetails?.status,
+            participants: tournamentDetails?.participants?.length || 0,
+            matches: tournamentDetails?.matches?.length || 0
+        });
+        
+        // Check if user is participant and their elimination status
+        const isParticipant = tournamentDetails && tournamentDetails.participants.some(p => p.id === userId);
+        let userStatus = 'spectator';
+        if (isParticipant) {
+            const db = await initDB();
+            const userInfo = await db.get('SELECT isEliminated FROM users WHERE id = ?', [userId]);
+            userStatus = userInfo?.isEliminated ? 'eliminated' : 'active';
+        }
+        
         const response = {
             type: 'tournament',
             event: 'details',
-            data: { tournament: null }
+            data: { 
+                tournament: tournamentDetails,
+                userStatus, // 'spectator', 'active', 'eliminated'
+                isParticipant
+            }
         };
+        
+        console.log(`📊 TOURNAMENT DETAILS: Sending response to user ${userId}:`, {
+            hasTournament: !!tournamentDetails,
+            userStatus,
+            isParticipant
+        });
+        
         connection.send(JSON.stringify(response));
-        return;
+        
+    } catch (error) {
+        console.error(`❌ Error getting tournament details for user ${userId}:`, error);
+        const errorResponse = {
+            type: 'tournament',
+            event: 'details',
+            data: { tournament: null, error: error.message }
+        };
+        connection.send(JSON.stringify(errorResponse));
     }
-    
-    const tournamentDetails = await getTournamentDetailsService(tournamentId);
-    
-    const response = {
-        type: 'tournament',
-        event: 'details',
-        data: { tournament: tournamentDetails }
-    };
-    
-    connection.send(JSON.stringify(response));
 }
 
 // Turnuva bracket'ini getirme
 export async function getTournamentBracket(data, userId, connection) {
-    const tournamentId = data.tournamentId || await getActiveTournamentId();
-    
-    if (!tournamentId) {
+    try {
+        const tournamentId = data.tournamentId || await getActiveTournamentId();
+        
+        if (!tournamentId) {
+            const response = {
+                type: 'tournament',
+                event: 'bracket',
+                data: { bracket: null }
+            };
+            connection.send(JSON.stringify(response));
+            return;
+        }
+        
+        const bracket = await getTournamentBracketService(tournamentId);
+        
         const response = {
             type: 'tournament',
             event: 'bracket',
-            data: { bracket: null }
+            data: { bracket }
         };
+        
         connection.send(JSON.stringify(response));
-        return;
+        
+    } catch (error) {
+        console.error('Error getting tournament bracket:', error);
+        const errorResponse = {
+            type: 'tournament',
+            event: 'bracket',
+            data: { bracket: null, error: error.message }
+        };
+        connection.send(JSON.stringify(errorResponse));
     }
-    
-    const bracket = await getTournamentBracketService(tournamentId);
-    
-    const response = {
-        type: 'tournament',
-        event: 'bracket',
-        data: { bracket }
-    };
-    
-    connection.send(JSON.stringify(response));
 }

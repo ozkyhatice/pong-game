@@ -66,12 +66,18 @@ export async function startTournamentService(tournamentId) {
     const participants = await getTournamentParticipants(tournamentId);
     const bracket = generateTournamentBracket(participants);
     
-    // İlk round maçlarını oluştur
+    // İlk round maçlarını oluştur ve pairings'i veritabanına kaydet
     await createTournamentMatches(tournamentId, bracket[0], 1);
+    await storeTournamentPairings(tournamentId, bracket);
     
-    // İlk round maçlarını başlat
-    const { startTournamentMatches } = await import('../services/match.service.js');
-    await startTournamentMatches(tournamentId, 1);
+    // Önce maç eşleşmelerini göster, sonra maçları başlat
+    await showMatchPairings(tournamentId, bracket[0], 1);
+    
+    // 5 saniye sonra maçları başlat
+    setTimeout(async () => {
+        const { startTournamentMatches } = await import('../services/match.service.js');
+        await startTournamentMatches(tournamentId, 1);
+    }, 5000);
     
     // Tüm katılımcılara turnuva başladığını bildir
     await broadcastToTournamentPlayers(tournamentId, {
@@ -81,7 +87,7 @@ export async function startTournamentService(tournamentId) {
             tournamentId,
             bracket,
             currentRound: 1,
-            message: 'Tournament başladı! İlk round maçları başlıyor...'
+            message: 'Tournament has started! First round matches are beginning...'
         }
     });
     
@@ -92,17 +98,23 @@ export async function startTournamentService(tournamentId) {
 export async function getTournamentDetailsService(tournamentId) {
     const db = await initDB();
     
+    console.log(`📊 TOURNAMENT SERVICE: Getting details for tournament ${tournamentId}`);
+    
     // Turnuva bilgilerini al
     const tournament = await db.get(
         'SELECT * FROM tournaments WHERE id = ?', [tournamentId]
     );
     
     if (!tournament) {
+        console.log(`📊 TOURNAMENT SERVICE: Tournament ${tournamentId} not found`);
         return null;
     }
     
+    console.log(`📊 TOURNAMENT SERVICE: Tournament found - Status: ${tournament.status}, Name: ${tournament.name}`);
+    
     // Katılımcıları al
     const participants = await getTournamentParticipants(tournamentId);
+    console.log(`📊 TOURNAMENT SERVICE: Found ${participants.length} participants`);
     
     // Aktif maçları al
     const matches = await db.all(
@@ -115,17 +127,43 @@ export async function getTournamentDetailsService(tournamentId) {
         [tournamentId]
     );
     
-    return {
+    console.log(`📊 TOURNAMENT SERVICE: Found ${matches.length} matches`);
+    
+    // Tournament pairings'i de al
+    const pairings = await db.all(
+        `SELECT tp.*, u1.username as player1Username, u2.username as player2Username, u3.username as winnerUsername
+         FROM tournament_pairings tp
+         LEFT JOIN users u1 ON tp.player1Id = u1.id
+         LEFT JOIN users u2 ON tp.player2Id = u2.id  
+         LEFT JOIN users u3 ON tp.winnerId = u3.id
+         WHERE tp.tournamentId = ?
+         ORDER BY tp.round ASC, tp.position ASC`,
+        [tournamentId]
+    );
+    
+    const result = {
         ...tournament,
         participants,
         matches,
+        pairings,
         currentPlayers: participants.length
     };
+    
+    console.log(`📊 TOURNAMENT SERVICE: Returning tournament details with ${result.participants.length} participants, ${result.matches.length} matches, ${result.pairings?.length || 0} pairings`);
+    
+    return result;
 }
 
 // Turnuva bracket'ini getirme
 export async function getTournamentBracketService(tournamentId) {
     const participants = await getTournamentParticipants(tournamentId);
+    
+    // Eğer tournament henüz başlamamışsa (4 kişi değilse) bracket oluşturma
+    if (participants.length < 4) {
+        console.log(`📊 TOURNAMENT BRACKET: Not enough participants (${participants.length}/4), returning empty bracket`);
+        return null;
+    }
+    
     return generateTournamentBracket(participants);
 }
 
@@ -193,7 +231,10 @@ async function createTournamentMatches(tournamentId, roundMatches, round) {
 
 // Maç bittiğinde sonraki round'a geçiş
 export async function processTournamentMatchResult(matchId, winnerId) {
-    console.log(`🏆 Processing tournament match result: matchId=${matchId}, winnerId=${winnerId}`);
+    console.log(`🏆 TOURNAMENT: Processing match ${matchId} result, winner: ${winnerId}`);
+    
+    // Tournament pairings'e kazananı kaydet
+    await updateTournamentPairingWithWinner(matchId, winnerId);
     const db = await initDB();
     
     // Maç bilgilerini al
@@ -209,7 +250,7 @@ export async function processTournamentMatchResult(matchId, winnerId) {
     const tournamentId = match.tournamentId;
     const round = match.round;
     
-    console.log(`🏆 Tournament ${tournamentId}, Round ${round}: Match ${matchId} completed by winner ${winnerId}`);
+    console.log(`🏆 TOURNAMENT ${tournamentId}: Round ${round} match ${matchId} won by ${winnerId}`);
     
     // Bu round'daki tüm maçların bitip bitmediğini kontrol et
     const unfinishedMatches = await db.all(
@@ -217,7 +258,7 @@ export async function processTournamentMatchResult(matchId, winnerId) {
         [tournamentId, round]
     );
     
-    console.log(`🏆 Unfinished matches in round ${round}: ${unfinishedMatches.length}`);
+    console.log(`⏳ TOURNAMENT ${tournamentId}: ${unfinishedMatches.length} matches remaining in round ${round}`);
     
     if (unfinishedMatches.length > 0) {
         // Henüz bitmemiş maçlar var, bekle
@@ -230,9 +271,139 @@ export async function processTournamentMatchResult(matchId, winnerId) {
         return;
     }
     
-    // Tüm maçlar bitti, sonraki round'a geç
-    console.log(`🎉 All matches in round ${round} completed! Advancing to next round...`);
-    await advanceToNextRound(tournamentId, round);
+    // Tüm maçlar bitti, kazananları göster ve sonraki round'a geç
+    console.log(`🎉 All matches in round ${round} completed! Showing winners and advancing to next round...`);
+    
+    // Önce kazananları göster
+    await showRoundResults(tournamentId, round);
+    
+    // 5 saniye bekle, sonra sonraki round'a geç
+    setTimeout(async () => {
+        try {
+            await advanceToNextRound(tournamentId, round);
+        } catch (error) {
+            console.error(`❌ Error advancing to next round for tournament ${tournamentId}:`, error);
+        }
+    }, 5000);
+}
+
+// Tournament pairings'i veritabanına kaydetme
+async function storeTournamentPairings(tournamentId, bracket) {
+    const db = await initDB();
+    
+    // Mevcut pairings'i temizle
+    await db.run('DELETE FROM tournament_pairings WHERE tournamentId = ?', [tournamentId]);
+    
+    // Her round için pairings'i kaydet (forEach yerine for...of kullan async için)
+    for (let roundIndex = 0; roundIndex < bracket.length; roundIndex++) {
+        const round = bracket[roundIndex];
+        for (let position = 0; position < round.length; position++) {
+            const match = round[position];
+            await db.run(
+                `INSERT INTO tournament_pairings (tournamentId, round, position, player1Id, player2Id) 
+                 VALUES (?, ?, ?, ?, ?)`,
+                [
+                    tournamentId, 
+                    roundIndex + 1, 
+                    position, 
+                    match.player1?.id || null, 
+                    match.player2?.id || null
+                ]
+            );
+        }
+    }
+    
+    console.log(`💾 TOURNAMENT ${tournamentId}: Bracket pairings stored in database`);
+}
+
+// Tournament pairing'e kazananı güncelleme
+async function updateTournamentPairingWithWinner(matchId, winnerId) {
+    const db = await initDB();
+    
+    // Maç bilgilerini al
+    const match = await db.get('SELECT * FROM matches WHERE id = ?', [matchId]);
+    if (!match || !match.tournamentId) return;
+    
+    // Bu maça karşılık gelen pairing'i bul ve winnerId'yi güncelle
+    await db.run(
+        `UPDATE tournament_pairings 
+         SET winnerId = ?, matchId = ?
+         WHERE tournamentId = ? AND round = ? 
+         AND ((player1Id = ? AND player2Id = ?) OR (player1Id = ? AND player2Id = ?))`,
+        [winnerId, matchId, match.tournamentId, match.round, 
+         match.player1Id, match.player2Id, match.player2Id, match.player1Id]
+    );
+    
+    console.log(`💾 TOURNAMENT: Updated pairing with winner ${winnerId} for match ${matchId}`);
+}
+
+// Maç eşleşmelerini gösterme (tournament başlarken)
+async function showMatchPairings(tournamentId, roundMatches, round) {
+    const roundName = round === 1 ? 'Semifinals' : round === 2 ? 'Final' : `Round ${round}`;
+    
+    const pairings = roundMatches.map(match => ({
+        player1: match.player1.username,
+        player2: match.player2.username
+    }));
+    
+    console.log(`🎯 Showing ${roundName} pairings for tournament ${tournamentId}:`, pairings);
+    
+    // Katılımcılara eşleşmeleri göster
+    await broadcastToTournamentPlayers(tournamentId, {
+        type: 'tournament',
+        event: 'matchPairingsRevealed',
+        data: { 
+            tournamentId,
+            round,
+            roundName,
+            pairings,
+            message: `${roundName} pairings revealed! Matches start in 5 seconds...`,
+            startsIn: 5 // seconds
+        }
+    });
+}
+
+// Round sonuçlarını gösterme (kazananları bildirme)
+async function showRoundResults(tournamentId, completedRound) {
+    const db = await initDB();
+    
+    // Bu round'un kazananlarını al
+    const winners = await db.all(
+        `SELECT m.winnerId as id, u.username,
+                u1.username as player1Username, u2.username as player2Username,
+                CASE WHEN m.winnerId = m.player1Id THEN u2.username ELSE u1.username END as defeatedPlayer
+         FROM matches m 
+         JOIN users u ON m.winnerId = u.id 
+         JOIN users u1 ON m.player1Id = u1.id
+         JOIN users u2 ON m.player2Id = u2.id
+         WHERE m.tournamentId = ? AND m.round = ?`,
+        [tournamentId, completedRound]
+    );
+    
+    const roundName = completedRound === 1 ? 'Semifinals' : `Round ${completedRound}`;
+    const nextRoundName = completedRound === 1 ? 'Final' : `Round ${completedRound + 1}`;
+    
+    console.log(`🏆 Round ${completedRound} completed! Winners advancing to ${nextRoundName}:`, 
+        winners.map(w => w.username));
+    
+    // Kazananları ve sonraki round bilgisini broadcast et
+    await broadcastToTournamentPlayers(tournamentId, {
+        type: 'tournament',
+        event: 'roundCompleted',
+        data: { 
+            tournamentId,
+            completedRound,
+            roundName,
+            nextRoundName,
+            winners: winners.map(w => ({ 
+                id: w.id, 
+                username: w.username,
+                defeatedPlayer: w.defeatedPlayer
+            })),
+            message: `${roundName} completed! ${winners.length} player${winners.length !== 1 ? 's' : ''} advancing to ${nextRoundName}.`,
+            nextRoundStartsIn: 5 // seconds
+        }
+    });
 }
 
 // Sonraki round'a geçiş
@@ -252,6 +423,24 @@ async function advanceToNextRound(tournamentId, currentRound) {
     
     console.log(`🏆 Winners from round ${currentRound}:`, winners.map(w => `${w.username} (${w.id})`));
     
+    // Bu round'da elenen oyuncuları işaretle
+    const matches = await db.all(
+        `SELECT player1Id, player2Id, winnerId 
+         FROM matches 
+         WHERE tournamentId = ? AND round = ?`,
+        [tournamentId, currentRound]
+    );
+    
+    // Kaybedenleri eliminated olarak işaretle
+    for (const match of matches) {
+        const loserId = match.winnerId === match.player1Id ? match.player2Id : match.player1Id;
+        await db.run(
+            'UPDATE users SET isEliminated = 1 WHERE id = ? AND currentTournamentId = ?',
+            [loserId, tournamentId]
+        );
+        console.log(`❌ Player ${loserId} eliminated from tournament ${tournamentId}`);
+    }
+    
     if (winners.length === 1) {
         // Final bitti, turnuvayı sonlandır
         console.log(`🏆 Tournament ${tournamentId} completed! Winner: ${winners[0].username} (${winners[0].id})`);
@@ -264,33 +453,87 @@ async function advanceToNextRound(tournamentId, currentRound) {
     console.log(`🏆 Creating ${Math.floor(winners.length / 2)} matches for round ${nextRound}`);
     
     // Sonraki round maçlarını oluştur
+    const nextRoundMatches = [];
     for (let i = 0; i < winners.length; i += 2) {
         if (winners[i + 1]) {
-            await db.run(
+            const result = await db.run(
                 `INSERT INTO matches (player1Id, player2Id, tournamentId, round, createdAt) 
                  VALUES (?, ?, ?, ?, ?)`,
                 [winners[i].id, winners[i + 1].id, tournamentId, nextRound, new Date().toISOString()]
             );
+            nextRoundMatches.push({
+                id: result.lastID,
+                player1: winners[i],
+                player2: winners[i + 1]
+            });
             console.log(`🏆 Created match: ${winners[i].username} vs ${winners[i + 1].username} (Round ${nextRound})`);
         }
     }
     
-    // Sonraki round maçlarını başlat
-    const { startTournamentMatches } = await import('../services/match.service.js');
-    await startTournamentMatches(tournamentId, nextRound);
+    // Tournament current round'u güncelle
+    await db.run('UPDATE tournaments SET currentRound = ? WHERE id = ?', [nextRound, tournamentId]);
     
-    // Sonraki round başladığını bildir
+    // Sonraki round için pairings'i güncelle (database'de kaydet)
+    for (let position = 0; position < nextRoundMatches.length; position++) {
+        const match = nextRoundMatches[position];
+        await db.run(
+            `INSERT INTO tournament_pairings (tournamentId, round, position, player1Id, player2Id) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [tournamentId, nextRound, position, match.player1.id, match.player2.id]
+        );
+    }
+    
+    // Önce maç eşleşmelerini göster
+    const pairings = [];
+    for (let i = 0; i < winners.length; i += 2) {
+        if (winners[i + 1]) {
+            pairings.push({
+                player1: winners[i].username,
+                player2: winners[i + 1].username
+            });
+        }
+    }
+    
+    // Eşleşmeleri göster
     await broadcastToTournamentPlayers(tournamentId, {
         type: 'tournament',
-        event: 'nextRoundStarted',
+        event: 'matchPairingsRevealed',
         data: { 
             tournamentId,
             round: nextRound,
-            winners: winners.map(w => ({ id: w.id, username: w.username }))
+            roundName: nextRound === 2 ? 'Final' : `Round ${nextRound}`,
+            pairings,
+            message: `${nextRound === 2 ? 'Final' : `Round ${nextRound}`} pairings revealed! Matches start in 5 seconds...`,
+            startsIn: 5
         }
     });
     
-    console.log(`Tournament ${tournamentId} advanced to round ${nextRound}`);
+    // 5 saniye sonra maçları başlat
+    setTimeout(async () => {
+        try {
+            console.log(`🚀 TOURNAMENT ${tournamentId}: Starting round ${nextRound} matches`);
+            const { startTournamentMatches } = await import('../services/match.service.js');
+            await startTournamentMatches(tournamentId, nextRound);
+            
+            // Maçlar başladığını bildir
+            const roundName = nextRound === 2 ? 'Final' : `Round ${nextRound}`;
+            await broadcastToTournamentPlayers(tournamentId, {
+                type: 'tournament',
+                event: 'nextRoundStarted',
+                data: { 
+                    tournamentId,
+                    round: nextRound,
+                    roundName,
+                    winners: winners.map(w => ({ id: w.id, username: w.username })),
+                    message: `${roundName} matches are starting now!`
+                }
+            });
+            
+            console.log(`🚀 TOURNAMENT ${tournamentId}: Round ${nextRound} started successfully`);
+        } catch (error) {
+            console.error(`❌ Error starting round ${nextRound} for tournament ${tournamentId}:`, error);
+        }
+    }, 5000);
 }
 
 // Turnuvayı sonlandırma
@@ -303,9 +546,9 @@ async function finalizeTournament(tournamentId, winnerId) {
         [winnerId, new Date().toISOString(), tournamentId]
     );
     
-    // Tüm kullanıcıların currentTournamentId'sini temizle
+    // Tüm kullanıcıların currentTournamentId ve isEliminated'ını temizle
     await db.run(
-        'UPDATE users SET currentTournamentId = NULL WHERE currentTournamentId = ?',
+        'UPDATE users SET currentTournamentId = NULL, isEliminated = 0 WHERE currentTournamentId = ?',
         [tournamentId]
     );
     
@@ -316,13 +559,15 @@ async function finalizeTournament(tournamentId, winnerId) {
     );
     
     // Turnuva sonuçlarını bildir
+    const winnerUser = await db.get('SELECT username FROM users WHERE id = ?', [winnerId]);
     await broadcastToTournamentPlayers(tournamentId, {
         type: 'tournament',
         event: 'tournamentEnded',
         data: { 
             tournamentId,
             winnerId,
-            message: 'Tournament tamamlandı!'
+            winnerUsername: winnerUser?.username || 'Unknown',
+            message: `Tournament completed! Winner: ${winnerUser?.username || winnerId}`
         }
     });
     
@@ -352,7 +597,7 @@ async function autoCreateNextTournament() {
             event: 'newTournamentCreated',
             data: { 
                 tournamentId: newTournamentId,
-                message: 'Yeni turnuva oluşturuldu! Katılmak için joinle.'
+                message: 'A new tournament has been created! Join now to participate.'
             }
         });
         

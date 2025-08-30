@@ -59,6 +59,10 @@ export class TournamentService {
     this.wsManager.on("tournament:tournamentStarted", callback);
   }
 
+  onTournamentMatchPairings(callback: (data: any) => void) {
+    this.wsManager.on("tournament:matchPairingsRevealed", callback);
+  }
+
   onTournamentMatchStarted(callback: (data: any) => void) {
     console.log('🎯 Setting up tournament:matchStarted listener');
     this.wsManager.on("tournament:matchStarted", callback);
@@ -67,6 +71,11 @@ export class TournamentService {
   onTournamentMatchCompleted(callback: (data: any) => void) {
     console.log('🎯 Setting up tournament:matchCompleted listener');
     this.wsManager.on("tournament:matchCompleted", callback);
+  }
+
+  onTournamentRoundCompleted(callback: (data: any) => void) {
+    console.log('🎯 Setting up tournament:roundCompleted listener');
+    this.wsManager.on("tournament:roundCompleted", callback);
   }
 
   onTournamentNextRound(callback: (data: any) => void) {

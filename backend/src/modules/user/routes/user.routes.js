@@ -4,7 +4,8 @@ import {
   getUserById,
   getUserByUsername,
   updateMyProfile,
-  updateMyAvatar
+  updateMyAvatar,
+  getUserTournamentStatus
 } from '../controller/user.controller.js';
 import { 
   getMyProfileSchema, 
@@ -44,6 +45,11 @@ export default async function userRoutes(app, options) {
     preHandler: verifyToken,
     schema: getUserByIdSchema
   }, getUserById);
+
+  // Get user tournament status
+  app.get('/tournament-status/:id', {
+    preHandler: verifyToken
+  }, getUserTournamentStatus);
   
   // Get user by username (should be last to avoid conflicts)
   app.get('/:username', {
