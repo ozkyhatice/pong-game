@@ -1,37 +1,54 @@
-<div class="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+<style>
+  .radial-bg {
+    height: 100vh;
+    width: 100%;
+    background-image: radial-gradient(circle, black 0%, #2a2a2a 100%);
+}
 
-	<div class="bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-    <div class="text-center mb-4">
-      <h1 class="text-2xl font-bold text-white mb-1">Game Lobby</h1>
-      <p class="text-slate-400 text-sm" id="room-status">Waiting for players...</p>
+</style>
+
+<div class="min-h-screen radial-bg flex items-center justify-center p-4">
+
+	<div class="bg-terminal-border p-6 text-[10px] leading-relaxed rounded-lg w-full max-w-md text-white border-2 border-neon-green shadow-[0_0_10px_neon-green">
+    <div class="bg-[#1A1A1A] px-3 py-2 border-b border-neon-green w-full border-opacity-30 text-[10px] leading-relaxed text-center mb-4">
+      <div class="text-neon-green text-2xl font-bold tracking-wide mb-1" style="text-shadow: 0 0 5px #39FF14;">
+		PONG LOBBY
+      </div>
+      <div class="flex items-center gap-1 mb-1 text-neon-white">
+        <div class="status-dot"></div>
+        <span>GAME STATUS: LOADED</span>
+      </div>
+      <div class="text-neon-white flex items-center gap-1 mb-1" id="room-status">
+        > WAITING FOR PLAYERS...
+      </div>
     </div>
 
     <div class="flex justify-between items-center mb-4">
 
     <!-- Player 1 -->
       <div class="flex flex-col items-center flex-1">
-        <img id="player1-avatar" src="https://placehold.co/400x400?text=Player\n1" alt="P1" class="w-12 h-12 rounded-full bg-slate-700 object-cover mb-2" />
-        <span class="text-white text-sm font-medium" id="player1-name">-</span>
-        <span id="player1-ready-text" class="text-xs text-gray-400 mt-1">Not Ready</span>
+        <img id="player1-avatar" src="https://placehold.co/400x400?text=Player\n1" alt="P1" class="w-12 h-12 rounded-full bg-black object-cover mb-2" />
+        <span class="text-neon-white text-sm font-medium" id="player1-name">-</span>
+        <span id="player1-ready-text" class="text-[10px] text-neon-red mt-1">NOT READY</span>
       </div>
-      <span class="text-slate-500 mx-2">vs</span>
-      
+      <span class="text-neon-white font-bold text-xl mx-2" style="text-shadow: 0 0 5px #39FF14;">VS</span>
+
 	  <!-- Player 2 -->
       <div class="flex flex-col items-center flex-1">
-        <img id="player2-avatar" src="https://placehold.co/400x400?text=Player\n2" alt="P2" class="w-12 h-12 rounded-full bg-slate-700 object-cover mb-2" />
-        <span class="text-white text-sm font-medium" id="player2-name">-</span>
-        <span id="player2-ready-text" class="text-xs text-gray-400 mt-1">Not Ready</span>
+        <img id="player2-avatar" src="https://placehold.co/400x400?text=Player\n2" alt="P2" class="w-12 h-12 rounded-full bg-black object-cover mb-2" />
+        <span class="text-neon-white text-sm font-medium" id="player2-name">-</span>
+        <span id="player2-ready-text" class="text-[10px]  text-neon-red mt-1">NOT READY</span>
       </div>
 
     </div>
 
-	<div class="flex justify-between items-center bg-slate-700 rounded p-2 mb-4 text-xs">
-      <span class="text-slate-400">Room:</span>
-      <span id="room-id" class="text-white font-mono">-</span>
+	<div class="flex justify-between items-center bg-btn-gradient rounded p-2 mb-4 text-xs">
+      <span class="text-neon-red">ROOM:</span>
+      <span id="room-id" class="text-neon-white font-mono">-</span>
     </div>
 
-  <button id="ready-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition-colors mb-2 disabled:opacity-50 disabled:cursor-not-allowed">Ready</button>
-    <button id="leave-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded transition-colors">Leave Lobby</button>
+  <button id="ready-btn" class="w-full bg-transparent border border-neon-green text-neon-green hover:bg-neon-green hover:text-terminal-border font-bold py-2 rounded transition-colors mb-2 tracking-widest">ARE YOU READY?</button>
+    <button id="leave-btn" class="w-full bg-transparent border border-neon-red text-neon-red hover:bg-neon-red hover:text-terminal-border font-semibold py-2 rounded transition-colors">LEAVE LOBBY</button>
 
   </div>
 </div>
