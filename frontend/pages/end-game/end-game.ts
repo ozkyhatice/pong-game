@@ -14,6 +14,7 @@ export function init() {
 	const player1Avatar = document.getElementById('player1-avatar') as HTMLImageElement;
 	const player2Avatar = document.getElementById('player2-avatar') as HTMLImageElement;
 	const backBtn = document.getElementById('back-btn');
+	const gameResultStatus = document.getElementById('game-result-status');
 
 	const userService = new UserService();
 
@@ -33,14 +34,28 @@ export function init() {
 			
 			if (playerIds.length < 2) return;
 
-			const [player1, player2] = await Promise.all([
+			const [currentUser, player1, player2] = await Promise.all([
+				userService.getCurrentUser(),
 				userService.getUserById(parseInt(playerIds[0])),
 				userService.getUserById(parseInt(playerIds[1]))
 			]);
 
+			const winnerId = gameResult.winner;
+			const winnerUser = winnerId == playerIds[0] ? player1 : player2;
+			const isCurrentUserWinner = currentUser && currentUser.id == winnerId;
+
+			if (gameResultStatus) {
+				if (isCurrentUserWinner) {
+					gameResultStatus.textContent = '> RESULT: VICTORY!';
+					gameResultStatus.className = 'text-neon-green flex items-center gap-1 mb-1';
+				} else {
+					gameResultStatus.textContent = '> RESULT: DEFEAT...';
+					gameResultStatus.className = 'text-neon-red flex items-center gap-1 mb-1';
+				}
+			}
+
 			if (winnerText) {
-				const winnerUser = gameResult.winner == playerIds[0] ? player1 : player2;
-				winnerText.textContent = `Winner: ${winnerUser?.username || 'Player ' + gameResult.winner}`;
+				winnerText.textContent = `${winnerUser?.username || 'Player ' + winnerId} WINS!`;
 			}
 
 			if (scoreText) {
