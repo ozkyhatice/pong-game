@@ -136,10 +136,23 @@ export function init() {
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = `❌ ERROR`;
   });
 
-  gameService.onPlayerLeft((data) => {
-    notify(`Player ${data.leftPlayer} left the game.`);
-    appState.clearCurrentRoom();
-    router.navigate('home');
+  gameService.onPlayerLeft((data: any) => {
+    // Check if this is a tournament match
+    if (data.isTournamentMatch && data.tournamentId) {
+      // Tournament match - player left, return to tournament page
+      console.log('🏆 Tournament player left:', data);
+      notify(`Player ${data.leftPlayer} left the match. You win! Returning to tournament...`);
+      
+      // Update tournament state
+      appState.updateTournamentStatus('active', data.round);
+      appState.clearCurrentRoom();
+      router.navigate('tournament');
+    } else {
+      // Regular match - return to home
+      notify(`Player ${data.leftPlayer} left the game.`);
+      appState.clearCurrentRoom();
+      router.navigate('home');
+    }
   });
 
   gameService.onGameOver((data: any) => {

@@ -405,6 +405,21 @@ export class GameAreaComponent extends Component {
     this.tournamentService.onTournamentNextRound((data) => {
       notify(`Round ${data.round} started!`);
       this.updateTournamentBracket(data);
+      this.loadTournamentData(); // Bracket'i güncelle
+    });
+
+    // Maç tamamlandığında
+    this.tournamentService.onTournamentMatchCompleted((data) => {
+      console.log('🏆 Tournament match completed:', data);
+      notify(`Match completed! Winner: ${data.winnerUsername || data.winnerId}`);
+      this.loadTournamentData(); // Bracket'i güncelle
+    });
+
+    // Round tamamlandığında
+    this.tournamentService.onTournamentRoundCompleted((data) => {
+      console.log('🏆 Tournament round completed:', data);
+      notify(`${data.roundName} completed! ${data.winners.length} players advancing.`);
+      this.loadTournamentData(); // Bracket'i güncelle
     });
 
     // Turnuva bittiğinde
@@ -539,9 +554,17 @@ export class GameAreaComponent extends Component {
       this.displayTournamentBracketPreview(tournament);
     }
     
-    // Eğer turnuva başlamışsa matches'i göster
-    if (tournament.status === 'active' && tournament.matches?.length > 0) {
-      this.displayCurrentRoundMatches(tournament.matches);
+    // Eğer turnuva başlamışsa bracket'i göster
+    if (tournament.status === 'active') {
+      const bracketPreview = this.element.querySelector('#tournament-bracket-preview');
+      bracketPreview?.classList.remove('hidden');
+      
+      // Pairings varsa onları kullan, yoksa matches'i kullan
+      if (tournament.pairings?.length > 0) {
+        this.displayTournamentBracketFromPairings(tournament.pairings);
+      } else if (tournament.matches?.length > 0) {
+        this.displayCurrentRoundMatches(tournament.matches);
+      }
     }
   }
 
@@ -552,7 +575,13 @@ export class GameAreaComponent extends Component {
   }
 
   private displayTournamentBracket(bracket: any): void {
-    if (!bracket) return;
+    if (!bracket) {
+      // Bracket yoksa tournament data'dan pairings'i kullan
+      if (this.currentTournament?.pairings) {
+        this.displayTournamentBracketFromPairings(this.currentTournament.pairings);
+      }
+      return;
+    }
 
     const container = this.element.querySelector('#bracket-container');
     if (!container) return;
@@ -560,20 +589,67 @@ export class GameAreaComponent extends Component {
     let html = '';
     
     bracket.forEach((round: any, roundIndex: number) => {
+      const roundName = roundIndex === 0 ? 'Semifinals' : roundIndex === 1 ? 'Final' : `Round ${roundIndex + 1}`;
       html += `<div class="mb-4">`;
-      html += `<h5 class="font-medium text-purple-700 mb-2">Round ${roundIndex + 1}</h5>`;
+      html += `<h5 class="font-medium text-green-300 mb-2 font-mono">${roundName}</h5>`;
       html += `<div class="space-y-2">`;
       
       round.forEach((match: any, matchIndex: number) => {
         const player1Name = match.player1?.username || 'TBD';
         const player2Name = match.player2?.username || 'TBD';
-        const winnerClass = match.winner ? 'bg-green-100 border-green-300' : 'bg-white border-gray-200';
+        const winnerClass = match.winner ? 'bg-green-900/50 border-green-400' : 'bg-gray-800 border-gray-600';
         
         html += `
           <div class="flex items-center justify-between p-2 border rounded ${winnerClass}">
-            <span class="text-sm font-medium">${player1Name}</span>
-            <span class="text-xs text-gray-500">vs</span>
-            <span class="text-sm font-medium">${player2Name}</span>
+            <span class="text-sm font-medium text-green-200">${player1Name}</span>
+            <span class="text-xs text-green-400 font-mono">vs</span>
+            <span class="text-sm font-medium text-green-200">${player2Name}</span>
+            ${match.winner ? `<span class="text-xs text-green-400 font-bold font-mono">🏆 ${match.winner.username}</span>` : ''}
+          </div>
+        `;
+      });
+      
+      html += `</div></div>`;
+    });
+
+    container.innerHTML = html;
+  }
+
+  private displayTournamentBracketFromPairings(pairings: any[]): void {
+    const container = this.element.querySelector('#bracket-container');
+    if (!container || !pairings) return;
+
+    // Group by round
+    const rounds: { [key: number]: any[] } = {};
+    pairings.forEach(pairing => {
+      if (!rounds[pairing.round]) {
+        rounds[pairing.round] = [];
+      }
+      rounds[pairing.round].push(pairing);
+    });
+
+    let html = '';
+    
+    Object.keys(rounds).sort((a, b) => parseInt(a) - parseInt(b)).forEach(roundNum => {
+      const round = rounds[parseInt(roundNum)];
+      const roundName = parseInt(roundNum) === 1 ? 'Semifinals' : parseInt(roundNum) === 2 ? 'Final' : `Round ${roundNum}`;
+      
+      html += `<div class="mb-4">`;
+      html += `<h5 class="font-medium text-green-300 mb-2 font-mono">${roundName}</h5>`;
+      html += `<div class="space-y-2">`;
+      
+      round.forEach(pairing => {
+        const player1Name = pairing.player1Username || 'TBD';
+        const player2Name = pairing.player2Username || 'TBD';
+        const winnerClass = pairing.winnerId ? 'bg-green-900/50 border-green-400' : 'bg-gray-800 border-gray-600';
+        const winnerName = pairing.winnerUsername;
+        
+        html += `
+          <div class="flex items-center justify-between p-2 border rounded ${winnerClass}">
+            <span class="text-sm font-medium text-green-200 ${pairing.winnerId === pairing.player1Id ? 'font-bold text-green-400' : ''}">${player1Name}</span>
+            <span class="text-xs text-green-400 font-mono">vs</span>
+            <span class="text-sm font-medium text-green-200 ${pairing.winnerId === pairing.player2Id ? 'font-bold text-green-400' : ''}">${player2Name}</span>
+            ${winnerName ? `<span class="text-xs text-green-400 font-bold font-mono">🏆 ${winnerName}</span>` : ''}
           </div>
         `;
       });

@@ -65,7 +65,10 @@ export async function broadcastLeft(room, userId) {
                     roomId: room.id,
                     winner: winId,
                     finalScore: room.state ? room.state.score : null,
-                    leftPlayer: userId
+                    leftPlayer: userId,
+                    isTournamentMatch: !!room.tournamentId,
+                    tournamentId: room.tournamentId,
+                    round: room.round
                 });
             }
         }
