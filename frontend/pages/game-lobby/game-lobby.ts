@@ -9,6 +9,10 @@ declare global {
 }
 
 export function init() {
+
+
+
+
   const roomStatus = document.getElementById('room-status');
   const roomId = document.getElementById('room-id');
   const readyBtn = document.getElementById('ready-btn');
@@ -68,7 +72,11 @@ export function init() {
     // Disable ready button after clicking
     if (readyBtn) {
       (readyBtn as HTMLButtonElement).disabled = true;
-      readyBtn.textContent = 'Ready!';
+		readyBtn.textContent = 'READY';
+		readyBtn.classList.remove('bg-transparent', 'text-neon-green');
+		readyBtn.classList.remove('hover:bg-neon-green', 'hover:text-terminal-border');
+		readyBtn.classList.add('bg-neon-green', 'text-terminal-border');
+		readyBtn.classList.add('cursor-not-allowed');
     }
   }
 
@@ -126,7 +134,42 @@ export function init() {
     const totalPlayers = data.totalPlayers || 2;
     
     if (roomStatus) {
-      roomStatus.textContent = `${readyCount}/${totalPlayers} players ready`;
+      roomStatus.textContent = `> ${readyCount}/${totalPlayers} PLAYERS READY`;
+    }
+
+    // Update ready status for each player
+    const player1ReadyText = document.getElementById('player1-ready-text');
+    const player2ReadyText = document.getElementById('player2-ready-text');
+    const readyPlayerIds = data.readyPlayers || [];
+    
+    if (currentRoom?.players && currentRoom.players.length >= 2) {
+      const [playerId1, playerId2] = currentRoom.players;
+      
+      // Update Player 1 ready status
+      if (player1ReadyText) {
+        if (readyPlayerIds.includes(playerId1)) {
+          player1ReadyText.textContent = 'READY';
+          player1ReadyText.classList.remove('text-neon-red');
+          player1ReadyText.classList.add('text-neon-green');
+        } else {
+          player1ReadyText.textContent = 'NOT READY';
+          player1ReadyText.classList.remove('text-neon-green');
+          player1ReadyText.classList.add('text-neon-red');
+        }
+      }
+      
+      // Update Player 2 ready status
+      if (player2ReadyText) {
+        if (readyPlayerIds.includes(playerId2)) {
+          player2ReadyText.textContent = 'READY';
+          player2ReadyText.classList.remove('text-neon-red');
+          player2ReadyText.classList.add('text-neon-green');
+        } else {
+          player2ReadyText.textContent = 'NOT READY';
+          player2ReadyText.classList.remove('text-neon-green');
+          player2ReadyText.classList.add('text-neon-red');
+        }
+      }
     }
   }
 }
