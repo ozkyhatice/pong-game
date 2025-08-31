@@ -730,7 +730,7 @@ export function init() {
             }
           }, 2000);
         }
-      }, 1000);
+      }, 1000) as any;
     }
     
     // Display will be updated by WebSocket events - no need for additional requests
@@ -813,7 +813,7 @@ export function init() {
             (roundCountdownBar as HTMLElement).style.width = '0%';
           }
         }
-      }, 1000);
+      }, 1000) as any;
     }
     
     // Bracket will be updated by WebSocket events - no need for additional requests
@@ -864,7 +864,7 @@ export function init() {
     };
 
     // Check connection every 5 seconds
-    wsReconnectInterval = setInterval(checkConnection, 5000);
+    wsReconnectInterval = setInterval(checkConnection, 5000) as any;
     
     // Also check on page visibility change
     document.addEventListener('visibilitychange', () => {

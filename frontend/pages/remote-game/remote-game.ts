@@ -338,7 +338,7 @@ export function init() {
     let resizeTimeout: number | null = null;
     window.addEventListener('resize', () => {
       if (resizeTimeout) clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(updateCanvasSize, 100);
+      resizeTimeout = setTimeout(updateCanvasSize, 100) as any;
     });
   }
 
@@ -443,7 +443,7 @@ export function init() {
       handleMobileMovement();
       
       // Continue moving every 16ms (60fps)
-      moveInterval = setInterval(handleMobileMovement, 16);
+      moveInterval = setInterval(handleMobileMovement, 16) as any;
     }
 
     function stopContinuousMovement() {
