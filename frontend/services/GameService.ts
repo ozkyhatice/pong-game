@@ -59,6 +59,9 @@ export class GameService {
   onPlayerReady(callback: (data: any) => void): void { this.wsManager.on('player-ready', callback); }
   onAllReady(callback: (data: any) => void): void { this.wsManager.on('all-ready', callback); }
   onGameOver(callback: (data: any) => void): void { this.wsManager.on('game-over', callback); }
+  onGamePaused(callback: (data: any) => void): void { this.wsManager.on('paused', callback); }
+  onGameResumed(callback: (data: any) => void): void { this.wsManager.on('resumed', callback); }
+  onPlayerReconnected(callback: (data: any) => void): void { this.wsManager.on('reconnected', callback); }
 
   private send(event: GameMessage['event'], data: any = {}): void {
     this.wsManager.send({ type: 'game', event, data });

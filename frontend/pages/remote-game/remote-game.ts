@@ -51,6 +51,11 @@ export function init() {
   const gameStatusEl = document.getElementById('game-status');
   const leaveGameBtn = document.getElementById('leave-game-btn');
   
+  // Pause elements
+  const pauseMessageEl = document.getElementById('pause-message');
+  const pauseTextEl = document.getElementById('pause-text');
+  const pauseCountdownEl = document.getElementById('pause-countdown');
+  
   // Mobile elements
   const mobilePlayer1NameEl = document.getElementById('mobile-player1-name');
   const mobilePlayer2NameEl = document.getElementById('mobile-player2-name');
@@ -63,6 +68,11 @@ export function init() {
   const mobileUpBtn = document.getElementById('mobile-up-btn');
   const mobileDownBtn = document.getElementById('mobile-down-btn');
   const mobileCanvas = document.getElementById('mobile-game-canvas') as HTMLCanvasElement | null;
+  
+  // Mobile pause elements
+  const mobilePauseMessageEl = document.getElementById('mobile-pause-message');
+  const mobilePauseTextEl = document.getElementById('mobile-pause-text');
+  const mobilePauseCountdownEl = document.getElementById('mobile-pause-countdown');
 
   const appState = AppState.getInstance();
   const gameService = new GameService();
@@ -79,6 +89,7 @@ export function init() {
   let players: Player[] = [];
   let myPlayerId: number | null = null;
   let keysPressed: { [key: string]: boolean } = {};
+  let pauseCountdownTimer: number | null = null;
 
   if (roomIdEl) roomIdEl.textContent = `ROOM: ${currentRoom.roomId}`;
   if (leaveGameBtn) leaveGameBtn.addEventListener('click', handleLeaveGame);
@@ -105,6 +116,8 @@ export function init() {
 
   // Game Service Events
   gameService.onStateUpdate((data) => {
+    if (gameStatusEl) gameStatusEl.textContent = '⚔️ BATTLE IN PROGRESS ⚔️';
+    if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚔️ BATTLE ⚔️';
     gameState = data.state;
     updateScores();
     updatePlayerNames();
@@ -152,6 +165,21 @@ export function init() {
       appState.clearCurrentRoom();
       router.navigate('end-game');
     }
+  });
+
+  gameService.onGamePaused((data: any) => {
+    console.log('⏸️ Game paused:', data);
+    showPauseMessage(data.message, data.timeoutSeconds);
+  });
+
+  gameService.onGameResumed((data: any) => {
+    console.log('▶️ Game resumed:', data);
+    hidePauseMessage();
+  });
+
+  gameService.onPlayerReconnected((data: any) => {
+    console.log('🔄 Player reconnected:', data);
+    hidePauseMessage();
   });
 
   // Initialize game
@@ -511,6 +539,59 @@ export function init() {
       appState.clearCurrentRoom();
       router.navigate('home');
     }
+  }
+
+  function showPauseMessage(message: string, countdownSeconds?: number) {
+    // Show pause message on desktop
+    if (pauseMessageEl) pauseMessageEl.classList.remove('hidden');
+    if (pauseTextEl) pauseTextEl.textContent = message;
+    
+    // Show pause message on mobile
+    if (mobilePauseMessageEl) mobilePauseMessageEl.classList.remove('hidden');
+    if (mobilePauseTextEl) mobilePauseTextEl.textContent = '⏸️ PAUSED';
+    
+    // Start countdown if provided
+    if (countdownSeconds) {
+      startPauseCountdown(countdownSeconds);
+    }
+  }
+
+  function hidePauseMessage() {
+    // Hide pause message on desktop
+    if (pauseMessageEl) pauseMessageEl.classList.add('hidden');
+    
+    // Hide pause message on mobile
+    if (mobilePauseMessageEl) mobilePauseMessageEl.classList.add('hidden');
+    
+    // Clear countdown timer
+    if (pauseCountdownTimer) {
+      clearInterval(pauseCountdownTimer);
+      pauseCountdownTimer = null;
+    }
+  }
+
+  function startPauseCountdown(seconds: number) {
+    if (pauseCountdownTimer) {
+      clearInterval(pauseCountdownTimer);
+    }
+    
+    let remaining = seconds;
+    
+    const updateCountdown = () => {
+      const text = `Reconnecting in ${remaining}s...`;
+      if (pauseCountdownEl) pauseCountdownEl.textContent = text;
+      if (mobilePauseCountdownEl) mobilePauseCountdownEl.textContent = text;
+      
+      remaining--;
+      
+      if (remaining < 0) {
+        clearInterval(pauseCountdownTimer!);
+        pauseCountdownTimer = null;
+      }
+    };
+    
+    updateCountdown();
+    pauseCountdownTimer = setInterval(updateCountdown, 1000) as any;
   }
 
   async function initPlayerInfo() {
