@@ -100,3 +100,15 @@ export async function broadcastTournamentUpdateToAll(message) {
     await broadcastToAll(message);
     console.log(`🏆 WS BROADCAST: Tournament update sent to all online users`);
 }
+
+
+export async function removeUserFromTournament(userId) {
+    const db = await initDB();
+    try {
+        await db.run('UPDATE users SET currentTournamentId = NULL WHERE id = ?', [userId]);
+        console.log(`User ${userId} removed from their tournament`);
+    } catch (error) {
+        console.error(`Error removing user ${userId} from tournament:`, error);
+        throw error;
+    }
+}
