@@ -271,50 +271,79 @@ export async function handlePlayerReady(data, userId, connection) {
 
 export async function handleReconnection(connection, userId) {
     const roomId = userRoom.get(userId);
-    if (!roomId) {
-        console.warn(`🔍 RECONNECT ERROR: User not in room -> User: ${userId}`);
-        return;
-    }
     
-    const room = rooms.get(roomId);
-    if (!room) {
-        console.warn(`🔍 RECONNECT ERROR: Room not found -> User: ${userId}, Room: ${roomId}`);
-        return;
-    }
+    // Check if user has active tournament or game to reconnect to
+    const { initDB } = await import('../../../config/db.js');
+    const db = await initDB();
+    const user = await db.get('SELECT currentTournamentId FROM users WHERE id = ?', [userId]);
     
-    // Reconnect the user to the room
-    room.sockets.set(userId, connection);
-    
-    // Cancel disconnection timeout if it exists
-    if (room.disconnectionTimeout) {
-        console.log(`🔄 GAME RECONNECT: Player reconnected -> User: ${userId}, Room: ${roomId}`);
-        clearTimeout(room.disconnectionTimeout);
-        room.disconnectionTimeout = null;
-    }
-    
-    // Eğer oyun başlamışsa ve durdurulmuşsa, oyunu tekrar başlat
-    if (room.started && room.state.paused) {
-        console.log(`▶️ GAME RESUME: Game resuming after reconnect -> User: ${userId}, Room: ${roomId}`);
-        resumeGame(room);
-        
-        // Game loop'u yeniden başlat
-        if (!room.loop) {
-            startGameLoop(room, connection);
+    // If user is in an active game, redirect to remote-game
+    if (roomId) {
+        const room = rooms.get(roomId);
+        if (room && room.started) {
+            console.log(`🎮 RECONNECT: User ${userId} has active game in room ${roomId}, redirecting to remote-game`);
+            
+            // Reconnect the user to the room
+            room.sockets.set(userId, connection);
+            
+            // Cancel disconnection timeout if it exists
+            if (room.disconnectionTimeout) {
+                console.log(`🔄 GAME RECONNECT: Player reconnected -> User: ${userId}, Room: ${roomId}`);
+                clearTimeout(room.disconnectionTimeout);
+                room.disconnectionTimeout = null;
+            }
+            
+            // Resume game if paused
+            if (room.state.paused) {
+                console.log(`▶️ GAME RESUME: Game resuming after reconnect -> User: ${userId}, Room: ${roomId}`);
+                resumeGame(room);
+                
+                // Game loop'u yeniden başlat
+                if (!room.loop) {
+                    startGameLoop(room, connection);
+                }
+            }
+            
+            // Redirect to remote-game page
+            sendMessage(connection, 'navigation', 'redirect', {
+                page: 'remote-game',
+                reason: 'game_reconnection'
+            });
+            
+            // Send current state to reconnected user
+            sendMessage(connection, 'game', "room-state", {
+                roomId: room.id,
+                state: room.state,
+                players: Array.from(room.players)
+            });
+            
+            // Notify all users about reconnection
+            broadcast(room, 'game', 'reconnected', {
+                userId: userId,
+                message: `Player ${userId} has reconnected! Game resuming...`
+            });
+            
+            return;
         }
     }
     
-    // Notify all users about reconnection
-    broadcast(room, 'game', 'reconnected', {
-        userId: userId,
-        message: `Player ${userId} has reconnected! Game resuming...`
-    });
+    // If user is in tournament but no active game, redirect to tournament page
+    if (user && user.currentTournamentId) {
+        console.log(`🏆 RECONNECT: User ${userId} is in tournament ${user.currentTournamentId}, redirecting to tournament page`);
+        
+        sendMessage(connection, 'navigation', 'redirect', {
+            page: 'tournament',
+            reason: 'tournament_reconnection'
+        });
+        
+        return;
+    }
     
-    // Send current state to reconnected user
-    sendMessage(connection, 'game', "room-state", {
-        roomId: room.id,
-        state: room.state,
-        players: Array.from(room.players)
-    });
+    // If no room found, just return (normal case for users not in game)
+    if (!roomId) {
+        console.warn(`🔍 RECONNECT: User ${userId} not in any room or tournament`);
+        return;
+    }
 
     // Display the current state of the room for debugging
     await displayRoomState(room);

@@ -48,6 +48,29 @@ export async function handleConnection(connection, request) {
 
 export async function handleDisconnect(userId) {
   if (userId) {
+    // Check if user is in a tournament before disconnecting
+    const { initDB } = await import('../../config/db.js');
+    const db = await initDB();
+    const user = await db.get('SELECT currentTournamentId FROM users WHERE id = ?', [userId]);
+    
+    if (user && user.currentTournamentId) {
+      console.log(`User ${userId} is in tournament ${user.currentTournamentId}, removing from tournament`);
+      // Remove user from tournament
+      await db.run('UPDATE users SET currentTournamentId = NULL WHERE id = ?', [userId]);
+      
+      // Broadcast tournament update to other participants
+      const { broadcastToTournamentPlayers } = await import('../../modules/tournament/utils/tournament.utils.js');
+      await broadcastToTournamentPlayers(user.currentTournamentId, {
+        type: 'tournament',
+        event: 'playerLeft',
+        data: { 
+          tournamentId: user.currentTournamentId,
+          leftUserId: userId,
+          message: 'A player has disconnected and left the tournament'
+        }
+      });
+    }
+    
     await removeClient(userId);
     await broadcastUserStatus(userId, 'offline');
     console.log(`Client ${userId} disconnected`);

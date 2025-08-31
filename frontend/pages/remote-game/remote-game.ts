@@ -3,6 +3,7 @@ import { GameService } from "../../services/GameService.js";
 import { UserService } from "../../services/UserService.js";
 import { Router } from "../../core/router.js";
 import { notify } from "../../core/notify.js";
+import { WebSocketManager } from "../../core/WebSocketManager.js";
 
 declare global {
   var router: Router;
@@ -22,6 +23,15 @@ interface Player {
 }
 
 export function init() {
+  // Check if this is a page reload (no WebSocket connection)
+  const wsManager = WebSocketManager.getInstance();
+  if (!wsManager.isConnected()) {
+    console.log('🔄 Remote-game: Page reloaded, redirecting to home for proper initialization');
+    window.router.navigate('home');
+    return;
+  }
+
+
   const canvasElement = document.getElementById('game-canvas') as HTMLCanvasElement | null;
   if (!canvasElement) {
     console.error('Canvas not found');

@@ -37,6 +37,18 @@ export class AuthGuard {
       }
       router.navigate(redirectPage);
     }
+    
+    // If authenticated and WebSocket not connected, connect it
+    if (this.isAuthenticated()) {
+      const wsManager = WebSocketManager.getInstance();
+      if (!wsManager.isConnected()) {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          console.log('🔌 AUTH: Auto-connecting WebSocket after page reload');
+          wsManager.connect(token);
+        }
+      }
+    }
   }
 
   public static logout(): void {

@@ -42,8 +42,7 @@ export class WebSocketManager {
       this.reconnectAttempts = 0;
       this.emit('connected', {});
       
-      // Check if user is in a room and redirect to lobby
-      this.checkRoomAndRedirect();
+      // Removed automatic lobby redirect - let backend handle page navigation
     };
 
     this.ws.onmessage = (event) => {
@@ -63,6 +62,19 @@ export class WebSocketManager {
             event: message.event,
             data: message.data
           });
+          
+          // If room-state message, redirect to remote-game
+          if (message.event === 'room-state') {
+            console.log('🎮 WS: Game state received, redirecting to remote-game');
+            const currentPath = window.location.pathname;
+            if (!currentPath.includes('remote-game')) {
+              console.log(`🎮 WS: Current page is ${currentPath}, redirecting to remote-game`);
+              setTimeout(() => {
+                (window as any).router.navigate('remote-game');
+              }, 100);
+            }
+          }
+          
           // Emit both the general 'game' event and the specific event
           this.emit(message.type, message.data || message);
           if (message.event) {
@@ -78,6 +90,9 @@ export class WebSocketManager {
           if (message.event) {
             this.emit(`tournament:${message.event}`, message.data || message);
           }
+        } else if (message.type === 'navigation') {
+          console.log('🧭 WS: Navigation received ->', message);
+          this.handleNavigation(message);
         } else {
           console.log('📡 WS:', message.type, message.data || message);
           this.emit(message.type, message);
@@ -178,6 +193,20 @@ export class WebSocketManager {
 
   isConnected(): boolean {
     return this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  private handleNavigation(message: any): void {
+    const { page, reason } = message;
+    console.log(`🧭 WS: Navigation redirect to ${page} (reason: ${reason})`);
+    
+    if (!page) {
+      console.error('❌ WS: Navigation page is undefined, skipping redirect');
+      return;
+    }
+    
+    setTimeout(() => {
+      (window as any).router.navigate(page);
+    }, 100);
   }
 
   private checkRoomAndRedirect(): void {
