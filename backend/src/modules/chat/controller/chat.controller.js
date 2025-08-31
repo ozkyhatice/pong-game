@@ -14,6 +14,9 @@ import {
 import { 
   isConnected 
 } from '../../../websocket/services/client.service.js';
+import {
+  isUserBlocked
+} from '../../friend/service/friend.service.js';
 
 export async function undeliveredMessageController(userId, connection) {
   // Tek seferde hem undelivered hem unread mesajları gönder
@@ -50,6 +53,12 @@ export async function processChatMessage(message, userId) {
     
     if (userId === receiverId) {
       throw new Error('You cannot send a message to yourself');
+    }
+    
+    // Check if the sender is blocked by the receiver
+    const isBlocked = await isUserBlocked(userId, receiverId);
+    if (isBlocked) {
+      throw new Error('You cannot send a message to this user as they have blocked you');
     }
 
     // Mesajı her zaman DB'ye kaydet (online/offline fark etmez)
@@ -91,6 +100,15 @@ export async function getChatHistoryController(request, reply) {
       return reply.status(400).send({
         success: false,
         error: 'Cannot get chat history with yourself'
+      });
+    }
+    
+    // Check if the current user is blocked by the other user
+    const isBlocked = await isUserBlocked(currentUserId, parseInt(otherUserId));
+    if (isBlocked) {
+      return reply.status(403).send({
+        success: false,
+        error: 'You cannot view chat history with this user as they have blocked you'
       });
     }
     

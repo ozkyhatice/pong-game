@@ -9,6 +9,7 @@ import {
   updateMessageStatus
 } from './chat.service.js';
 import { getUserById } from '../../user/service/user.service.js';
+import { isUserBlocked } from '../../friend/service/friend.service.js';
 
 // WebSocket Specific Operations
 export async function sendMissedMessages(connection, userId) {
@@ -16,11 +17,30 @@ export async function sendMissedMessages(connection, userId) {
     // Hem undelivered hem unread mesajları al
     const undeliveredMessages = await getUndeliveredMessages(userId);
     const unreadMessages = await getUnreadMessages(userId);
+
+    // Engellenen kullanıcıların mesajlarını filtrele (Promise.all kullanmadan, sıralı olarak)
+    const allowedUndelivered = [];
+    for (const msg of undeliveredMessages) {
+      const blockedByRecipient = await isUserBlocked(msg.senderId, userId); // alıcı göndereni engelledi mi?
+      const blockedRecipient = await isUserBlocked(userId, msg.senderId);  // gönderen alıcıyı engelledi mi?
+      if (!blockedByRecipient && !blockedRecipient) {
+        allowedUndelivered.push(msg);
+      }
+    }
+
+    const allowedUnread = [];
+    for (const msg of unreadMessages) {
+      const blockedByRecipient = await isUserBlocked(msg.senderId, userId);
+      const blockedRecipient = await isUserBlocked(userId, msg.senderId);
+      if (!blockedByRecipient && !blockedRecipient) {
+        allowedUnread.push(msg);
+      }
+    }
     
     const messagePayload = {
       type: 'missedMessages',
       data: {
-        undelivered: undeliveredMessages.map(msg => ({
+        undelivered: allowedUndelivered.map(msg => ({
           from: msg.senderId,
           content: msg.content,
           createdAt: msg.createdAt,
@@ -28,7 +48,7 @@ export async function sendMissedMessages(connection, userId) {
           delivered: 0,
           id: msg.id
         })),
-        unread: unreadMessages.map(msg => ({
+        unread: allowedUnread.map(msg => ({
           from: msg.senderId,
           content: msg.content,
           createdAt: msg.createdAt,
@@ -36,7 +56,7 @@ export async function sendMissedMessages(connection, userId) {
           delivered: 1,
           id: msg.id
         })),
-        totalUnreadCount: undeliveredMessages.length + unreadMessages.length
+        totalUnreadCount: allowedUndelivered.length + allowedUnread.length
       }
     };
     
@@ -44,9 +64,9 @@ export async function sendMissedMessages(connection, userId) {
       connection.send(JSON.stringify(messagePayload));
       
       // Undelivered mesajları delivered olarak işaretle
-      await Promise.all(undeliveredMessages.map(msg =>
-        updateMessageStatus(msg.senderId, msg.receiverId, msg)
-      ));
+      for (const msg of allowedUndelivered) {
+        await updateMessageStatus(msg.senderId, msg.receiverId, msg);
+      }
     } catch (err) {
       console.error('Error sending missed messages:', err);
     }
@@ -84,6 +104,18 @@ export async function sendMessage(senderId, receiverId, content, message) {
 export async function handleRealtimeMessage(senderId, receiverId, content, messageObj) {
   // Real-time mesaj işleme logics
   try {
+    // alıcının göndereni engellediğini kontrol et
+    const isBlocked = await isUserBlocked(senderId, receiverId);
+    if (isBlocked) {
+      return { success: false, error: 'Message cannot be delivered because you are blocked by this user' };
+    }
+    
+    // gönderenin alıcıyı engellediğini kontrol et  
+    const isReceiverBlocked = await isUserBlocked(receiverId, senderId);
+    if (isReceiverBlocked) {
+      return { success: false, error: 'Message cannot be delivered because you blocked this user' };
+    }
+    
     await sendMessage(senderId, receiverId, content, messageObj);
     return { success: true };
   } catch (error) {
@@ -93,12 +125,22 @@ export async function handleRealtimeMessage(senderId, receiverId, content, messa
 }
 
 
-export async function getOnlineClients() {
+export async function getOnlineClients(requesterId = null) {
   try {
     const onlineClientIds = await getOnlineClientIds();
     const onlineClients = [];
     
     for (const userId of onlineClientIds) {
+      // If requesterId is provided, hide users who are blocked by the requester
+      // or who have blocked the requester
+      if (requesterId) {
+        const blockedByRequester = await isUserBlocked(userId, requesterId); // is userId blocked by requester?
+        const blockedRequester = await isUserBlocked(requesterId, userId); // is requester blocked by userId?
+        if (blockedByRequester || blockedRequester) {
+          continue; // skip showing this user in the online list
+        }
+      }
+
       const userDetails = await getUserById(userId);
       if (userDetails) {
         onlineClients.push({
