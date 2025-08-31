@@ -15,6 +15,7 @@ export async function init() {
   }
 
   const form = document.getElementById('2fa-form') as HTMLFormElement;
+  const backBtn = document.getElementById('back-btn') as HTMLButtonElement;
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -49,7 +50,6 @@ export async function init() {
 
         // Store auth token and user data
         localStorage.setItem('authToken', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
 
         notify(`2FA verification successful! Welcome ${data.user.username}!`, 'green');
         router.navigate('home');
@@ -66,4 +66,11 @@ export async function init() {
       }
     }
   });
+
+  backBtn?.addEventListener('click', () => {
+    router.navigate('login');
+	sessionStorage.removeItem('tempUserId');
+    sessionStorage.removeItem('pendingOAuthUserId');
+  });
+
 }
