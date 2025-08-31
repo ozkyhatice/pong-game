@@ -7,7 +7,8 @@ import {
   getSentRequestsSchema,
   deleteFriendSchema,
   blockFriendSchema,
-  unblockFriendSchema
+  unblockFriendSchema,
+  getBlockedUsersSchema,
 } from '../schema.js';
 import {
   createFriendRequest,
@@ -18,7 +19,8 @@ import {
   getSentRequestsController,
   deleteFriendController,
   blockFriendController,
-  unblockFriendController
+  unblockFriendController,
+  getBlockedUsersController
 } from '../controller/friend.controller.js';
 import { verifyToken } from '../../../middleware/auth.js';
 
@@ -70,4 +72,10 @@ export default async function friendRoutes(app, options) {
     schema: unblockFriendSchema,
     preHandler: [verifyToken]
   }, unblockFriendController);
+
+  //user blocked list
+  app.get('/:id/blocked', {
+    schema: getBlockedUsersSchema,
+    preHandler: [verifyToken]
+  }, getBlockedUsersController);
 }

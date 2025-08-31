@@ -186,3 +186,18 @@ export const unblockFriendSchema = {
     required: ['id']
   }
 };
+
+export const getBlockedUsersSchema = {
+  summary: 'Get blocked users list',
+  tags: ['Friend'],
+  params: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: "ID of the user whose blocked list is to be fetched"
+      }
+    },
+    required: ['id']  
+  }
+};

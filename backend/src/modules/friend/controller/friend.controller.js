@@ -11,7 +11,8 @@ import {
   unblockFriend,
   getFriendsListWithUserInfo,
   getIncomingFriendRequestsWithUserInfo,
-  getSentRequestsWithUserInfo
+  getSentRequestsWithUserInfo,
+  getBlockedUsers
 } from '../service/friend.service.js';
 
 export async function createFriendRequest(request, reply) {
@@ -204,3 +205,8 @@ export async function deleteFriendController(request, reply) {
   }
 }
 
+export async function getBlockedUsersController(request, reply) {
+  const userId = request.user.id;
+  const blockedUsers = await getBlockedUsers(userId);
+  return reply.code(200).send({ blockedUsers });
+}

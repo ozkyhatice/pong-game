@@ -208,3 +208,13 @@ export async function getSentRequestsWithUserInfo(userId) {
   return enrichedRequests;
 }
 
+export async function getBlockedUsers(userId) {
+  const db = await initDB();
+  
+  // engellenen kullanıcılar 
+  const blockedEntries = await db.all(
+    'SELECT * FROM blocked_users WHERE blockerId = ?', 
+    [userId]
+  );
+  return blockedEntries;
+}
