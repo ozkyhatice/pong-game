@@ -9,9 +9,7 @@ declare global {
 }
 
 export function init() {
-
-
-
+	//game lobby bi dah agirilmesin room id yoksa
 
   const roomStatus = document.getElementById('room-status');
   const roomId = document.getElementById('room-id');
