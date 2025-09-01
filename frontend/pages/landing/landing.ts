@@ -287,11 +287,6 @@ export function init() {
   fadeOutLandingUIOnce();
         event.preventDefault();
         break;
-      case 'KeyG':
-        (window as any).closeBabylonGame && (window as any).closeBabylonGame();
-        (window as any).router && (window as any).router.navigate('login');
-        event.preventDefault();
-        break;
     }
   });
 
