@@ -71,6 +71,10 @@ export class GameService {
     return this.wsManager.isConnected();
   }
 
+  getMatchHistory(userId?: number): void {
+    this.send('history', { userId });
+  }
+
   onRoomCreated(callback: (data: any) => void): void { this.wsManager.on('room-created', callback); }
   onPlayerJoined(callback: (data: any) => void): void { this.wsManager.on('joined', callback); }
   onGameStarted(callback: (data: any) => void): void { this.wsManager.on('game-started', callback); }
