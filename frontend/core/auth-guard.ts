@@ -1,5 +1,6 @@
 import { notify } from './notify.js';
 import { WebSocketManager } from './WebSocketManager.js';
+import { OnlineUsersService } from '../services/OnlineUsersService.js';
 
 export class AuthGuard {
   public static isAuthenticated(): boolean {
@@ -45,6 +46,13 @@ export class AuthGuard {
         const token = localStorage.getItem('authToken');
         if (token) {
           console.log('🔌 AUTH: Auto-connecting WebSocket after page reload');
+          
+          // Initialize OnlineUsersService when WebSocket connects
+          const onlineUsersService = OnlineUsersService.getInstance();
+          wsManager.on('connected', () => {
+            onlineUsersService.initialize();
+          });
+          
           wsManager.connect(token);
         }
       }
@@ -59,5 +67,8 @@ export class AuthGuard {
     const wsManager = WebSocketManager.getInstance();
     wsManager.disconnect();
 
+    // Clean up OnlineUsersService
+    const onlineUsersService = OnlineUsersService.getInstance();
+    onlineUsersService.destroy();
   }
 }

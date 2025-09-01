@@ -4,6 +4,7 @@ import { AuthGuard } from '../../core/auth-guard.js';
 import { ProfileComponent, UserProfile } from './components/ProfileComponent.js';
 import { GameAreaComponent } from './components/GameAreaComponent.js';
 import { WebSocketManager } from '../../core/WebSocketManager.js';
+import { OnlineUsersService } from '../../services/OnlineUsersService.js';
 
 export async function init() {
 
@@ -42,11 +43,17 @@ export async function init() {
     profileContainer.appendChild(profileComponent.getElement());
     gameAreaContainer.appendChild(gameAreaComponent.getElement());
 
-    //ws baglantisi ----------------------------------------
+    // WebSocket connection
     console.log(`Connecting to WebSocket...:${authToken}`);
     const wsManager = WebSocketManager.getInstance();
+    const onlineUsersService = OnlineUsersService.getInstance();
+    
+    // Initialize OnlineUsersService when WebSocket connects
+    wsManager.on('connected', () => {
+      onlineUsersService.initialize();
+    });
+    
     wsManager.connect(authToken ?? '');
-    //-------------------------------------------------------
 
     console.log('Home page loaded');
 
