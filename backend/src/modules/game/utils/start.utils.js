@@ -16,11 +16,10 @@ const WINNING_SCORE = 5;
 
 export async function updateBall(room, connection) {
     const ball = room.state.ball;
-    // Use explicit player order to maintain lobby consistency
-    const playerIds = room.playerOrder || Array.from(room.players);
+    const playerIds = Array.from(room.players).sort((a, b) => a - b); // Consistent sorting by ID
     const [player1Id, player2Id] = playerIds;
-    const paddle1 = room.state.paddles[player1Id]; // Left paddle (first player in room)
-    const paddle2 = room.state.paddles[player2Id]; // Right paddle (second player in room)
+    const paddle1 = room.state.paddles[player1Id]; // Left paddle (lowest ID)
+    const paddle2 = room.state.paddles[player2Id]; // Right paddle (highest ID)
     
     if (!paddle1 || !paddle2) {
         return;
@@ -133,7 +132,7 @@ async function endGame(room, winnerId) {
     room.winnerId = winnerId;
     room.endDate = new Date();
     
-    const players = room.playerOrder || Array.from(room.players); // Use explicit player order
+    const players = Array.from(room.players).sort((a, b) => a - b); // Consistent sorting
     const loserScore = room.state.score[players.find(p => p !== winnerId)] || 0;
     console.log(`🏆 GAME END: Match completed -> Winner: ${winnerId}, Score: ${room.state.score[winnerId]}-${loserScore}, Room: ${room.id}`);
     
@@ -154,7 +153,7 @@ async function endGame(room, winnerId) {
         }
         
         // Update player stats
-        const players = room.playerOrder || Array.from(room.players); // Use explicit player order
+        const players = Array.from(room.players).sort((a, b) => a - b); // Consistent sorting
         const playerStats = players.map(playerId => ({
             userId: playerId,
             isWinner: playerId === winnerId
@@ -188,25 +187,10 @@ async function endGame(room, winnerId) {
 }
 
 export async function broadcastGameState(room) {
-    // Create ordered score object based on room player order
-    const playerOrder = room.playerOrder || Array.from(room.players);
-    const orderedScore = {};
-    const orderedPaddles = {};
-    
-    // Build score and paddles in room order
-    playerOrder.forEach(playerId => {
-        if (room.state.score[playerId] !== undefined) {
-            orderedScore[playerId] = room.state.score[playerId];
-        }
-        if (room.state.paddles[playerId] !== undefined) {
-            orderedPaddles[playerId] = room.state.paddles[playerId];
-        }
-    });
-
     const stateData = {
         ball: room.state.ball,
-        paddles: orderedPaddles,
-        score: orderedScore,
+        paddles: room.state.paddles,
+        score: room.state.score,
         gameOver: room.state.gameOver
     };
 

@@ -30,10 +30,7 @@ export function init() {
 
 		try {
 			const gameResult = JSON.parse(gameResultString);
-			// Use room player order if available, otherwise fall back to score keys
-			const playerIds = gameResult.playerOrder && gameResult.playerOrder.length >= 2 
-				? gameResult.playerOrder.map((id: number) => id.toString())
-				: Object.keys(gameResult.finalScore || {});
+			const playerIds = Object.keys(gameResult.finalScore || {});
 			
 			if (playerIds.length < 2) return;
 
