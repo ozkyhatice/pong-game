@@ -26,9 +26,7 @@ export async function createTournamentService(data, userId, connection) {
         throw error;
     }
     
-    const newTournamentId = await getActiveTournamentId();
-    console.log(`Tournament "${tournamentName}" created by user ${userId} with max players ${maxPlayers} (ID: ${newTournamentId})`);
-    
+    const newTournamentId = await getActiveTournamentId();    
     // Tüm online kullanıcılara yeni tournament oluşturulduğunu bildir
     await broadcastTournamentUpdateToAll({
         type: 'tournament',
@@ -59,7 +57,6 @@ export async function joinTournamentService(data, userId, connection) {
     `;
     try {
         const result = await db.run(sql, [tournamentId, userId]);
-        console.log(`User ${userId} joined tournament ${tournamentId} and reset elimination status`);
         return result;
     } catch (error) {
         console.error('Error joining tournament:', error);
@@ -72,8 +69,8 @@ export async function startTournamentService(tournamentId) {
     const db = await initDB();
     
     // Turnuva durumunu 'active' yap
-    await db.run('UPDATE tournaments SET status = "active", startAt = ? WHERE id = ?', 
-        [new Date().toISOString(), tournamentId]);
+    const sql = `UPDATE tournaments SET status = "active", startAt = ? WHERE id = ?`;
+    await db.run(sql, [new Date().toISOString(), tournamentId]);
     
     // Katılımcıları al ve bracket oluştur
     const participants = await getTournamentParticipants(tournamentId);
@@ -301,32 +298,59 @@ export async function processTournamentMatchResult(matchId, winnerId) {
     }, 5000);
 }
 
-// Tournament pairings'i veritabanına kaydetme
+/**
+ * Tournament eşleşmelerini (pairings) veritabanına kaydetme fonksiyonu
+ * 
+ * Bu fonksiyon, turnuva bracket'ındaki tüm eşleşmeleri veritabanına kaydeder.
+ * Bracket, iki boyutlu bir dizi olup, ilk boyut turnuva roundlarını,
+ * ikinci boyut her bir rounddaki maçları temsil eder.
+ * 
+ * Örnek bracket yapısı:
+ * [
+ *   [ // Round 1 (Semifinal)
+ *     { player1: {...}, player2: {...}, winner: null }, // Match 1
+ *     { player1: {...}, player2: {...}, winner: null }  // Match 2
+ *   ],
+ *   [ // Round 2 (Final)
+ *     { player1: null, player2: null, winner: null }    // Final match
+ *   ]
+ * ]
+ * 
+ * @param {number} tournamentId - Turnuva ID'si
+ * @param {Array} bracket - Turnuva bracket'ı (eşleşme ağacı)
+ */
 async function storeTournamentPairings(tournamentId, bracket) {
     const db = await initDB();
     
-    // Mevcut pairings'i temizle
+    // Mevcut pairings'i temizle - Turnuvaya ait tüm eski eşleşmeleri siler
+    // Bu, bracket'ı yeniden yapılandırırken veya güncellerken önemlidir
     await db.run('DELETE FROM tournament_pairings WHERE tournamentId = ?', [tournamentId]);
     
-    // Her round için pairings'i kaydet (forEach yerine for...of kullan async için)
+    // roundIndex: 0=Semifinal, 1=Final (4 kişilik turnuva için)
     for (let roundIndex = 0; roundIndex < bracket.length; roundIndex++) {
         const round = bracket[roundIndex];
+        // Her rounddaki maçları pozisyonlarıyla birlikte kaydet
         for (let position = 0; position < round.length; position++) {
             const match = round[position];
+            // tournament_pairings tablosuna eşleşmeyi kaydet
+            // roundIndex+1 yapılır çünkü veritabanında roundlar 1'den başlar (kod içinde 0'dan)
+            // position: Aynı round içindeki maçın pozisyonu (0, 1, ...)
+            // player1Id/player2Id: Eşleşmedeki oyuncuların ID'leri (henüz belirlenmemişse null)
             await db.run(
                 `INSERT INTO tournament_pairings (tournamentId, round, position, player1Id, player2Id) 
                  VALUES (?, ?, ?, ?, ?)`,
                 [
                     tournamentId, 
-                    roundIndex + 1, 
-                    position, 
-                    match.player1?.id || null, 
-                    match.player2?.id || null
+                    roundIndex + 1,  // Veritabanında round 1'den başlar
+                    position,        // Maçın round içindeki pozisyonu
+                    match.player1?.id || null, // Optional chaining - player1 null ise null döndürür (final maçında, henüz yarı final sonuçlanmadığında null olur)
+                    match.player2?.id || null  // Optional chaining - player2 null ise null döndürür (final maçında, henüz yarı final sonuçlanmadığında null olur)
                 ]
             );
         }
     }
     
+    // İşlem tamamlandığında log
     console.log(`💾 TOURNAMENT ${tournamentId}: Bracket pairings stored in database`);
 }
 
@@ -661,3 +685,30 @@ export async function handlePlayerDisconnection(userId, tournamentId) {
         [userId]
     );
 }
+
+
+export async function getUserTournamentStatus(tournamentId, userId) {
+    // Kullanıcının turnuva katılımcısı olup olmadığını ve durumunu kontrol et
+    const db = await initDB();
+    
+    // Turnuva detaylarını al
+    const tournamentDetails = await getTournamentDetailsService(tournamentId);
+    
+    // Kullanıcının katılımcı olup olmadığını kontrol et
+    const isParticipant = tournamentDetails && tournamentDetails.participants.some(p => p.id === userId);
+    let userStatus = 'spectator'; // Varsayılan durum: seyirci
+    
+    // Eğer kullanıcı katılımcı ise, elenme durumunu kontrol et
+    if (isParticipant) {
+        const sql = 'SELECT isEliminated FROM users WHERE id = ?';
+        const userInfo = await db.get(sql, [userId]);
+        userStatus = userInfo?.isEliminated ? 'eliminated' : 'active';
+    }
+    
+    return {
+        isParticipant,
+        userStatus // 'spectator', 'active', 'eliminated'
+    };
+}
+
+

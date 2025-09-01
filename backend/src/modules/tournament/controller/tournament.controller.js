@@ -1,4 +1,4 @@
-import { createTournamentService, joinTournamentService, startTournamentService, getTournamentDetailsService, leaveTournamentService, getTournamentBracketService } from '../service/tournament.service.js';
+import { createTournamentService, joinTournamentService, startTournamentService, getTournamentDetailsService, leaveTournamentService, getTournamentBracketService, getUserTournamentStatus } from '../service/tournament.service.js';
 import { broadcastToAll } from '../../../websocket/services/client.service.js';
 import { countTournamentPlayers, getActiveTournamentId, broadcastToTournamentPlayers, broadcastTournamentUpdateToAll } from '../utils/tournament.utils.js';
 import { getStatusOfTournament, isUserInTournament, getTournamentParticipants } from '../utils/tournament.utils.js';
@@ -98,7 +98,6 @@ export async function leaveTournament(data, userId, connection) {
     }
     
     if (!(await isUserInTournament(userId, tournamentId))) {
-        console.log(`⚠️ User ${userId} tried to leave tournament ${tournamentId} but is not in it - ignoring`);
         return; // Silently ignore instead of throwing error
     }
     
@@ -123,12 +122,8 @@ export async function leaveTournament(data, userId, connection) {
 // Turnuva detaylarını getirme (herkes görebilir)
 export async function getTournamentDetails(data, userId, connection) {
     try {
-        const tournamentId = data.tournamentId || await getActiveTournamentId();
-        
-        console.log(`📊 TOURNAMENT DETAILS: Request from user ${userId}, tournamentId: ${tournamentId}`);
-        
+        const tournamentId = data.tournamentId || await getActiveTournamentId();        
         if (!tournamentId) {
-            console.log(`📊 TOURNAMENT DETAILS: No active tournament found`);
             const response = {
                 type: 'tournament',
                 event: 'details',
@@ -140,21 +135,8 @@ export async function getTournamentDetails(data, userId, connection) {
         
         const tournamentDetails = await getTournamentDetailsService(tournamentId);
         
-        console.log(`📊 TOURNAMENT DETAILS: Retrieved tournament data:`, {
-            id: tournamentDetails?.id,
-            status: tournamentDetails?.status,
-            participants: tournamentDetails?.participants?.length || 0,
-            matches: tournamentDetails?.matches?.length || 0
-        });
-        
-        // Check if user is participant and their elimination status
-        const isParticipant = tournamentDetails && tournamentDetails.participants.some(p => p.id === userId);
-        let userStatus = 'spectator';
-        if (isParticipant) {
-            const db = await initDB();
-            const userInfo = await db.get('SELECT isEliminated FROM users WHERE id = ?', [userId]);
-            userStatus = userInfo?.isEliminated ? 'eliminated' : 'active';
-        }
+        // Kullanıcının turnuva durumunu servis fonksiyonu ile al
+        const { isParticipant, userStatus } = await getUserTournamentStatus(tournamentId, userId);
         
         const response = {
             type: 'tournament',
@@ -165,17 +147,9 @@ export async function getTournamentDetails(data, userId, connection) {
                 isParticipant
             }
         };
-        
-        console.log(`📊 TOURNAMENT DETAILS: Sending response to user ${userId}:`, {
-            hasTournament: !!tournamentDetails,
-            userStatus,
-            isParticipant
-        });
-        
         connection.send(JSON.stringify(response));
         
     } catch (error) {
-        console.error(`❌ Error getting tournament details for user ${userId}:`, error);
         const errorResponse = {
             type: 'tournament',
             event: 'details',
@@ -211,7 +185,6 @@ export async function getTournamentBracket(data, userId, connection) {
         connection.send(JSON.stringify(response));
         
     } catch (error) {
-        console.error('Error getting tournament bracket:', error);
         const errorResponse = {
             type: 'tournament',
             event: 'bracket',

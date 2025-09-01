@@ -3,6 +3,7 @@ import { undeliveredMessageController, onlineClientsController } from '../../mod
 import { userRoom , rooms} from '../../modules/game/controller/game.controller.js';
 import { metrics } from '../../plugins/metrics.js';
 import { clearAll } from '../../modules/game/utils/end.utils.js';
+import { getCurrentTournamentId } from '../services/client.service.js';
 
 export async function handleConnection(connection, request) {
   console.log('\nWebSocket connection request received');
@@ -49,15 +50,11 @@ export async function handleConnection(connection, request) {
 export async function handleDisconnect(userId) {
   if (userId) {
     // Check if user is in a tournament before disconnecting
-    const { initDB } = await import('../../config/db.js');
-    const db = await initDB();
-    const user = await db.get('SELECT currentTournamentId FROM users WHERE id = ?', [userId]);
-    
+    const user = getCurrentTournamentId(userId);
     if (user && user.currentTournamentId) {
       console.log(`User ${userId} is in tournament ${user.currentTournamentId}, removing from tournament`);
       // Remove user from tournament
-      await db.run('UPDATE users SET currentTournamentId = NULL WHERE id = ?', [userId]);
-      
+      await removeUserFromTournament(userId);
       // Broadcast tournament update to other participants
       const { broadcastToTournamentPlayers } = await import('../../modules/tournament/utils/tournament.utils.js');
       await broadcastToTournamentPlayers(user.currentTournamentId, {

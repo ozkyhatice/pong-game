@@ -208,6 +208,8 @@ export async function getSentRequestsWithUserInfo(userId) {
   return enrichedRequests;
 }
 
+
+//engellenen kullanıcıları listelerken bilgilerini göstermek users tablosundan alındı
 export async function getBlockedUsers(userId) {
   const db = await initDB();
   
@@ -216,5 +218,30 @@ export async function getBlockedUsers(userId) {
     'SELECT * FROM blocked_users WHERE blockerId = ?', 
     [userId]
   );
-  return blockedEntries;
+  const blockedUsers = [];
+  for (const entry of blockedEntries) {
+    const blockedInfo = await db.get(
+      'SELECT id, username, avatar, wins, losses FROM users WHERE id = ?',
+      [entry.blockedId]
+    );
+    if (blockedInfo) {
+      blockedUsers.push(blockedInfo);
+    }
+  }
+  return blockedUsers;
+
 }
+
+export async function isUserBlocked(senderId, receiverId) {
+  const db = await initDB();
+  
+  // Check if receiver has blocked the sender
+  const blockEntry = await db.get(
+    'SELECT * FROM blocked_users WHERE blockerId = ? AND blockedId = ?',
+    [receiverId, senderId]
+  );
+  
+  return blockEntry !== undefined;
+}
+
+

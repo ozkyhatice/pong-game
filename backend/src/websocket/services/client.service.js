@@ -26,7 +26,12 @@ export async function broadcastToAll(message) {
   });
 }
 
-
+export async function getCurrentTournamentId(userId) {
+  const { initDB } = await import('../../config/db.js');
+  const db = await initDB();
+  const user = await db.get('SELECT currentTournamentId FROM users WHERE id = ?', [userId]);
+  return user ? user.currentTournamentId : null;
+}
 
 export async function broadcastUserStatus(userId, status) {
   await broadcastToAll({
