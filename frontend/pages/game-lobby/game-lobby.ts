@@ -9,7 +9,15 @@ declare global {
 }
 
 export function init() {
-	//game lobby bi dah agirilmesin room id yoksa
+  const appState = AppState.getInstance();
+  const currentRoom: RoomInfo | null = appState.getCurrentRoom();
+
+  //game lobby bi dah agirilmesin room id yoksa
+  if (!currentRoom?.roomId) {
+    notify('No room found');
+    router.navigate('home');
+  }
+
 
   const roomStatus = document.getElementById('room-status');
   const roomId = document.getElementById('room-id');
@@ -20,10 +28,8 @@ export function init() {
   const player1Avatar = document.getElementById('player1-avatar') as HTMLImageElement;
   const player2Avatar = document.getElementById('player2-avatar') as HTMLImageElement;
 
-  const appState = AppState.getInstance();
   const gameService = new GameService();
   const userService = new UserService();
-  const currentRoom: RoomInfo | null = appState.getCurrentRoom();
 
   if (readyBtn) readyBtn.addEventListener('click', handleReady);
   if (leaveBtn) leaveBtn.addEventListener('click', handleLeave);

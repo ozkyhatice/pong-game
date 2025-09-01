@@ -200,7 +200,7 @@ export class WebSocketManager {
     console.log(`🧭 WS: Navigation redirect to ${page} (reason: ${reason})`);
     
     if (!page) {
-      console.error('❌ WS: Navigation page is undefined, skipping redirect');
+      console.log('❌ WS: Navigation page is undefined, skipping redirect');
       return;
     }
     

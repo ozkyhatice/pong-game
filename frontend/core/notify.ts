@@ -41,7 +41,7 @@ export function notify(message: string, color?: string) {
   toast.style.transition = 'opacity 0.3s';
   toast.style.opacity = '1';
 
-  const msg = document.createElement('span');
+  const msg = document.createElement('b');
   msg.textContent = displayMsg;
   toast.appendChild(msg);
 

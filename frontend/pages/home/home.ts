@@ -5,6 +5,9 @@ import { ProfileComponent, UserProfile } from './components/ProfileComponent.js'
 import { GameAreaComponent } from './components/GameAreaComponent.js';
 import { WebSocketManager } from '../../core/WebSocketManager.js';
 import { OnlineUsersService } from '../../services/OnlineUsersService.js';
+import { ChatService } from '../../services/ChatService.js';
+import { UserService } from '../../services/UserService.js';
+import { GameService } from '../../services/GameService.js';
 
 export async function init() {
 
@@ -55,10 +58,44 @@ export async function init() {
     
     wsManager.connect(authToken ?? '');
 
-    console.log('Home page loaded');
+    const chatService = new ChatService();
+    
+    // yeni mesaji notify ile bildir
+    chatService.onNewMessage((message) => {
+      console.log('New chat message:', message);
+      const userService = new UserService();
+      userService.getUserById(message.from).then(user => {
+        notify(`New message from ${user?.username || message.sender}: ${message.content}`);
+      });
+    });
 
+    const gameService = new GameService();
+
+    // oyun mesajlarinda oyun ekranina yonlendir
+    gameService.onStateUpdate((update) => {
+      console.log('Game state updated:', update);
+      router.navigate('remote-game');
+    });
+
+    gameService.onRoomCreated((room) => {
+      console.log('Game room created:', room);
+      router.navigate('game-lobby');
+    });
+
+    gameService.onGameResumed((game) => {
+      console.log('Game resumed:', game);
+      router.navigate('remote-game');
+    });
+
+    gameService.onGamePaused((game) => {
+      console.log('Game paused:', game);
+      router.navigate('remote-game');
+    });
+
+    console.log('Home page loaded');
+    
   } catch (error) {
-    console.error('Error loading user data:', error);
+    console.log('Error loading user data:', error);
     
     // Token geçersizse temizle ve landing'e yönlendir
     AuthGuard.logout();
