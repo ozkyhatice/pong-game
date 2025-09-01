@@ -1,17 +1,20 @@
 import { createRoom, sendMessage, checkJoinable, addPlayerToRoom, displayRoomState} from "../utils/join.utils.js";
-import { updateBall, broadcastGameState} from "../utils/start.utils.js";
 import { broadcast, clearAll } from "../utils/end.utils.js";
 import { startGameLoop, stopGameLoop, pauseGame, resumeGame } from "../utils/game-loop.utils.js";
 import { getClientById } from "../../../websocket/services/client.service.js";
+import { joinMatchmakingQueue, leaveMatchmakingQueue, cancelMatchmaking, getMatchmakingStatus } from "./match-making.controller.js";
+import { getMatchHistoryByUserId } from "../services/game.service.js";
 
 export const rooms = new Map();
 export const userRoom = new Map(); // userId -> roomId
 
 export async function handleGameMessage(msgObj, userId, connection) {
-
+    console.log(`🎮 GAME: Message received -> User: ${userId}, Event: ${msgObj.event}`);
+    
     const { event, data} = msgObj;
     const handler = eventHandlers[event];
     if (!handler) {
+        console.error(`❌ GAME: No handler for event: ${event}`);
         throw new Error(`No handler for event: ${event}`);
     }
     return await handler(data, userId, connection);
@@ -25,8 +28,14 @@ const eventHandlers = {
     leave: leaveGame,
     ready: handlePlayerReady,
     reconnect: handleReconnectRequest,
+    history: getMatchHistoryByUserId,
     'game-invite': handleGameInvite,
     'invite-accepted': handleInviteAccepted,
+    // match-making
+    'matchmaking-join-queue': joinMatchmakingQueue,
+    'matchmaking-leave-queue': leaveMatchmakingQueue,
+    'matchmaking-cancel': cancelMatchmaking,
+    'matchmaking-status': getMatchmakingStatus,
 };
 
 async function handleReconnectRequest(data, userId, connection) {

@@ -48,6 +48,29 @@ export class GameService {
     this.send('invite-accepted', { senderId });
   }
 
+  // Matchmaking methods
+  joinMatchmakingQueue(): void {
+    console.log('🎮 GAMESERVICE: Sending matchmaking-join-queue event...');
+    this.send('matchmaking-join-queue', {});
+  }
+
+  leaveMatchmakingQueue(): void {
+    console.log('🎮 GAMESERVICE: Sending matchmaking-leave-queue event...');
+    this.send('matchmaking-leave-queue', {});
+  }
+
+  cancelMatchmaking(): void {
+    this.send('matchmaking-cancel', {});
+  }
+
+  getMatchmakingStatus(): void {
+    this.send('matchmaking-status', {});
+  }
+
+  isConnected(): boolean {
+    return this.wsManager.isConnected();
+  }
+
   onRoomCreated(callback: (data: any) => void): void { this.wsManager.on('room-created', callback); }
   onPlayerJoined(callback: (data: any) => void): void { this.wsManager.on('joined', callback); }
   onGameStarted(callback: (data: any) => void): void { this.wsManager.on('game-started', callback); }
@@ -62,6 +85,12 @@ export class GameService {
   onGamePaused(callback: (data: any) => void): void { this.wsManager.on('paused', callback); }
   onGameResumed(callback: (data: any) => void): void { this.wsManager.on('resumed', callback); }
   onPlayerReconnected(callback: (data: any) => void): void { this.wsManager.on('reconnected', callback); }
+
+  // Matchmaking event listeners
+  onMatchmakingJoined(callback: (data: any) => void): void { this.wsManager.on('matchmaking-joined', callback); }
+  onMatchmakingLeft(callback: (data: any) => void): void { this.wsManager.on('matchmaking-left', callback); }
+  onMatchmakingStatus(callback: (data: any) => void): void { this.wsManager.on('matchmaking-status', callback); }
+  onMatchFound(callback: (data: any) => void): void { this.wsManager.on('match-found', callback); }
 
   private send(event: GameMessage['event'], data: any = {}): void {
     this.wsManager.send({ type: 'game', event, data });

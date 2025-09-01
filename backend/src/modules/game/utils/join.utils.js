@@ -17,7 +17,7 @@ export async function sendMessage(connection, type, event, data = {}) {
 }
 
 
-export async function createRoom(userId, connection, rooms, tournamentId = null, round = null) {
+export async function createRoom(userId, connection, rooms, tournamentId = null, round = null, isMatchmaking = false) {
     const roomId = await generateRoomId();
     const room = {
         id: roomId,
@@ -47,7 +47,8 @@ export async function createRoom(userId, connection, rooms, tournamentId = null,
         tournamentId: tournamentId,  // Turnuva ID'si (turnuva maçıysa)
         round: round,                // Round bilgisi (turnuva maçıysa)
         matchId: null,               // Match ID (DB'ye kayıt sonrası set edilir)
-        ballDirectionCounter: 0      // Top yönü sayacı (adil alternatif için)
+        ballDirectionCounter: 0,     // Top yönü sayacı (adil alternatif için)
+        isMatchmaking: false // Matchmaking room mu?
     };
     rooms.set(roomId, room);
     userRoom.set(userId, roomId); // Kullanıcı ve oda ilişkisi->connection close için
