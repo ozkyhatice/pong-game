@@ -11,7 +11,7 @@ const BALL_RADIUS = 8;
 const BALL_SPEED = 5;
 const PADDLE_WIDTH = 10;
 const PADDLE_HEIGHT = 100;
-const PADDLE_SPEED = 8;
+const PADDLE_SPEED = 15;
 const WINNING_SCORE = 5;
 
 export async function updateBall(room, connection) {
@@ -47,13 +47,18 @@ export async function updateBall(room, connection) {
         
         // Ball hits left paddle - bounce to right
         ball.x = PADDLE_WIDTH + BALL_RADIUS; // Position ball just outside paddle
-        ball.vx = Math.abs(ball.vx); // Make sure ball goes right
+        
+        // Increase ball speed on paddle hit
+        const currentSpeed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+        const newSpeed = Math.min(currentSpeed * 1.05, BALL_SPEED * 1.8); // Max 1.8x original speed
+        
+        ball.vx = Math.abs(ball.vx) * (newSpeed / currentSpeed); // Make sure ball goes right with increased speed
         
         // Add angle based on where ball hit the paddle
         const paddleCenter = paddle1.y + PADDLE_HEIGHT / 2;
         const hitOffset = ball.y - paddleCenter;
         const normalizedOffset = hitOffset / (PADDLE_HEIGHT / 2); // -1 to 1
-        ball.vy = normalizedOffset * BALL_SPEED * 0.5; // Add vertical component
+        ball.vy = normalizedOffset * newSpeed * 0.5; // Add vertical component with new speed
         
     }
     
@@ -66,13 +71,18 @@ export async function updateBall(room, connection) {
         
         // Ball hits right paddle - bounce to left
         ball.x = CANVAS_WIDTH - PADDLE_WIDTH - BALL_RADIUS; // Position ball just outside paddle
-        ball.vx = -Math.abs(ball.vx); // Make sure ball goes left
+        
+        // Increase ball speed on paddle hit
+        const currentSpeed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+        const newSpeed = Math.min(currentSpeed * 1.05, BALL_SPEED * 1.8); // Max 1.8x original speed
+        
+        ball.vx = -Math.abs(ball.vx) * (newSpeed / currentSpeed); // Make sure ball goes left with increased speed
         
         // Add angle based on where ball hit the paddle
         const paddleCenter = paddle2.y + PADDLE_HEIGHT / 2;
         const hitOffset = ball.y - paddleCenter;
         const normalizedOffset = hitOffset / (PADDLE_HEIGHT / 2); // -1 to 1
-        ball.vy = normalizedOffset * BALL_SPEED * 0.5; // Add vertical component
+        ball.vy = normalizedOffset * newSpeed * 0.5; // Add vertical component with new speed
         
     }
     

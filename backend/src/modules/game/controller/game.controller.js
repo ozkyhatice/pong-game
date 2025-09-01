@@ -168,24 +168,20 @@ export async function handlePlayerMove(data, userId) {
         return;
     }
     
-    // Oyuncunun paddle'ını güncelle
     if (room.state.paddles[userId]) {
         const oldY = room.state.paddles[userId].y;
         
-        // Game constants (should match frontend and game logic)
         const CANVAS_HEIGHT = 400;
         const PADDLE_HEIGHT = 100;
         
-        // Clamp paddle position within bounds
-        const newY = Math.max(0, Math.min(CANVAS_HEIGHT - PADDLE_HEIGHT, data.y));
+        // Direct position update with boundary safety margins
+        const targetY = Math.max(1, Math.min(CANVAS_HEIGHT - PADDLE_HEIGHT - 1, data.y));
         
-        room.state.paddles[userId].y = newY;
+        // Direct assignment for instant response
+        room.state.paddles[userId].y = targetY;
         
-        // Only update game state if position actually changed
-        if (oldY !== newY) {
-            // Oyun durumunu güncelle ve tüm oyunculara gönder
-            await stateGame(data, userId);
-        }
+        // Always update for smoother real-time movement
+        await stateGame(data, userId);
     } else {
         console.log(`❌ MOVE ERROR: Paddle not found for user ${userId}`);
     }

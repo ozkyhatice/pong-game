@@ -90,6 +90,12 @@ export function init() {
   let myPlayerId: number | null = null;
   let keysPressed: { [key: string]: boolean } = {};
   let pauseCountdownTimer: number | null = null;
+  
+  // Smooth movement variables
+  let lastUpdateTime = 0;
+  let animationFrameId: number | null = null;
+  let targetPaddlePositions: { [userId: number]: { y: number, targetY: number, velocity: number } } = {};
+  let lastServerUpdate = 0;
 
   if (roomIdEl) roomIdEl.textContent = `ROOM: ${currentRoom.roomId}`;
   if (leaveGameBtn) leaveGameBtn.addEventListener('click', handleLeaveGame);
@@ -104,24 +110,21 @@ export function init() {
   initPlayerInfo();
   initRoomPlayerNames(); // Show player names immediately from room data
 
-  // Keyboard controls
-  document.addEventListener('keydown', (e) => {
-    keysPressed[e.code] = true;
-    handleKeyPress();
-  });
-
-  document.addEventListener('keyup', (e) => {
-    keysPressed[e.code] = false;
-  });
+  // Keyboard controls handled in smooth animation section
 
   // Game Service Events
   gameService.onStateUpdate((data) => {
     if (gameStatusEl) gameStatusEl.textContent = '⚔️ BATTLE IN PROGRESS ⚔️';
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚔️ BATTLE ⚔️';
-    gameState = data.state;
+    
+    // Update server state and setup interpolation
+    const newState = data.state;
+    updatePaddleTargets(newState);
+    gameState = newState;
+    lastServerUpdate = performance.now();
+    
     updateScores();
     updatePlayerNames();
-    draw();
   });
 
   gameService.onGameStarted((data) => {
@@ -198,6 +201,9 @@ export function init() {
   // Initialize game
   initGame();
   
+  // Start smooth animation loop
+  startSmoothAnimation();
+  
   // Start countdown before game begins
   startCountdown();
 
@@ -253,14 +259,14 @@ export function init() {
     if (!myPaddle) return;
     
     let newY: number | null = null;
-    const paddleSpeed = 10;
+    const paddleSpeed = 15; // Balanced speed for responsive control
     const paddleHeight = 100;
-    const gameHeight = 400; // Original game canvas height
+    const gameHeight = 400;
     
     if (keysPressed['KeyW'] || keysPressed['ArrowUp']) {
-      newY = Math.max(0, myPaddle.y - paddleSpeed);
+      newY = Math.max(1, myPaddle.y - paddleSpeed); // Minimum 1px from top
     } else if (keysPressed['KeyS'] || keysPressed['ArrowDown']) {
-      newY = Math.min(gameHeight - paddleHeight, myPaddle.y + paddleSpeed);
+      newY = Math.min(gameHeight - paddleHeight - 1, myPaddle.y + paddleSpeed); // 1px margin from bottom
     }
     
     if (newY !== null) {
@@ -511,14 +517,13 @@ export function init() {
       const myPaddle = gameState.paddles[myPlayerId];
       if (!myPaddle) return;
 
-      const moveSpeed = 8; // Adjust speed as needed
+      const moveSpeed = 22; // Even faster mobile movement for smoothness
       let newY = myPaddle.y;
 
       if (currentDirection === 'up') {
         newY = Math.max(0, myPaddle.y - moveSpeed);
       } else if (currentDirection === 'down') {
-        // Use original canvas dimensions (400px height) for game logic
-        newY = Math.min(400 - 100, myPaddle.y + moveSpeed); // 100 is paddle height, 400 is game height
+        newY = Math.min(400 - 100, myPaddle.y + moveSpeed);
       }
 
       if (newY !== myPaddle.y) {
@@ -681,4 +686,109 @@ export function init() {
       console.error('Error initializing player names:', e);
     }
   }
+
+  // Smooth animation functions
+  function startSmoothAnimation() {
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    
+    function animate(currentTime: number) {
+      const deltaTime = currentTime - lastUpdateTime;
+      lastUpdateTime = currentTime;
+      
+      // Update paddle interpolation
+      updatePaddleInterpolation(deltaTime);
+      
+      // Draw the frame
+      draw();
+      
+      // Continue animation loop
+      animationFrameId = requestAnimationFrame(animate);
+    }
+    
+    lastUpdateTime = performance.now();
+    animationFrameId = requestAnimationFrame(animate);
+  }
+
+  function updatePaddleTargets(newState: GameState) {
+    if (!newState.paddles) return;
+    
+    Object.keys(newState.paddles).forEach(userIdStr => {
+      const userId = parseInt(userIdStr);
+      const serverPaddle = newState.paddles[userId];
+      
+      if (!targetPaddlePositions[userId]) {
+        // Initialize paddle position
+        targetPaddlePositions[userId] = {
+          y: serverPaddle.y,
+          targetY: serverPaddle.y,
+          velocity: 0
+        };
+      } else {
+        // Update target position
+        targetPaddlePositions[userId].targetY = serverPaddle.y;
+      }
+    });
+  }
+
+  function updatePaddleInterpolation(deltaTime: number) {
+    if (!gameState?.paddles) return;
+    
+    const timeSinceLastUpdate = performance.now() - lastServerUpdate;
+    const interpolationFactor = Math.min(timeSinceLastUpdate / 100, 1); // Interpolate over 100ms
+    
+    Object.keys(targetPaddlePositions).forEach(userIdStr => {
+      const userId = parseInt(userIdStr);
+      const paddlePos = targetPaddlePositions[userId];
+      
+      if (!paddlePos || !gameState?.paddles[userId]) return;
+      
+      // Smooth interpolation with easing
+      const diff = paddlePos.targetY - paddlePos.y;
+      const speed = Math.abs(diff) > 1 ? diff * 0.4 : diff;
+      
+      paddlePos.y += speed;
+      
+      // Update game state with interpolated position, ensure boundaries
+      if (gameState?.paddles[userId]) {
+        const clampedY = Math.max(0, Math.min(300, paddlePos.y)); // 400-100=300 max
+        gameState.paddles[userId].y = clampedY;
+        paddlePos.y = clampedY; // Sync interpolation position
+      }
+    });
+  }
+
+  // Improved keyboard handling with continuous movement
+  let keyboardUpdateInterval: number | null = null;
+
+  function startKeyboardMovement() {
+    if (keyboardUpdateInterval) return;
+    
+    keyboardUpdateInterval = setInterval(() => {
+      if (Object.keys(keysPressed).some(key => keysPressed[key])) {
+        handleKeyPress();
+      }
+    }, 8) as any; // 120 FPS for more responsive input
+  }
+
+  function stopKeyboardMovement() {
+    if (keyboardUpdateInterval) {
+      clearInterval(keyboardUpdateInterval);
+      keyboardUpdateInterval = null;
+    }
+  }
+
+  // Enhanced keyboard event listeners
+  document.addEventListener('keydown', (e) => {
+    if (!keysPressed[e.code]) {
+      keysPressed[e.code] = true;
+      startKeyboardMovement();
+    }
+  });
+
+  document.addEventListener('keyup', (e) => {
+    keysPressed[e.code] = false;
+    if (!Object.keys(keysPressed).some(key => keysPressed[key])) {
+      stopKeyboardMovement();
+    }
+  });
 }
