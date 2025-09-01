@@ -10,7 +10,7 @@ export interface WSMessage {
 
 export interface GameMessage extends WSMessage {
   type: 'game';
-  event: 'join' | 'move' | 'start' | 'state' | 'score' | 'leave' | 'reconnect' | 'game-invite' | 'invite-accepted' | 'ready' | 'matchmaking-join-queue' | 'matchmaking-leave-queue' | 'matchmaking-cancel' | 'matchmaking-status';
+  event: 'join' | 'move' | 'start' | 'state' | 'score' | 'leave' | 'reconnect' | 'game-invite' | 'invite-accepted' | 'ready' | 'matchmaking-join-queue' | 'matchmaking-leave-queue' | 'matchmaking-cancel' | 'matchmaking-status' | 'history';
   data: {
     roomId?: string;
     y?: number;
