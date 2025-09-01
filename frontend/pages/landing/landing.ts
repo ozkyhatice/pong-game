@@ -207,6 +207,13 @@ export function init() {
   paddle2.position.x = 3.6;
   paddle1.position.y = paddle2.position.y = paddleHeight/2 + 0.02;
 
+  // Compute safe Z clamp so paddles don't overlap with top/bottom borders
+  const fieldHalfDepth = 2; // half of table depth is 2
+  const borderHalf = borderThickness / 2;
+  const safetyGap = 0.02; // small visual gap from border
+  const paddleHalfDepth = paddleDepth / 2;
+  const paddleZClamp = fieldHalfDepth - borderHalf - paddleHalfDepth - safetyGap; // e.g., ~1.43
+
   const leftBorderLight = new BABYLON.PointLight("leftBorderLight", new BABYLON.Vector3(-3.8, 0.5, 0), scene);
   leftBorderLight.diffuse = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
   leftBorderLight.intensity = 0.8;
@@ -257,17 +264,27 @@ export function init() {
   };
 
   let userControlling = false;
+  let uiFaded = false;
+
+  function fadeOutLandingUIOnce() {
+    if (uiFaded) return;
+    uiFaded = true;
+    const ui = document.getElementById('landing-ui');
+    if (ui) ui.classList.add('fade-out');
+  }
 
   window.addEventListener('keydown', (event) => {
     switch(event.code) {
       case 'ArrowUp':
         keys.up = true;
         userControlling = true;
+  fadeOutLandingUIOnce();
         event.preventDefault();
         break;
       case 'ArrowDown':
         keys.down = true;
         userControlling = true;
+  fadeOutLandingUIOnce();
         event.preventDefault();
         break;
       case 'KeyG':
@@ -433,7 +450,7 @@ export function init() {
     paddle1Light.position.z = paddle1.position.z;
     paddle2Light.position.z = paddle2.position.z;
 
-    if (!userControlling && paddle1ToCorner !== null) {
+  if (!userControlling && paddle1ToCorner !== null) {
       const dz = paddle1ToCorner - paddle1.position.z;
       if (Math.abs(dz) < 0.1) {
         paddle1.position.z = paddle1ToCorner;
@@ -451,7 +468,7 @@ export function init() {
       paddle1.position.z += Math.sign(ball.position.z - paddle1.position.z) * PADSPEED;
     }
 
-    if (paddle2ToCorner !== null) {
+  if (paddle2ToCorner !== null) {
       const dz = paddle2ToCorner - paddle2.position.z;
       if (Math.abs(dz) < 0.1) {
         paddle2.position.z = paddle2ToCorner;
@@ -461,8 +478,9 @@ export function init() {
     } else
       paddle2.position.z += Math.sign(ball.position.z - paddle2.position.z) * PADSPEED;
 
-    paddle1.position.z = Math.max(Math.min(paddle1.position.z, 1.5), -1.5);
-    paddle2.position.z = Math.max(Math.min(paddle2.position.z, 1.5), -1.5);
+  // Clamp paddles so they don't intersect top/bottom borders
+  paddle1.position.z = Math.max(Math.min(paddle1.position.z, paddleZClamp), -paddleZClamp);
+  paddle2.position.z = Math.max(Math.min(paddle2.position.z, paddleZClamp), -paddleZClamp);
 
     ball.position.x += ballDirX;
     ball.position.z += ballDirZ;
@@ -497,7 +515,7 @@ export function init() {
       paddleHit = true;
       paddle1FlashTime = 1.0; // Trigger 1 second yellow flash
       if (!userControlling) {
-        paddle1ToCorner = -1.5;
+        paddle1ToCorner = -paddleZClamp;
       }
     }
 
@@ -513,7 +531,7 @@ export function init() {
       ballDirZ = (ballDirZ / Math.abs(ballDirZ)) * Math.abs(ballDirZ / norm) * BALLSPEEDZ;
       paddleHit = true;
       paddle2FlashTime = 1.0; // Trigger 1 second yellow flash
-      paddle2ToCorner = 1.5;
+  paddle2ToCorner = paddleZClamp;
     }
 
     const leftOut = ball.position.x < -3.85 && !(ball.position.x > paddle1.position.x - paddleMargin && ball.position.x < paddle1.position.x + paddleWidth/2 + paddleMargin && Math.abs(ball.position.z - paddle1.position.z) < paddleDepth/2 + paddleLengthMargin);

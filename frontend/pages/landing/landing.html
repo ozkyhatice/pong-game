@@ -64,9 +64,17 @@
     background: linear-gradient(90deg, transparent, var(--neon), transparent);
     box-shadow: 0 0 8px var(--neon-glow);
   }
+
+  /* Fade out the landing UI when user starts controlling the paddle */
+  #landing-ui { transition: opacity 300ms ease, filter 300ms ease; }
+  #landing-ui.fade-out {
+    opacity: 0;
+    filter: blur(2px);
+    pointer-events: none;
+  }
 </style>
 
-<div class="h-screen flex flex-col items-center justify-center">
+<div id="landing-ui" class="h-screen flex flex-col items-center justify-center">
   <!-- PONG Başlık -->
   <h1 id="landing-title" class="landing-title" style="margin-bottom: 4rem;" aria-label="PONG">
     <span class="typing-text"></span>
