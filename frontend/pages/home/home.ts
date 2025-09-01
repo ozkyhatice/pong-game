@@ -20,9 +20,17 @@ export async function init() {
     return;
   }
 
-  // Clear existing components to prevent duplicates
-  profileContainer.innerHTML = '';
-  gameAreaContainer.innerHTML = '';
+  // Force clear existing components to prevent duplicates
+  if (profileContainer.firstChild) {
+    while (profileContainer.firstChild) {
+      profileContainer.removeChild(profileContainer.firstChild);
+    }
+  }
+  if (gameAreaContainer.firstChild) {
+    while (gameAreaContainer.firstChild) {
+      gameAreaContainer.removeChild(gameAreaContainer.firstChild);
+    }
+  }
 
   // Game Area component'ini olustur
   

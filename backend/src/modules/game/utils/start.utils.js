@@ -96,10 +96,14 @@ async function resetBallAndCheck(room, ball, scoringPlayerId) {
     ball.x = CANVAS_WIDTH / 2;
     ball.y = CANVAS_HEIGHT / 2;
     
-    // Ball starts moving towards the player who was scored on
-    const playerIds = Array.from(room.players).sort((a, b) => a - b); // Consistent sorting
-    const [player1Id, player2Id] = playerIds;
-    const ballDirection = scoringPlayerId === player1Id ? 1 : -1; // If player1 scored, ball goes right
+    // Initialize ball direction counter if not exists
+    if (!room.ballDirectionCounter) {
+        room.ballDirectionCounter = 0;
+    }
+    
+    // Alternate ball direction: even = left (-1), odd = right (1)
+    room.ballDirectionCounter++;
+    const ballDirection = room.ballDirectionCounter % 2 === 0 ? -1 : 1;
     
     // Random angle but not too steep
     const angle = (Math.random() - 0.5) * Math.PI / 4; // -45 to +45 degrees

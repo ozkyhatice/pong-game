@@ -27,7 +27,7 @@ export async function createRoom(userId, connection, rooms, tournamentId = null,
             ball: {
                 x: 400,                  // Canvas center X (800/2)
                 y: 200,                  // Canvas center Y (400/2) 
-                vx: 5,                   // Ball starts moving right
+                vx: Math.random() > 0.5 ? 5 : -5,  // Random initial direction
                 vy: 0                    // Ball starts horizontal
             },
             paddles: {
@@ -46,7 +46,8 @@ export async function createRoom(userId, connection, rooms, tournamentId = null,
         winnerId: null,              // Oyun kazananı
         tournamentId: tournamentId,  // Turnuva ID'si (turnuva maçıysa)
         round: round,                // Round bilgisi (turnuva maçıysa)
-        matchId: null                // Match ID (DB'ye kayıt sonrası set edilir)
+        matchId: null,               // Match ID (DB'ye kayıt sonrası set edilir)
+        ballDirectionCounter: 0      // Top yönü sayacı (adil alternatif için)
     };
     rooms.set(roomId, room);
     userRoom.set(userId, roomId); // Kullanıcı ve oda ilişkisi->connection close için

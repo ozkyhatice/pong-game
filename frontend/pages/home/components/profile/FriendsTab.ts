@@ -94,8 +94,8 @@ export class FriendsTab {
     ).length;
 
     this.element.innerHTML = `
-      <div class="space-y-2">
-        <div class="flex justify-between items-center mb-3">
+      <div class="overflow-hidden">
+        <div class="flex justify-between items-center mb-4">
           <span class="text-sm font-medium text-gray-700">
             Friends (${this.friends.length})
           </span>
@@ -103,42 +103,44 @@ export class FriendsTab {
             ${onlineCount} online
           </span>
         </div>
-        ${sortedFriends.map(friend => {
-          const status = this.getFriendOnlineStatus(friend.friendInfo.id);
-          const lastSeenText = !status.isOnline && status.lastSeen ? 
-            this.formatLastSeen(status.lastSeen) : '';
-          
-          return `
-            <div class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors ${status.isOnline ? 'border-l-2 border-green-400' : ''}">
-              <div class="relative mr-3 flex-shrink-0">
-                <img src="${friend.friendInfo.avatar}" alt="Avatar" class="w-10 h-10 rounded-full">
-                ${status.isOnline ? '<div class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>' : ''}
-              </div>
-              
-              <div class="flex-1 min-w-0 mr-3">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-medium text-gray-900 truncate">${friend.friendInfo.username}</span>
-                  ${status.isOnline ? '<span class="text-xs text-green-600 font-medium flex-shrink-0">online</span>' : ''}
+        <div class="space-y-3 overflow-y-auto max-h-96">
+          ${sortedFriends.map(friend => {
+            const status = this.getFriendOnlineStatus(friend.friendInfo.id);
+            const lastSeenText = !status.isOnline && status.lastSeen ? 
+              this.formatLastSeen(status.lastSeen) : '';
+            
+            return `
+              <div class="flex items-start p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors ${status.isOnline ? 'border-l-3 border-green-400' : ''}">
+                <div class="relative mr-3 flex-shrink-0">
+                  <img src="${friend.friendInfo.avatar}" alt="Avatar" class="w-12 h-12 rounded-full">
+                  ${status.isOnline ? '<div class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>' : ''}
                 </div>
-                ${!status.isOnline && lastSeenText ? `<div class="text-xs text-gray-500">${lastSeenText}</div>` : ''}
+                
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-sm font-medium text-gray-900 truncate" title="${friend.friendInfo.username}">${friend.friendInfo.username}</span>
+                    ${status.isOnline ? '<div class="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>' : ''}
+                  </div>
+                  ${!status.isOnline && lastSeenText ? `<div class="text-xs text-gray-500 mb-2">${lastSeenText}</div>` : ''}
+                  
+                  <div class="flex space-x-2">
+                    <button class="view-profile-btn px-3 py-1.5 text-xs bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 transition-colors" 
+                            data-user-id="${friend.friendInfo.id}" 
+                            data-username="${friend.friendInfo.username}">
+                      Chat
+                    </button>
+                    <button class="play-btn px-3 py-1.5 text-xs ${status.isOnline ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} rounded-md transition-colors"
+                            data-user-id="${friend.friendInfo.id}" 
+                            data-username="${friend.friendInfo.username}"
+                            ${!status.isOnline ? 'disabled' : ''}>
+                      Play
+                    </button>
+                  </div>
+                </div>
               </div>
-              
-              <div class="flex space-x-2 flex-shrink-0">
-                <button class="view-profile-btn px-3 py-1.5 text-xs bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 transition-colors" 
-                        data-user-id="${friend.friendInfo.id}" 
-                        data-username="${friend.friendInfo.username}">
-                  Chat
-                </button>
-                <button class="play-btn px-3 py-1.5 text-xs ${status.isOnline ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} rounded-md transition-colors"
-                        data-user-id="${friend.friendInfo.id}" 
-                        data-username="${friend.friendInfo.username}"
-                        ${!status.isOnline ? 'disabled' : ''}>
-                  Play
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('')}
+            `;
+          }).join('')}
+        </div>
       </div>
     `;
   }
