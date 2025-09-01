@@ -8,6 +8,7 @@ export interface RoomInfo {
   roomId: string;
   players: number[];
   createdAt: number;
+  isMatchmaking?: boolean;
 }
 
 export interface TournamentInfo {

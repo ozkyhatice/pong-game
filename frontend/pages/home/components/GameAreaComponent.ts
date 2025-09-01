@@ -20,6 +20,7 @@ export class GameAreaComponent extends Component {
     this.loadInvites();
     this.listenForInvites();
     this.setupTournamentListeners();
+    this.setupMatchmakingListeners();
     this.loadTournamentData();
     this.checkUserTournamentStatus();
   }
@@ -110,6 +111,34 @@ export class GameAreaComponent extends Component {
             </div>
           </div>
 
+          <!-- Matchmaking Section -->
+          <div class="mb-8 p-6 bg-gradient-to-r from-blue-900/50 to-cyan-900/50 rounded-lg border border-blue-400/50 shadow-lg">
+            <h3 class="text-xl font-semibold text-blue-300 mb-4 font-mono flex items-center">
+              <span class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3 border border-blue-400">🎮</span>
+              QUICK MATCH
+            </h3>
+            
+            <div class="mb-4">
+              <p class="text-blue-400 text-sm font-mono mb-4">Find an opponent automatically and start playing immediately!</p>
+              
+              <div id="matchmaking-status" class="mb-4 p-3 bg-black/30 rounded-lg border border-blue-400/30 hidden">
+                <div class="flex items-center">
+                  <span class="inline-block animate-spin w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full mr-3"></span>
+                  <span class="text-blue-300 font-mono">Searching for opponent...</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex space-x-4">
+              <button id="join-matchmaking-btn" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3 px-6 rounded-lg transition-all border border-blue-400 shadow-lg hover:shadow-blue-500/25 font-mono">
+                <span class="mr-2">⚡</span> FIND MATCH
+              </button>
+              <button id="leave-matchmaking-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-lg transition-all border border-red-400 shadow-lg hover:shadow-red-500/25 font-mono hidden">
+                <span class="mr-2">❌</span> CANCEL
+              </button>
+            </div>
+          </div>
+
           <!-- Game Invites -->
           <div class="p-6 bg-gradient-to-r from-gray-900/50 to-slate-900/50 rounded-lg border border-green-400/30 shadow-lg">
             <h3 class="text-xl font-semibold text-green-300 mb-4 font-mono flex items-center">
@@ -136,6 +165,13 @@ export class GameAreaComponent extends Component {
     joinTournamentBtn?.addEventListener('click', this.handleJoinTournament.bind(this));
     leaveTournamentBtn?.addEventListener('click', this.handleLeaveTournament.bind(this));
     returnTournamentBtn?.addEventListener('click', this.handleReturnToTournament.bind(this));
+
+    // Matchmaking buttons
+    const joinMatchmakingBtn = this.element.querySelector('#join-matchmaking-btn');
+    const leaveMatchmakingBtn = this.element.querySelector('#leave-matchmaking-btn');
+    
+    joinMatchmakingBtn?.addEventListener('click', this.handleJoinMatchmaking.bind(this));
+    leaveMatchmakingBtn?.addEventListener('click', this.handleLeaveMatchmaking.bind(this));
   }
 
   private loadInvites(): void {
@@ -875,4 +911,92 @@ export class GameAreaComponent extends Component {
     container.innerHTML = html;
   }
 
+  // Matchmaking Methods
+  private setupMatchmakingListeners(): void {
+    this.gameService.onMatchmakingJoined((data) => {
+      console.log('🔍 Joined matchmaking queue:', data);
+      this.showMatchmakingStatus();
+      notify(`Joined matchmaking queue (position: ${data.position})`);
+    });
+
+    this.gameService.onMatchmakingLeft((data) => {
+      console.log('❌ Left matchmaking queue:', data);
+      this.hideMatchmakingStatus();
+      notify('Left matchmaking queue');
+    });
+
+    this.gameService.onMatchFound((data) => {
+      console.log('🎮 Match found:', data);
+      this.hideMatchmakingStatus();
+      notify(`Match found! Opponent: ${data.opponent}`);
+      
+      // Set room info and navigate to game
+      if (data.roomId) {
+        const appState = AppState.getInstance();
+        appState.setCurrentRoom({
+          roomId: data.roomId,
+          players: [data.opponent], // Add opponent
+          createdAt: Date.now(),
+          isMatchmaking: true
+        });
+        
+        // Navigate to remote-game directly for matchmaking
+        (window as any).router.navigate('remote-game');
+      }
+    });
+
+    this.gameService.onMatchmakingStatus((data) => {
+      console.log('📊 Matchmaking status:', data);
+      if (data.inQueue) {
+        this.showMatchmakingStatus();
+      } else {
+        this.hideMatchmakingStatus();
+      }
+    });
+  }
+
+  private showMatchmakingStatus(): void {
+    const statusElement = this.element.querySelector('#matchmaking-status');
+    const joinBtn = this.element.querySelector('#join-matchmaking-btn');
+    const leaveBtn = this.element.querySelector('#leave-matchmaking-btn');
+
+    statusElement?.classList.remove('hidden');
+    joinBtn?.classList.add('hidden');
+    leaveBtn?.classList.remove('hidden');
+  }
+
+  private hideMatchmakingStatus(): void {
+    const statusElement = this.element.querySelector('#matchmaking-status');
+    const joinBtn = this.element.querySelector('#join-matchmaking-btn');
+    const leaveBtn = this.element.querySelector('#leave-matchmaking-btn');
+
+    statusElement?.classList.add('hidden');
+    joinBtn?.classList.remove('hidden');
+    leaveBtn?.classList.add('hidden');
+  }
+
+  // Matchmaking Methods
+  private handleJoinMatchmaking(): void {
+    console.log('🔍 MATCHMAKING: Button clicked - Joining matchmaking queue...');
+    
+    // Check if WebSocket is connected
+    const wsManager = (this.gameService as any).wsManager;
+    if (!wsManager || !wsManager.isConnected()) {
+      console.error('❌ MATCHMAKING: WebSocket not connected!');
+      notify('Connection error. Please refresh the page.');
+      return;
+    }
+    
+    console.log('✅ MATCHMAKING: WebSocket connected, sending join request...');
+    this.gameService.joinMatchmakingQueue();
+    this.showMatchmakingStatus();
+    notify('Searching for opponent...');
+  }
+
+  private handleLeaveMatchmaking(): void {
+    console.log('❌ Leaving matchmaking queue...');
+    this.gameService.leaveMatchmakingQueue();
+    this.hideMatchmakingStatus();
+    notify('Matchmaking cancelled');
+  }
 }
