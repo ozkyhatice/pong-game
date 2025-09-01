@@ -1,10 +1,18 @@
 import { registerUser, loginUser, handleGoogleUser } from '../service/auth.service.js';
+import { escapeFields } from '../../../utils/security.js';
 
 export async function register(request, reply) {
   const { username, email, password } = request.body;
+  
+  // XSS koruması için input'ları escape et
+  const sanitizedData = escapeFields({ username, email }, ['username', 'email']);
 
   try {
-    const user = await registerUser({ username, email, password });
+    const user = await registerUser({ 
+      username: sanitizedData.username, 
+      email: sanitizedData.email, 
+      password 
+    });
 
     const token = await reply.jwtSign({
       id: user.id,
@@ -27,9 +35,12 @@ export async function register(request, reply) {
 
 export async function login(request, reply) {
   const { email, password } = request.body;
+  
+  // XSS koruması için email'i escape et
+  const sanitizedData = escapeFields({ email }, ['email']);
 
   try {
-    const user = await loginUser({ email, password });
+    const user = await loginUser({ email: sanitizedData.email, password });
     console.log('2FA is enabled for user:', user.isTwoFAEnabled);
 
     // Eğer kullanıcı 2FA etkinleştirmişse, 2FA doğrulaması yapılacak

@@ -3,6 +3,7 @@ import { broadcastToAll } from '../../../websocket/services/client.service.js';
 import { countTournamentPlayers, getActiveTournamentId, broadcastToTournamentPlayers, broadcastTournamentUpdateToAll } from '../utils/tournament.utils.js';
 import { getStatusOfTournament, isUserInTournament, getTournamentParticipants } from '../utils/tournament.utils.js';
 import { initDB } from '../../../config/db.js';
+import { sanitizeInput } from '../../../utils/security.js';
 
 export async function handleTournamentMessage(msgObj, userId, connection) {
   const { event, data} = msgObj;
@@ -33,11 +34,18 @@ export async function createTournament(data, userId, connection) {
         console.error('Error checking active tournament:', error);
         return;
     }
-    await createTournamentService(data, userId);
+    
+    // XSS koruması için tournament adını sanitize et
+    const sanitizedData = {
+        ...data,
+        name: data.name ? sanitizeInput(data.name) : data.name
+    };
+    
+    await createTournamentService(sanitizedData, userId);
     const message = {
         type: 'tournament',
         event: 'created',
-        data: { userId, ...data }
+        data: { userId, ...sanitizedData }
     };
     await broadcastToAll(message);
 

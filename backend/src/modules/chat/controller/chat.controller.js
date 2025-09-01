@@ -17,6 +17,7 @@ import {
 import {
   isUserBlocked
 } from '../../friend/service/friend.service.js';
+import { sanitizeInput } from '../../../utils/security.js';
 
 export async function undeliveredMessageController(userId, connection) {
   // Tek seferde hem undelivered hem unread mesajları gönder
@@ -51,6 +52,9 @@ export async function processChatMessage(message, userId) {
       throw new Error('Receiver ID and content are required');
     }
     
+    // XSS koruması için mesaj içeriğini sanitize et
+    const sanitizedContent = sanitizeInput(content);
+    
     if (userId === receiverId) {
       throw new Error('You cannot send a message to yourself');
     }
@@ -62,14 +66,14 @@ export async function processChatMessage(message, userId) {
     }
 
     // Mesajı her zaman DB'ye kaydet (online/offline fark etmez)
-    const newMessage = await addMessageToDb(userId, receiverId, content);
+    const newMessage = await addMessageToDb(userId, receiverId, sanitizedContent);
     
     if (newMessage) {
       const messageObj = {
         id: newMessage.lastID,
         senderId: userId,
         receiverId: receiverId,
-        content: content,
+        content: sanitizedContent,
         isRead: 0,
         delivered: 0,
         createdAt: new Date().toISOString()
@@ -78,7 +82,7 @@ export async function processChatMessage(message, userId) {
       // Sadece her iki user da online ise mesajı gönder
       if (await isConnected(receiverId) && await isConnected(userId)) {
         try {
-          await handleRealtimeMessage(userId, receiverId, content, messageObj);
+          await handleRealtimeMessage(userId, receiverId, sanitizedContent, messageObj);
         } catch (err) {
           console.error('Error sending message:', err);
         }
