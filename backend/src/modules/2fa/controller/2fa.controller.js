@@ -4,6 +4,7 @@ import {
   verify2FACode,
 } from "../service/2fa.service.js";
 import { initDB } from "../../../config/db.js";
+import { sanitizeInput } from "../../../utils/security.js";
 
 export async function handle2FASetup(request, reply) {
   try {
@@ -30,7 +31,10 @@ export async function handle2FAVerify(request, reply) {
     const userId = request.user.id;
     const { token } = request.body;
 
-    const isValid = await verify2FACode(userId, token);
+    // XSS koruması için token'ı sanitize et
+    const sanitizedToken = sanitizeInput(token);
+
+    const isValid = await verify2FACode(userId, sanitizedToken);
     if (!isValid) {
       return reply.status(400).send({ error: "Invalid 2FA token." });
     }
@@ -48,7 +52,10 @@ export async function handle2FALoginVerify(request, reply) {
   try {
     const { userId, token } = request.body;
 
-    const isValid = await verify2FACode(userId, token);
+    // XSS koruması için token'ı sanitize et
+    const sanitizedToken = sanitizeInput(token);
+
+    const isValid = await verify2FACode(userId, sanitizedToken);
     if (!isValid) {
       return reply.status(400).send({ error: "Invalid 2FA token." });
     }

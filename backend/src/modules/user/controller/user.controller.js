@@ -4,6 +4,7 @@ import {
   updateProfile,
   updateAvatar
 } from '../service/user.service.js';
+import { escapeFields, sanitizeInput } from '../../../utils/security.js';
 import fs from 'fs';
 import path from 'path';
 import { initDB } from '../../../config/db.js';
@@ -26,8 +27,11 @@ export async function getMyProfile(request, reply) {
 export async function getUserByUsername(request, reply) {
   const { username } = request.params;
   
+  // XSS koruması için username'i sanitize et
+  const sanitizedUsername = sanitizeInput(username);
+  
   try {
-    const user = await getUserByUsernameService(username);
+    const user = await getUserByUsernameService(sanitizedUsername);
     if (!user) {
       return reply.code(404).send({ error: 'User not found' });
     }
@@ -42,8 +46,11 @@ export async function updateMyProfile(request, reply) {
   const userId = request.user.id;
   const { username, email } = request.body;
 
+  // XSS koruması için input'ları escape et
+  const sanitizedData = escapeFields({ username, email }, ['username', 'email']);
+
   try {
-    const updatedUser = await updateProfile(userId, { username, email });
+    const updatedUser = await updateProfile(userId, sanitizedData);
     reply.send({ user: updatedUser });
   } catch (error) {
     reply.code(400).send({ error: error.message });
