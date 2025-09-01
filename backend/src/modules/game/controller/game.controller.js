@@ -3,6 +3,7 @@ import { broadcast, clearAll } from "../utils/end.utils.js";
 import { startGameLoop, stopGameLoop, pauseGame, resumeGame } from "../utils/game-loop.utils.js";
 import { getClientById } from "../../../websocket/services/client.service.js";
 import { joinMatchmakingQueue, leaveMatchmakingQueue, cancelMatchmaking, getMatchmakingStatus } from "./match-making.controller.js";
+import { getMatchHistoryByUserId } from "../services/game.service.js";
 
 export const rooms = new Map();
 export const userRoom = new Map(); // userId -> roomId
@@ -27,6 +28,7 @@ const eventHandlers = {
     leave: leaveGame,
     ready: handlePlayerReady,
     reconnect: handleReconnectRequest,
+    history: getMatchHistoryByUserId,
     'game-invite': handleGameInvite,
     'invite-accepted': handleInviteAccepted,
     // match-making

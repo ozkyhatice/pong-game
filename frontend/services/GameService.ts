@@ -67,6 +67,10 @@ export class GameService {
     this.send('matchmaking-status', {});
   }
 
+  isConnected(): boolean {
+    return this.wsManager.isConnected();
+  }
+
   onRoomCreated(callback: (data: any) => void): void { this.wsManager.on('room-created', callback); }
   onPlayerJoined(callback: (data: any) => void): void { this.wsManager.on('joined', callback); }
   onGameStarted(callback: (data: any) => void): void { this.wsManager.on('game-started', callback); }
