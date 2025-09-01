@@ -85,7 +85,7 @@ export async function joinGame(data, userId, connection) {
     // Notify the user that they have joined the room
     await sendMessage(connection, 'game', 'joined', {
         roomId: room.id,
-        players: Array.from(room.players),
+        players: room.playerOrder || Array.from(room.players),
         message: `User ${userId} joined the game`
     });
     if (room.players.size === 2 && !room.started) {
@@ -120,7 +120,7 @@ export async function startGame(data, userId, connection) {
         // Don't send error to user, just broadcast current state
         await sendMessage(connection, 'game', 'game-started', {
             roomId: room.id,
-            players: Array.from(room.players),
+            players: room.playerOrder || Array.from(room.players),
             message: `Game already in progress`
         });
         return;
@@ -146,7 +146,7 @@ export async function startGame(data, userId, connection) {
     
     // Set started flag and start game
     room.started = true;
-    console.log(`🎮 GAME START: Game started -> User: ${userId}, Room: ${room.id}, Players: ${Array.from(room.players).join(', ')}`);
+        console.log(`🎮 GAME START: Game started -> User: ${userId}, Room: ${room.id}, Players: ${(room.playerOrder || Array.from(room.players)).join(', ')}`);  
     
     startGameLoop(room, connection);
     
@@ -154,7 +154,7 @@ export async function startGame(data, userId, connection) {
     for (const [playerId, socket] of room.sockets) {
         await sendMessage(socket, 'game', 'game-started', {
             roomId: room.id,
-            players: Array.from(room.players),
+            players: room.playerOrder || Array.from(room.players),
             message: `Game started by user ${userId}`
         });
     }
@@ -201,11 +201,26 @@ export async function stateGame(data, userId) {
         return;
     }
     
+    // Create ordered score object based on room player order
+    const playerOrder = room.playerOrder || Array.from(room.players);
+    const orderedScore = {};
+    const orderedPaddles = {};
+    
+    // Build score and paddles in room order
+    playerOrder.forEach(playerId => {
+        if (room.state.score[playerId] !== undefined) {
+            orderedScore[playerId] = room.state.score[playerId];
+        }
+        if (room.state.paddles[playerId] !== undefined) {
+            orderedPaddles[playerId] = room.state.paddles[playerId];
+        }
+    });
+    
     // Oyun durumunu güncelle
     const stateData = {
         ball: room.state.ball,
-        paddles: room.state.paddles,
-        score: room.state.score,
+        paddles: orderedPaddles,
+        score: orderedScore,
         gameOver: room.state.gameOver,
     };
     
@@ -432,14 +447,14 @@ export async function handleInviteAccepted(data, userId, connection) {
     // Notify both users
     await sendMessage(connection, 'game', 'room-created', {
         roomId: room.id,
-        players: Array.from(room.players),
+        players: room.playerOrder || Array.from(room.players),
         message: 'Game room created! You can now start the game.'
     });
     
     await sendMessage(senderClient, 'game', 'invite-accepted', {
         roomId: room.id,
         acceptedBy: userId,
-        players: Array.from(room.players),
+        players: room.playerOrder || Array.from(room.players),
         message: 'Your game invitation was accepted! Room created.'
     });
     

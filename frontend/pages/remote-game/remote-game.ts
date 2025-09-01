@@ -175,7 +175,8 @@ export function init() {
         winner: data.winner,
         finalScore: data.finalScore,
         message: data.message,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        playerOrder: currentRoom?.players || [] // Add room player order
       }));
       
       appState.clearCurrentRoom();
@@ -305,11 +306,12 @@ export function init() {
     const paddleWidth = (originalPaddleWidth / 800) * targetCanvas.width;
     const paddleHeight = (originalPaddleHeight / 400) * targetCanvas.height;
     
-    if (gameState && gameState.paddles) {
-      const playerIds = Object.keys(gameState.paddles).map(id => parseInt(id)).sort();
+    if (gameState && gameState.paddles && currentRoom?.players) {
+      // Use room player order instead of ID sorting to match lobby display
+      const roomPlayerOrder = currentRoom.players;
       
-      // Always assign first player to left, second to right consistently
-      playerIds.forEach((playerId, index) => {
+      // Always assign first room player to left, second to right consistently
+      roomPlayerOrder.forEach((playerId, index) => {
         const paddle = gameState!.paddles[playerId];
         if (paddle) {
           // Scale paddle position for different canvas sizes
@@ -350,12 +352,13 @@ export function init() {
   }
 
   function updateScores() {
-    if (!gameState?.score) return;
+    if (!gameState?.score || !currentRoom?.players) return;
     
-    const playerIds = Object.keys(gameState.score).map(id => parseInt(id)).sort();
-    if (playerIds.length >= 2) {
-      const score1 = gameState.score[playerIds[0]] || 0;
-      const score2 = gameState.score[playerIds[1]] || 0;
+    // Use room player order instead of ID sorting
+    const roomPlayerOrder = currentRoom.players;
+    if (roomPlayerOrder.length >= 2) {
+      const score1 = gameState.score[roomPlayerOrder[0]] || 0;
+      const score2 = gameState.score[roomPlayerOrder[1]] || 0;
       
       // Update desktop scores
       if (player1ScoreEl) player1ScoreEl.textContent = score1.toString();
@@ -618,26 +621,27 @@ export function init() {
   }
 
   async function updatePlayerNames() {
-    if (!gameState?.score) return;
+    if (!gameState?.score || !currentRoom?.players) return;
     
-    const playerIds = Object.keys(gameState.score).map(id => parseInt(id)).sort();
-    if (playerIds.length < 2) return;
+    // Use room player order instead of ID sorting
+    const roomPlayerOrder = currentRoom.players;
+    if (roomPlayerOrder.length < 2) return;
 
     try {
       const [player1, player2] = await Promise.all([
-        userService.getUserById(playerIds[0]),
-        userService.getUserById(playerIds[1])
+        userService.getUserById(roomPlayerOrder[0]),
+        userService.getUserById(roomPlayerOrder[1])
       ]);
 
       // Update desktop elements
-      if (player1NameEl) player1NameEl.textContent = player1?.username || `WARRIOR ${playerIds[0]}`;
-      if (player2NameEl) player2NameEl.textContent = player2?.username || `WARRIOR ${playerIds[1]}`;
+      if (player1NameEl) player1NameEl.textContent = player1?.username || `WARRIOR ${roomPlayerOrder[0]}`;
+      if (player2NameEl) player2NameEl.textContent = player2?.username || `WARRIOR ${roomPlayerOrder[1]}`;
       if (player1InitialEl) player1InitialEl.textContent = player1?.username?.[0]?.toUpperCase() || 'W1';
       if (player2InitialEl) player2InitialEl.textContent = player2?.username?.[0]?.toUpperCase() || 'W2';
       
       // Update mobile elements
-      if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1?.username || `WARRIOR ${playerIds[0]}`;
-      if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2?.username || `WARRIOR ${playerIds[1]}`;
+      if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1?.username || `WARRIOR ${roomPlayerOrder[0]}`;
+      if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2?.username || `WARRIOR ${roomPlayerOrder[1]}`;
       if (mobilePlayer1InitialEl) mobilePlayer1InitialEl.textContent = player1?.username?.[0]?.toUpperCase() || 'W1';
       if (mobilePlayer2InitialEl) mobilePlayer2InitialEl.textContent = player2?.username?.[0]?.toUpperCase() || 'W2';
     } catch (e) {

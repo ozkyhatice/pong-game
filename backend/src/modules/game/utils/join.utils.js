@@ -23,6 +23,7 @@ export async function createRoom(userId, connection, rooms, tournamentId = null,
         id: roomId,
         players: new Set([userId]),
         sockets: new Map([[userId, connection]]),
+        playerOrder: [userId], // Track insertion order explicitly
         state: {
             ball: {
                 x: 400,                  // Canvas center X (800/2)
@@ -68,6 +69,11 @@ export async function displayRoomState(room) {
 export async function addPlayerToRoom(room, userId, connection) {
   room.players.add(userId);
   room.sockets.set(userId, connection);
+  
+  // Track player order explicitly
+  if (!room.playerOrder.includes(userId)) {
+    room.playerOrder.push(userId);
+  }
   
   // initialize paddle and score for the new player
   if (!room.state.paddles[userId]) {
