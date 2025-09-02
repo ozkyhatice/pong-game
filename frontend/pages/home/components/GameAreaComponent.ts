@@ -583,25 +583,9 @@ export class GameAreaComponent extends Component {
     // Katılımcı listesini göster
     this.displayTournamentParticipants(tournament.participants || []);
 
-    // Eğer turnuva 4 kişi dolmuşsa bracket preview'i göster
-    if (tournament.currentPlayers === 4) {
-      const bracketPreview = this.element.querySelector('#tournament-bracket-preview');
-      bracketPreview?.classList.remove('hidden');
-      this.displayTournamentBracketPreview(tournament);
-    }
-    
-    // Eğer turnuva başlamışsa bracket'i göster
-    if (tournament.status === 'active') {
-      const bracketPreview = this.element.querySelector('#tournament-bracket-preview');
-      bracketPreview?.classList.remove('hidden');
-      
-      // Pairings varsa onları kullan, yoksa matches'i kullan
-      if (tournament.pairings?.length > 0) {
-        this.displayTournamentBracketFromPairings(tournament.pairings);
-      } else if (tournament.matches?.length > 0) {
-        this.displayCurrentRoundMatches(tournament.matches);
-      }
-    }
+  // Home ekranında bracket hiç gösterilmesin
+  const bracketPreview = this.element.querySelector('#tournament-bracket-preview');
+  bracketPreview?.classList.add('hidden');
   }
 
   private displayTournamentStarted(data: any): void {

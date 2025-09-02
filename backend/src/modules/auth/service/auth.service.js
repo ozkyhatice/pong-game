@@ -132,9 +132,14 @@ export async function handleGoogleUser({ email, name, picture }) {
       avatar: picture 
     };
   } else {
-    if (user.avatar && user.avatar.startsWith('/')) {
-      console.log('User has uploaded avatar, keeping local file');
-    } else {
+    // Kullanıcının önceden upload ettiği avatar'ı var mı kontrol et
+    const hasUploadedAvatar = user.avatar && (
+      user.avatar.includes('/api/uploads/avatars/') || // Full URL format
+      user.avatar.startsWith('/uploads/avatars/') ||   // Relative path format
+      user.avatar.startsWith('/api/uploads/avatars/')  // API path format
+    );
+    
+    if (!hasUploadedAvatar) {
       await db.run(
         'UPDATE users SET avatar = ? WHERE id = ?',
         [picture, user.id]
