@@ -3,7 +3,7 @@
     <div class="bg-console-bg border-2 border-neon-green shadow-terminal rounded-lg w-full max-w-4xl mx-auto">
         <!-- Settings Section -->
         <!-- Settings Header -->
-        <div class="bg-header-gradient rounded-lg p-4">
+        <div class="bg-header-gradient rounded-t border-b border-neon-green p-4 mb-4">
             <div class="flex items-center justify-center">
                 <div class="text-center">
                     <div class="text-neon-white text-2xl font-bold tracking-wide mb-2" style="text-shadow: 0 0 10px #62A6FA;">
@@ -14,44 +14,44 @@
                         <span class="text-[10px] text-neon-green">SETTINGS STATUS: LOADED</span>
                     </div>
                     <div class="text-neon-white flex items-center justify-center gap-1 text-xs">
-                        <span class="text-[10px]">> CONFIGURE YOUR PROFILE... </span>
+                        <span class="text-[10px]">> CONFIGURE YOUR DATA AND SECURITY...</span>
                     </div>
                 </div>
             </div>
         </div>
 
-            <div id="messages" class="hidden p-3 rounded-sm border border-neon-green border-opacity-50 bg-black bg-opacity-40 text-neon-green text-xs mb-4"></div>
+            <div id="messages" class="hidden p-3 rounded-sm border border-neon-blue border-opacity-50 bg-black bg-opacity-40 text-neon-blue text-xs mb-4 mx-4"></div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mx-4">
                 <!-- Profile Information Section -->
                 <div class="lg:col-span-2">
-                    <div class="bg-black bg-opacity-60 border border-neon-green border-opacity-40 rounded-sm p-4 sm:p-6 mb-6">
+                    <div class="bg-black bg-opacity-60 border border-neon-blue border-opacity-40 rounded-sm p-4 sm:p-6 mb-6">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:gap-6 mb-6">
                             <div class="flex-shrink-0">
-                                <div id="avatarPreview" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-black border-2 border-neon-green border-opacity-50 flex items-center justify-center overflow-hidden shadow-terminal">
-                                    <span class="text-neon-green text-xs uppercase">No Avatar</span>
+                                <div id="avatarPreview" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-black border-2 border-neon-blue border-opacity-50 flex items-center justify-center overflow-hidden shadow-[0_0_10px_#62a6fa]">
+                                    <span class="text-neon-blue text-xs uppercase">NO AVATAR</span>
                                 </div>
                             </div>
                             <div class="mt-4 sm:mt-0 flex-1">
-                                <div id="profileInfo" class="text-neon-green font-medium text-xs space-y-1"></div>
-                                <p class="text-neon-green text-opacity-70 text-[10px] mt-2 uppercase tracking-wide">User Data Matrix</p>
+                                <p class="text-neon-blue text-xs font-bold mt-2 uppercase tracking-wide mb-1">USER DATA MATRIX</p>
+                                <div id="profileInfo" class="text-neon-blue font-medium text-[10px] space-y-1"></div>
                             </div>
                         </div>
 
                         <!-- Avatar Upload -->
                         <div class="mb-6">
-                            <h3 class="text-neon-green text-xs font-bold mb-3 uppercase tracking-wide">Avatar Upload Protocol</h3>
+                            <h3 class="text-neon-blue text-xs font-bold mb-3 uppercase tracking-wide">AVATAR UPLOAD PROTOCOL</h3>
                             <div class="flex flex-col sm:flex-row sm:items-center sm:gap-3">
                                 <input type="file" id="avatarFile" accept="image/*"
-                                       class="flex-1 terminal-input bg-black bg-opacity-80 border border-neon-green border-opacity-50 rounded-sm px-3 py-2 text-neon-green font-orbitron text-xs outline-none file:mr-4 file:py-1 file:px-3 file:rounded-sm file:border-0 file:text-xs file:font-semibold file:bg-neon-green file:bg-opacity-20 file:text-neon-green" />
+                                       class="flex-1 terminal-input bg-black bg-opacity-80 border border-neon-blue border-opacity-50 rounded-sm px-3 py-2 text-neon-blue font-orbitron text-xs outline-none file:mr-4 file:py-1 file:px-3 file:rounded-sm file:border-0 file:text-xs file:font-semibold file:bg-neon-blue file:bg-opacity-20 file:text-neon-blue" />
                                 <div class="flex gap-2 mt-3 sm:mt-0">
                                     <button id="uploadBtn"
-                                            class="terminal-btn bg-btn-gradient border border-neon-green text-neon-green px-3 py-1 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
-                                        Upload
+                                            class="terminal-btn bg-btn-gradient border border-neon-blue text-neon-blue px-3 py-1 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
+                                        UPLOAD
                                     </button>
                                     <button id="removeAvatarBtn"
                                             class="terminal-btn bg-btn-gradient border border-neon-red text-neon-red px-3 py-1 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
-                                        Remove
+                                        REMOVE
                                     </button>
                                 </div>
                             </div>
@@ -59,65 +59,84 @@
 
                         <!-- Profile Update -->
                         <div>
-                            <h3 class="text-neon-green text-xs font-bold mb-3 uppercase tracking-wide">User Data Update</h3>
+                            <h3 class="text-neon-blue text-xs font-bold mb-3 uppercase tracking-wide">USER SETTINGS</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                                 <div>
-                                    <label class="block text-neon-green text-[10px] mb-1 uppercase tracking-wide">User ID:</label>
+                                    <label class="block text-neon-blue text-[10px] mb-1 uppercase tracking-wide">USERNAME:</label>
                                     <input type="text" id="newUsername" placeholder="ENTER USERNAME"
-                                           class="terminal-input w-full bg-black bg-opacity-80 border border-neon-green border-opacity-50 rounded-sm px-3 py-2 text-neon-green font-orbitron text-xs outline-none" />
+                                           class="terminal-input w-full bg-black bg-opacity-80 border border-neon-blue border-opacity-50 rounded-sm px-3 py-2 text-neon-blue font-orbitron text-xs outline-none" />
                                 </div>
                                 <div>
-                                    <label class="block text-neon-green text-[10px] mb-1 uppercase tracking-wide">Email Address:</label>
+                                    <label class="block text-neon-blue text-[10px] mb-1 uppercase tracking-wide">EMAIL ADDRESS:</label>
                                     <input type="email" id="newEmail" placeholder="ENTER EMAIL"
-                                           class="terminal-input w-full bg-black bg-opacity-80 border border-neon-green border-opacity-50 rounded-sm px-3 py-2 text-neon-green font-orbitron text-xs outline-none" />
+                                           class="terminal-input w-full bg-black bg-opacity-80 border border-neon-blue border-opacity-50 rounded-sm px-3 py-2 text-neon-blue font-orbitron text-xs outline-none" />
                                 </div>
                             </div>
                             <button id="updateBtn"
-                                    class="terminal-btn bg-btn-gradient border-2 border-neon-green text-neon-green px-4 py-2 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
-                                Update Profile
+                                    class="terminal-btn bg-btn-gradient border-2 border-neon-blue text-neon-blue px-4 py-2 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
+                                UPDATE USER CREDENTIALS
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Blocked Users Section -->
+                    <div class="bg-black bg-opacity-60 border border-neon-red border-opacity-30 rounded-sm p-4 sm:p-6 mb-6">
+                        <h3 class="text-neon-red text-xs font-bold mb-3 uppercase tracking-wide flex items-center gap-2">
+                            <span></span> Blocked Users
+                        </h3>
+                        
+                        <div id="blockedUsersList" class="space-y-2 mb-4 max-h-32 overflow-y-auto">
+                            <!-- Loading state -->
+                            <div id="blockedUsersLoading" class="text-center text-neon-red py-4">
+                                <div class="animate-spin w-4 h-4 border-2 border-neon-red border-t-transparent rounded-full mx-auto mb-2"></div>
+                                <span class="text-[10px]">LOADING BLOCKED USERS...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-neon-red text-opacity-40 text-[9px] uppercase tracking-wide text-center">
+                            User Block Management System
                         </div>
                     </div>
                 </div>
 
                 <!-- 2FA Section -->
                 <div class="lg:col-span-1">
-                    <div class="bg-black bg-opacity-60 border border-neon-blue border-opacity-40 rounded-sm p-4 sm:p-6">
-                        <h3 class="text-neon-blue text-xs font-bold mb-3 uppercase tracking-wide flex items-center gap-2">
-                            <span>🔐</span> Two-Factor Auth
+                    <div class="bg-black bg-opacity-60 border border-neon-purple border-opacity-40 rounded-sm p-4 sm:p-6">
+                        <h3 class="text-neon-purple text-xs font-bold mb-3 uppercase tracking-wide flex items-center gap-2">
+                            <span></span> TWO-FACTOR AUTHENTICATION
                         </h3>
 
-                        <div id="twofaStatus" class="text-neon-green text-xs mb-4 p-3 bg-black bg-opacity-60 border border-neon-green border-opacity-30 rounded-sm"></div>
+                        <div id="twofaStatus" class="text-neon-purple text-xs mb-4 p-3 bg-black bg-opacity-60 border border-neon-purple border-opacity-30 rounded-sm"></div>
 
                         <div class="flex flex-col gap-3 mb-4">
                             <button id="enable2faBtn" style="display: none;"
-                                    class="terminal-btn bg-btn-gradient border border-neon-blue text-neon-blue px-3 py-2 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
-                                Enable 2FA
+                                    class="terminal-btn bg-btn-gradient border border-neon-purple text-neon-purple px-3 py-2 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
+                                ENABLE 2FA
                             </button>
                             <button id="disable2faBtn" style="display: none;"
                                     class="terminal-btn bg-btn-gradient border border-neon-red text-neon-red px-3 py-2 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
-                                Disable 2FA
+                                DISABLE 2FA
                             </button>
                         </div>
 
-                        <div id="qrCodeContainer" style="display: none;" class="bg-black bg-opacity-80 border border-neon-blue border-opacity-50 rounded-sm p-4 space-y-4">
+                        <div id="qrCodeContainer" style="display: none;" class="bg-black bg-opacity-80 border border-neon-purple border-opacity-50 rounded-sm p-4 space-y-4">
                             <div class="text-center">
-                                <h4 class="text-neon-blue text-xs font-bold mb-3 uppercase tracking-wide">📱 QR Scanner</h4>
+                                <h4 class="text-neon-purple text-xs font-bold mb-3 uppercase tracking-wide">QR SCANNER</h4>
                                 <div id="qrCode" class="flex justify-center mb-3 p-2 bg-white rounded-sm"></div>
                             </div>
                             <div>
-                                <p class="text-neon-green text-[10px] mb-2 uppercase tracking-wide">Backup Secret Key:</p>
-                                <div class="bg-black border border-neon-green border-opacity-50 rounded-sm p-2 font-mono text-[10px] text-neon-green break-all">
+                                <p class="text-neon-purple text-[10px] mb-2 uppercase tracking-wide">BACKUP SECRET KEY:</p>
+                                <div class="bg-black border border-neon-purple border-opacity-50 rounded-sm p-2 font-mono text-[10px] text-neon-purple break-all">
                                     <span id="secretKey"></span>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-neon-green text-[10px] mb-1 uppercase tracking-wide">Verification Code:</label>
+                                <label class="block text-neon-purple text-[10px] mb-1 uppercase tracking-wide">VERIFICATION CODE:</label>
                                 <input type="text" id="verifyCode" placeholder="ENTER 6-DIGIT CODE" maxlength="6"
-                                       class="terminal-input w-full bg-black bg-opacity-80 border border-neon-green border-opacity-50 rounded-sm px-3 py-2 text-neon-green font-orbitron text-xs text-center outline-none mb-3" />
+                                       class="terminal-input w-full bg-black bg-opacity-80 border border-neon-purple border-opacity-50 rounded-sm px-3 py-2 text-neon-purple font-orbitron text-xs text-center outline-none mb-3" />
                                 <button id="verifyBtn"
-                                        class="terminal-btn bg-btn-gradient border-2 border-neon-green text-neon-green px-3 py-2 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm w-full">
-                                    ✓ Verify & Enable
+                                        class="terminal-btn bg-btn-gradient border-2 border-neon-purple text-neon-purple px-3 py-2 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm w-full">
+                                    VERIFY & ENABLE
                                 </button>
                             </div>
                         </div>
@@ -126,10 +145,10 @@
             </div>
 
             <!-- Navigation -->
-            <div class="flex gap-2 mt-6">
+            <div class="flex gap-2 mt-6 mx-4">
                 <button id="backHomeBtn"
                         class="nav-btn flex-1 bg-black bg-opacity-60 border border-neon-green border-opacity-40 text-neon-green text-opacity-80 px-2 sm:px-3 py-2 text-[10px] sm:text-xs font-orbitron uppercase tracking-wide cursor-pointer rounded-sm">
-                    ← Back Home
+                    BACK HOME
                 </button>
             </div>
         </div>
