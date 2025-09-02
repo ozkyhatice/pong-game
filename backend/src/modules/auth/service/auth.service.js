@@ -132,13 +132,8 @@ export async function handleGoogleUser({ email, name, picture }) {
       avatar: picture 
     };
   } else {
-    // Kullanıcının önceden upload ettiği avatar'ı var mı kontrol et
-    const hasUploadedAvatar = user.avatar && (
-      user.avatar.includes('/api/uploads/avatars/') || // Full URL format
-      user.avatar.startsWith('/uploads/avatars/') ||   // Relative path format
-      user.avatar.startsWith('/api/uploads/avatars/')  // API path format
-    );
-    
+    // Kullanıcının önceden avatar upload etmediyse googledan avatari guncelle
+    const hasUploadedAvatar = user.avatar && (user.avatar.includes('/api/uploads/avatars/'));
     if (!hasUploadedAvatar) {
       await db.run(
         'UPDATE users SET avatar = ? WHERE id = ?',
