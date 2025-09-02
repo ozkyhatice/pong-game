@@ -41,13 +41,12 @@ export class WebSocketManager {
       console.log('🟢 WS: Connected');
       this.reconnectAttempts = 0;
       this.emit('connected', {});
-      
-      // Removed automatic lobby redirect - let backend handle page navigation
     };
-
+    console.log('WebSocket connection established');
     this.ws.onmessage = (event) => {
       try {
         const message: any = JSON.parse(event.data);
+        console.log('🔹 WS: Raw message received:', message);
         
         if (message.type === 'message') {
           console.log('📨 WS: Chat received ->', {
@@ -94,7 +93,7 @@ export class WebSocketManager {
           console.log('🧭 WS: Navigation received ->', message);
           this.handleNavigation(message);
         } else {
-          console.log('📡 WS:', message.type, message.data || message);
+          console.log('📡 WS: Other message type ->', message.type, 'content:', message);
           this.emit(message.type, message);
         }
       } catch (error) {
