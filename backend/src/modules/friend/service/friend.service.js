@@ -66,11 +66,13 @@ export async function blockFriend(blockerId, blockedId) {
   }
   
   try {
+    // Delete any existing friendship (accepted or pending) between the users
     await db.run(
       'DELETE FROM friends WHERE (requesterID = ? AND recipientID = ?) OR (requesterID = ? AND recipientID = ?)', 
       [blockerId, blockedId, blockedId, blockerId]
     );
     
+    // Add the block entry
     const result = await db.run(
       'INSERT INTO blocked_users (blockerId, blockedId) VALUES (?, ?)', 
       [blockerId, blockedId]
@@ -132,13 +134,21 @@ export async function deleteFriend(userId, targetId) {
 export async function getFriendsListWithUserInfo(userId) {
   const db = await initDB();
   
-  // Önce friend listesini al
-  const friends = await db.all(
-    'SELECT * FROM friends WHERE (requesterID = ? AND status = ?) OR (recipientID = ? AND status = ?)', 
-    [userId, 'approved', userId, 'approved']
-  );
+  // Get friends list with blocked users excluded
+  const friends = await db.all(`
+    SELECT f.* FROM friends f
+    WHERE ((f.requesterID = ? AND f.status = 'approved') OR (f.recipientID = ? AND f.status = 'approved'))
+    AND NOT EXISTS (
+      SELECT 1 FROM blocked_users b1 
+      WHERE (b1.blockerId = ? AND b1.blockedId = CASE WHEN f.requesterID = ? THEN f.recipientID ELSE f.requesterID END)
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM blocked_users b2 
+      WHERE (b2.blockerId = CASE WHEN f.requesterID = ? THEN f.recipientID ELSE f.requesterID END AND b2.blockedId = ?)
+    )
+  `, [userId, userId, userId, userId, userId, userId]);
   
-  // Her friend için user bilgisini al
+  // Get user info for each friend
   const enrichedFriends = [];
   for (const friend of friends) {
     const friendId = friend.requesterID === userId ? friend.recipientID : friend.requesterID;
@@ -147,10 +157,12 @@ export async function getFriendsListWithUserInfo(userId) {
       [friendId]
     );
     
-    enrichedFriends.push({
-      ...friend,
-      friendInfo: userInfo
-    });
+    if (userInfo) {
+      enrichedFriends.push({
+        ...friend,
+        friendInfo: userInfo
+      });
+    }
   }
   
   return enrichedFriends;
@@ -159,13 +171,21 @@ export async function getFriendsListWithUserInfo(userId) {
 export async function getIncomingFriendRequestsWithUserInfo(userId) {
   const db = await initDB();
   
-  // Önce gelen istekleri al
-  const requests = await db.all(
-    'SELECT * FROM friends WHERE recipientID = ? AND status = ?', 
-    [userId, 'pending']
-  );
+  // Get incoming requests with blocked users excluded
+  const requests = await db.all(`
+    SELECT f.* FROM friends f
+    WHERE f.recipientID = ? AND f.status = 'pending'
+    AND NOT EXISTS (
+      SELECT 1 FROM blocked_users b1 
+      WHERE (b1.blockerId = ? AND b1.blockedId = f.requesterID)
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM blocked_users b2 
+      WHERE (b2.blockerId = f.requesterID AND b2.blockedId = ?)
+    )
+  `, [userId, userId, userId]);
   
-  // Her request için gönderen kişi bilgisini al
+  // Get sender info for each request
   const enrichedRequests = [];
   for (const request of requests) {
     const senderInfo = await db.get(
@@ -173,10 +193,12 @@ export async function getIncomingFriendRequestsWithUserInfo(userId) {
       [request.requesterID]
     );
     
-    enrichedRequests.push({
-      ...request,
-      senderInfo: senderInfo
-    });
+    if (senderInfo) {
+      enrichedRequests.push({
+        ...request,
+        senderInfo: senderInfo
+      });
+    }
   }
   
   return enrichedRequests;
@@ -185,13 +207,21 @@ export async function getIncomingFriendRequestsWithUserInfo(userId) {
 export async function getSentRequestsWithUserInfo(userId) {
   const db = await initDB();
   
-  // Önce gönderilen istekleri al
-  const requests = await db.all(
-    'SELECT * FROM friends WHERE requesterID = ? AND status = ?', 
-    [userId, 'pending']
-  );
+  // Get sent requests with blocked users excluded
+  const requests = await db.all(`
+    SELECT f.* FROM friends f
+    WHERE f.requesterID = ? AND f.status = 'pending'
+    AND NOT EXISTS (
+      SELECT 1 FROM blocked_users b1 
+      WHERE (b1.blockerId = ? AND b1.blockedId = f.recipientID)
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM blocked_users b2 
+      WHERE (b2.blockerId = f.recipientID AND b2.blockedId = ?)
+    )
+  `, [userId, userId, userId]);
   
-  // Her request için hedef kişi bilgisini al
+  // Get target info for each request
   const enrichedRequests = [];
   for (const request of requests) {
     const targetInfo = await db.get(
@@ -199,10 +229,12 @@ export async function getSentRequestsWithUserInfo(userId) {
       [request.recipientID]
     );
     
-    enrichedRequests.push({
-      ...request,
-      targetInfo: targetInfo
-    });
+    if (targetInfo) {
+      enrichedRequests.push({
+        ...request,
+        targetInfo: targetInfo
+      });
+    }
   }
   
   return enrichedRequests;

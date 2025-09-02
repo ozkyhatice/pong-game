@@ -7,6 +7,19 @@ import { OnlineUsersService } from '../../services/OnlineUsersService.js';
 import { WebSocketManager } from '../../core/WebSocketManager.js';
 import { UserService } from '../../services/UserService.js';
 
+interface Match {
+  id: number;
+  player1Id: number;
+  player2Id: number;
+  player1Score: number;
+  player2Score: number;
+  winnerId: number | null;
+  startedAt: string;
+  endedAt: string | null;
+  tournamentId: number | null;
+  round: number | null;
+}
+
 export function init() {
   const userService = new UserService();
   const chatInput = document.getElementById('chat-input') as HTMLInputElement;
@@ -124,6 +137,9 @@ export function init() {
     if (sidebarToggleIcon) {
       sidebarToggleIcon.style.transform = 'rotate(180deg)';
     }
+    
+    // Load match history when sidebar opens
+    loadMatchHistory();
   }
 
   function closeSidebarPanel(): void {
@@ -343,10 +359,27 @@ function updateStatsDisplay(userData: any) {
 	console.log('Stats updated:', { wins, losses, winRate, totalGames });
   }
 
-  function getTimeAgo(index: number): string {
-    const timeOptions = ['2 hours ago', '5 hours ago', '1 day ago', '2 days ago', '3 days ago'];
-    return timeOptions[index] || `${index + 1} days ago`;
-}
+  function getTimeAgo(date: Date | number): string {
+    if (typeof date === 'number') {
+      // Old behavior for compatibility
+      const timeOptions = ['2 hours ago', '5 hours ago', '1 day ago', '2 days ago', '3 days ago'];
+      return timeOptions[date] || `${date + 1} days ago`;
+    }
+    
+    // New behavior for Date objects
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) {
+      return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    } else if (diffHours > 0) {
+      return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    } else {
+      return 'Less than an hour ago';
+    }
+  }
 
 async function handleChallenge() {
     if (!currentUserId || !friendUserId || !currentUsername) {
@@ -410,7 +443,7 @@ async function handleRemoveFriend() {
       notify(`Removed ${viewingUser.username} from friends`, 'green');
 
       setTimeout(() => {
-        window.location.href = '#/home';
+        router.navigate('home');
       }, 1000);
       
     } catch (error) {
@@ -456,16 +489,115 @@ async function handleBlockFriend() {
       notify(`Blocked ${viewingUser.username}`, 'green');
       
       setTimeout(() => {
-        window.location.href = '#/home';
+        router.navigate('home');
       }, 1000);
       
     } catch (error) {
       console.error('Error blocking user:', error);
       notify('Failed to block user', 'red');
     }
-}
+  }
 
-function cleanup(): void {
+  async function loadMatchHistory(): Promise<void> {
+    if (!friendUserId) {
+      console.log('No friend user ID available for match history');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token available');
+        return;
+      }
+
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.GAME.MATCH_HISTORY(friendUserId.toString())), {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to load match history: ${response.status}`);
+      }
+
+      const data = await response.json();
+      displayMatchHistory(data.matches || []);
+    } catch (error) {
+      console.error('Error loading match history:', error);
+      // Show a message if loading fails
+      const matchHistoryContainer = document.getElementById('match-history');
+      if (matchHistoryContainer) {
+        matchHistoryContainer.innerHTML = `
+          <div class="text-center text-neon-white/70 py-4">
+            <p class="text-sm">Unable to load match history</p>
+          </div>
+        `;
+      }
+    }
+  }
+
+  async function displayMatchHistory(matches: Match[]): Promise<void> {
+    const matchHistoryContainer = document.getElementById('match-history');
+    if (!matchHistoryContainer) return;
+
+    if (matches.length === 0) {
+      matchHistoryContainer.innerHTML = `
+        <div class="text-center text-neon-white/70 py-4">
+          <p class="text-sm">No matches found</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Get usernames for player IDs
+    const userService = new UserService();
+    const matchElements: string[] = [];
+
+    for (const match of matches.slice(0, 5)) { // Show only last 5 matches
+      try {
+        const isPlayer1 = match.player1Id === friendUserId;
+        const opponentId = isPlayer1 ? match.player2Id : match.player1Id;
+        const userScore = isPlayer1 ? match.player1Score : match.player2Score;
+        const opponentScore = isPlayer1 ? match.player2Score : match.player1Score;
+        
+        // Get opponent's username
+        const opponent = await userService.getUserById(opponentId);
+        const opponentUsername = opponent?.username || 'Unknown';
+        
+        const isWin = match.winnerId === friendUserId;
+        const resultClass = isWin ? 'neon-green' : 'neon-red';
+        const resultBorderClass = isWin ? 'border-neon-green' : 'border-neon-red';
+        const resultLetter = isWin ? 'W' : 'L';
+        
+        // Format date
+        const matchDate = new Date(match.endedAt || match.startedAt);
+        const timeAgo = getTimeAgo(matchDate);
+        
+        matchElements.push(`
+          <div class="flex items-center justify-between p-3 bg-terminal-border border border-${resultClass} border-opacity-50 rounded-lg">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 bg-${resultClass} rounded-full flex items-center justify-center text-terminal-border text-xs font-bold">${resultLetter}</div>
+              <div>
+                <div class="font-medium text-neon-white text-sm">vs. ${opponentUsername}</div>
+                <div class="text-xs text-neon-white/70">${timeAgo}</div>
+                ${match.tournamentId ? '<div class="text-xs text-neon-purple">Tournament</div>' : ''}
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-${resultClass} text-sm">${userScore} - ${opponentScore}</div>
+            </div>
+          </div>
+        `);
+      } catch (error) {
+        console.error('Error processing match:', error);
+      }
+    }
+
+    matchHistoryContainer.innerHTML = matchElements.join('');
+  }
+
+  function cleanup(): void {
     if (unsubscribeStatusChange) {
       unsubscribeStatusChange();
       unsubscribeStatusChange = null;

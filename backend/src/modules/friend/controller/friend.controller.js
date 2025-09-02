@@ -12,7 +12,8 @@ import {
   getFriendsListWithUserInfo,
   getIncomingFriendRequestsWithUserInfo,
   getSentRequestsWithUserInfo,
-  getBlockedUsers
+  getBlockedUsers,
+  isUserBlocked
 } from '../service/friend.service.js';
 import { validateUserId, sanitizeFriendData } from '../utils/validation.js';
 import { containsSqlInjection } from '../../../utils/validation.js';
@@ -42,6 +43,14 @@ export async function createFriendRequest(request, reply) {
 
   if (requesterId == targetId) {
     return reply.code(400).send({ error: 'You cannot send a friend request to yourself' });
+  }
+
+  // Check if either user has blocked the other
+  const isBlocked = await isUserBlocked(requesterId, targetId);
+  const isBlockedReverse = await isUserBlocked(targetId, requesterId);
+  
+  if (isBlocked || isBlockedReverse) {
+    return reply.code(400).send({ error: 'Cannot send friend request to this user' });
   }
 
   const existingRequest = await isExistingFriendRequest(requesterId, targetId);
@@ -113,6 +122,14 @@ export async function acceptRequest(request, reply) {
   // Check for SQL injection patterns
   if (containsSqlInjection(String(userId)) || containsSqlInjection(String(targetId))) {
     return reply.code(400).send({ error: 'Invalid input detected' });
+  }
+
+  // Check if either user has blocked the other
+  const isBlocked = await isUserBlocked(userId, targetId);
+  const isBlockedReverse = await isUserBlocked(targetId, userId);
+  
+  if (isBlocked || isBlockedReverse) {
+    return reply.code(400).send({ error: 'Cannot accept friend request from this user' });
   }
 
   const alreadyFriend = await isFriend(targetId, userId);
