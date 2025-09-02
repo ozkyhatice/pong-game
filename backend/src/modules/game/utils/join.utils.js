@@ -1,13 +1,18 @@
 import { v4 as uuidv4 } from 'uuid';
 import { userRoom } from '../controller/game.controller.js';
+import { sanitizeGameInput } from './security.utils.js';
+
 export async function generateRoomId() {
     return uuidv4();
 }
 
 export async function sendMessage(connection, type, event, data = {}) {
   try {
+    // Sanitize data before sending to prevent XSS attacks
+    const sanitizedData = sanitizeGameInput(data);
+    
     if (connection && connection.readyState === connection.OPEN) {
-      connection.send(JSON.stringify({ type, event, data }));
+      connection.send(JSON.stringify({ type, event, data: sanitizedData }));
     } else {
       console.warn(`🔴 WS SEND FAILED: Connection closed -> Type: ${type}, Event: ${event}`);
     }
