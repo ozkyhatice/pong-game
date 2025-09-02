@@ -1,89 +1,124 @@
 
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center py-6 px-4">
-    <div class="w-full max-w-5xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 sm:py-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">⚙️ <span class="text-indigo-600">Profile Settings</span></h1>
-                    <p class="text-sm text-slate-500 mt-1">Manage your avatar, profile details and two-factor authentication.</p>
+<div class="min-h-screen bg-radial-bg flex items-center justify-center p-2 sm:p-4 font-orbitron text-neon-green">
+    <div class="bg-terminal-bg border-2 border-neon-green rounded shadow-terminal w-full max-w-4xl mx-auto">
+        <!-- Settings Section -->
+        <div class="bg-console-bg p-4 sm:p-6">
+            <div class="text-neon-white text-base sm:text-lg font-bold mb-4 text-center uppercase tracking-widest" style="text-shadow: 0 0 10px #62A6FA;">
+                PROFILE SETTINGS
+            </div>
+
+            <div id="messages" class="hidden p-3 rounded-sm border border-neon-green border-opacity-50 bg-black bg-opacity-40 text-neon-green text-xs mb-4"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Profile Information Section -->
+                <div class="lg:col-span-2">
+                    <div class="bg-black bg-opacity-60 border border-neon-green border-opacity-40 rounded-sm p-4 sm:p-6 mb-6">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:gap-6 mb-6">
+                            <div class="flex-shrink-0">
+                                <div id="avatarPreview" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-black border-2 border-neon-green border-opacity-50 flex items-center justify-center overflow-hidden shadow-terminal">
+                                    <span class="text-neon-green text-xs uppercase">No Avatar</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 sm:mt-0 flex-1">
+                                <div id="profileInfo" class="text-neon-green font-medium text-xs space-y-1"></div>
+                                <p class="text-neon-green text-opacity-70 text-[10px] mt-2 uppercase tracking-wide">User Data Matrix</p>
+                            </div>
+                        </div>
+
+                        <!-- Avatar Upload -->
+                        <div class="mb-6">
+                            <h3 class="text-neon-green text-xs font-bold mb-3 uppercase tracking-wide">Avatar Upload Protocol</h3>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:gap-3">
+                                <input type="file" id="avatarFile" accept="image/*"
+                                       class="flex-1 terminal-input bg-black bg-opacity-80 border border-neon-green border-opacity-50 rounded-sm px-3 py-2 text-neon-green font-orbitron text-xs outline-none file:mr-4 file:py-1 file:px-3 file:rounded-sm file:border-0 file:text-xs file:font-semibold file:bg-neon-green file:bg-opacity-20 file:text-neon-green" />
+                                <div class="flex gap-2 mt-3 sm:mt-0">
+                                    <button id="uploadBtn"
+                                            class="terminal-btn bg-btn-gradient border border-neon-green text-neon-green px-3 py-1 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
+                                        Upload
+                                    </button>
+                                    <button id="removeAvatarBtn"
+                                            class="terminal-btn bg-btn-gradient border border-neon-red text-neon-red px-3 py-1 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile Update -->
+                        <div>
+                            <h3 class="text-neon-green text-xs font-bold mb-3 uppercase tracking-wide">User Data Update</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                <div>
+                                    <label class="block text-neon-green text-[10px] mb-1 uppercase tracking-wide">User ID:</label>
+                                    <input type="text" id="newUsername" placeholder="ENTER USERNAME"
+                                           class="terminal-input w-full bg-black bg-opacity-80 border border-neon-green border-opacity-50 rounded-sm px-3 py-2 text-neon-green font-orbitron text-xs outline-none" />
+                                </div>
+                                <div>
+                                    <label class="block text-neon-green text-[10px] mb-1 uppercase tracking-wide">Email Address:</label>
+                                    <input type="email" id="newEmail" placeholder="ENTER EMAIL"
+                                           class="terminal-input w-full bg-black bg-opacity-80 border border-neon-green border-opacity-50 rounded-sm px-3 py-2 text-neon-green font-orbitron text-xs outline-none" />
+                                </div>
+                            </div>
+                            <button id="updateBtn"
+                                    class="terminal-btn bg-btn-gradient border-2 border-neon-green text-neon-green px-4 py-2 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
+                                Update Profile
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button id="backHomeBtn" class="inline-flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg shadow-sm transition">← <span class="hidden sm:inline">Back to Home</span></button>
+
+                <!-- 2FA Section -->
+                <div class="lg:col-span-1">
+                    <div class="bg-black bg-opacity-60 border border-neon-blue border-opacity-40 rounded-sm p-4 sm:p-6">
+                        <h3 class="text-neon-blue text-xs font-bold mb-3 uppercase tracking-wide flex items-center gap-2">
+                            <span>🔐</span> Two-Factor Auth
+                        </h3>
+
+                        <div id="twofaStatus" class="text-neon-green text-xs mb-4 p-3 bg-black bg-opacity-60 border border-neon-green border-opacity-30 rounded-sm"></div>
+
+                        <div class="flex flex-col gap-3 mb-4">
+                            <button id="enable2faBtn" style="display: none;"
+                                    class="terminal-btn bg-btn-gradient border border-neon-blue text-neon-blue px-3 py-2 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
+                                Enable 2FA
+                            </button>
+                            <button id="disable2faBtn" style="display: none;"
+                                    class="terminal-btn bg-btn-gradient border border-neon-red text-neon-red px-3 py-2 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm">
+                                Disable 2FA
+                            </button>
+                        </div>
+
+                        <div id="qrCodeContainer" style="display: none;" class="bg-black bg-opacity-80 border border-neon-blue border-opacity-50 rounded-sm p-4 space-y-4">
+                            <div class="text-center">
+                                <h4 class="text-neon-blue text-xs font-bold mb-3 uppercase tracking-wide">📱 QR Scanner</h4>
+                                <div id="qrCode" class="flex justify-center mb-3 p-2 bg-white rounded-sm"></div>
+                            </div>
+                            <div>
+                                <p class="text-neon-green text-[10px] mb-2 uppercase tracking-wide">Backup Secret Key:</p>
+                                <div class="bg-black border border-neon-green border-opacity-50 rounded-sm p-2 font-mono text-[10px] text-neon-green break-all">
+                                    <span id="secretKey"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-neon-green text-[10px] mb-1 uppercase tracking-wide">Verification Code:</label>
+                                <input type="text" id="verifyCode" placeholder="ENTER 6-DIGIT CODE" maxlength="6"
+                                       class="terminal-input w-full bg-black bg-opacity-80 border border-neon-green border-opacity-50 rounded-sm px-3 py-2 text-neon-green font-orbitron text-xs text-center outline-none mb-3" />
+                                <button id="verifyBtn"
+                                        class="terminal-btn bg-btn-gradient border-2 border-neon-green text-neon-green px-3 py-2 font-orbitron text-xs font-bold uppercase tracking-wide cursor-pointer rounded-sm w-full">
+                                    ✓ Verify & Enable
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Left: avatar + profile info (span 2 on md) -->
-                <div class="md:col-span-2 flex flex-col gap-6">
-                    <div id="messages" class="hidden p-3 rounded-md border border-slate-200 bg-slate-50 text-sm"></div>
-
-                    <div class="bg-gradient-to-br from-white to-slate-50 rounded-xl p-5 sm:p-6 shadow">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:gap-6">
-                            <div class="flex-shrink-0">
-                                <div id="avatarPreview" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center overflow-hidden shadow-lg border-4 border-white"></div>
-                            </div>
-                            <div class="mt-4 sm:mt-0 flex-1">
-                                <div id="profileInfo" class="text-slate-700 font-medium"></div>
-                                <p class="text-sm text-slate-500 mt-1">Your public profile information shown to other players.</p>
-                            </div>
-                        </div>
-
-                        <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div class="sm:col-span-2">
-                                <h3 class="text-sm font-semibold text-slate-800 mb-2">Avatar Upload</h3>
-                                <div class="flex flex-col sm:flex-row sm:items-center sm:gap-3">
-                                    <input type="file" id="avatarFile" accept="image/*" class="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 bg-white file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700" />
-                                    <div class="flex gap-2 mt-3 sm:mt-0">
-                                        <button id="uploadBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow">Upload</button>
-                                        <button id="removeAvatarBtn" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 rounded-lg">Remove</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="sm:col-span-2">
-                                <h3 class="text-sm font-semibold text-slate-800 mb-2 mt-4">Profile Information</h3>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <input type="text" id="newUsername" placeholder="Username" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 bg-white" />
-                                    <input type="email" id="newEmail" placeholder="Email address" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 bg-white" />
-                                </div>
-                                <div class="mt-3">
-                                    <button id="updateBtn" class="w-full sm:w-auto px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium shadow">Update Profile</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right: 2FA -->
-                <div class="flex flex-col gap-6">
-                    <div class="bg-white rounded-xl p-5 sm:p-6 shadow border">
-                        <h3 class="font-semibold text-slate-800 mb-3 flex items-center gap-2">🔐 Two-Factor Authentication</h3>
-                        <div id="twofaStatus" class="text-slate-600 mb-4 p-3 bg-slate-50 rounded border"></div>
-
-                        <div class="flex flex-col sm:flex-row gap-3 mb-4">
-                            <button id="enable2faBtn" style="display: none;" class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">Enable 2FA</button>
-                            <button id="disable2faBtn" style="display: none;" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">Disable 2FA</button>
-                        </div>
-
-                        <div id="qrCodeContainer" style="display: none;" class="bg-slate-50 rounded-lg border border-slate-200 p-4 space-y-4">
-                            <div class="text-center">
-                                <h4 class="font-medium text-slate-800 mb-2">📱 Scan QR Code</h4>
-                                <div id="qrCode" class="flex justify-center mb-2"></div>
-                            </div>
-                            <div>
-                                <p class="text-sm text-slate-600 mb-2"><strong>Backup Secret Key:</strong></p>
-                                <div class="bg-white border rounded p-2 font-mono text-xs break-all"><span id="secretKey"></span></div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Verification Code</label>
-                                <input type="text" id="verifyCode" placeholder="Enter 6-digit code" maxlength="6" class="w-full p-3 border border-slate-300 rounded-lg text-center text-lg font-mono focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 bg-white" />
-                                <button id="verifyBtn" class="w-full mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium">✓ Verify & Enable 2FA</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Navigation -->
+            <div class="flex gap-2 mt-6">
+                <button id="backHomeBtn"
+                        class="nav-btn flex-1 bg-black bg-opacity-60 border border-neon-green border-opacity-40 text-neon-green text-opacity-80 px-2 sm:px-3 py-2 text-[10px] sm:text-xs font-orbitron uppercase tracking-wide cursor-pointer rounded-sm">
+                    ← Back Home
+                </button>
             </div>
         </div>
     </div>
 </div>
-

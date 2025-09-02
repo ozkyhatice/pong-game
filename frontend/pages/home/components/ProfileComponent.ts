@@ -7,12 +7,12 @@ export class ProfileComponent {
   private socialTabs: SocialTabs;
 
   constructor(profile: UserProfile) {
-    this.element = document.createElement('div');
-    this.element.className = 'h-full bg-gradient-to-br from-purple-500 via-blue-500 to-cyan-500 rounded-xl shadow-xl overflow-hidden flex flex-col';
-    
+  this.element = document.createElement('div');
+  this.element.className = 'h-full bg-terminal-bg border-2 border-neon-green rounded shadow-terminal overflow-hidden flex flex-col font-orbitron text-neon-green';
+
     this.profileHeader = new ProfileHeader(profile);
     this.socialTabs = new SocialTabs();
-    
+
     this.render();
   }
 
