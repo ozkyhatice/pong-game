@@ -1,11 +1,24 @@
 
 <div class="min-h-screen bg-radial-bg flex items-center justify-center p-2 sm:p-4 font-orbitron text-neon-green">
-    <div class="bg-terminal-bg border-2 border-neon-green rounded shadow-terminal w-full max-w-4xl mx-auto">
+    <div class="bg-console-bg border-2 border-neon-green shadow-terminal rounded-lg w-full max-w-4xl mx-auto">
         <!-- Settings Section -->
-        <div class="bg-console-bg p-4 sm:p-6">
-            <div class="text-neon-white text-base sm:text-lg font-bold mb-4 text-center uppercase tracking-widest" style="text-shadow: 0 0 10px #62A6FA;">
-                PROFILE SETTINGS
+        <!-- Settings Header -->
+        <div class="bg-header-gradient rounded-lg p-4">
+            <div class="flex items-center justify-center">
+                <div class="text-center">
+                    <div class="text-neon-white text-2xl font-bold tracking-wide mb-2" style="text-shadow: 0 0 10px #62A6FA;">
+                        PROFILE SETTINGS
+                    </div>
+                    <div class="flex items-center justify-center gap-1 mb-1 text-neon-white text-xs">
+                        <div class="w-1 h-1 bg-neon-green rounded-full animate-pulse"></div>
+                        <span class="text-[10px] text-neon-green">SETTINGS STATUS: LOADED</span>
+                    </div>
+                    <div class="text-neon-white flex items-center justify-center gap-1 text-xs">
+                        <span class="text-[10px]">> CONFIGURE YOUR PROFILE... </span>
+                    </div>
+                </div>
             </div>
+        </div>
 
             <div id="messages" class="hidden p-3 rounded-sm border border-neon-green border-opacity-50 bg-black bg-opacity-40 text-neon-green text-xs mb-4"></div>
 
