@@ -925,7 +925,7 @@ export class GameAreaComponent extends Component {
       notify('Left matchmaking queue');
     });
 
-    this.gameService.onMatchFound((data) => {
+    this.gameService.onMatchFound(async (data) => {
       console.log('🎮 Match found:', data);
       this.hideMatchmakingStatus();
       notify(`Match found! Opponent: ${data.opponent}`);
@@ -933,9 +933,12 @@ export class GameAreaComponent extends Component {
       // Set room info and navigate to game
       if (data.roomId) {
         const appState = AppState.getInstance();
+        const currentUser = await this.userService.getCurrentUser();
+        const myPlayerId = currentUser?.id;
+        
         appState.setCurrentRoom({
           roomId: data.roomId,
-          players: [data.opponent], // Add opponent
+          players: myPlayerId ? [myPlayerId, data.opponent] : [data.opponent],
           createdAt: Date.now(),
           isMatchmaking: true
         });
