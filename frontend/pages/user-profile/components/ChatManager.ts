@@ -30,6 +30,7 @@ export class ChatManager {
   private isLoadingMessages = false;
   private chatService: ChatService;
   private gameInviteManager: GameInviteManager;
+  private sentMessages = new Set<string>(); // Gönderilen mesajları takip etmek için
 
   constructor(
     chatInput: HTMLInputElement,
@@ -70,12 +71,22 @@ export class ChatManager {
   }
 
   async loadChatMessages(): Promise<void> {
-    if (this.isLoadingMessages || !this.friendUserId || !this.currentUserId) return;
+    console.log('loadChatMessages called with:', {
+      isLoadingMessages: this.isLoadingMessages,
+      friendUserId: this.friendUserId,
+      currentUserId: this.currentUserId
+    });
+    
+    if (this.isLoadingMessages || !this.friendUserId || !this.currentUserId) {
+      console.log('Early return from loadChatMessages');
+      return;
+    }
     
     this.isLoadingMessages = true;
     
     try {
       const token = localStorage.getItem('authToken');
+      
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.HISTORY(this.friendUserId.toString())), {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -84,12 +95,15 @@ export class ChatManager {
       });
 
       const data: ChatHistoryResponse = await response.json();
+      console.log('Chat API response:', data);
       
       if (data.success) {
+        console.log('Rendering messages:', data.data.messages);
         this.renderMessages(data.data.messages);
         // Load stored invites after rendering messages
         this.gameInviteManager.loadStoredInvites();
       } else {
+        console.error('API returned unsuccessful response:', data);
         notify('Failed to load messages', 'red');
       }
     } catch (error) {
@@ -101,14 +115,28 @@ export class ChatManager {
   }
 
   private renderMessages(messages: ApiMessage[]): void {
+    console.log('renderMessages called with:', messages.length, 'messages');
+    console.log('Chat messages element:', this.chatMessages);
+    
     this.chatMessages.innerHTML = '';
     
-    messages.forEach(message => {
+    if (messages.length === 0) {
+      this.chatMessages.innerHTML = `
+        <div class="text-center text-slate-500 py-8">
+          <p>NO MESSAGES YET. START A CONVERSATION!</p>
+        </div>
+      `;
+      return;
+    }
+    
+    messages.forEach((message, index) => {
+      console.log(`Rendering message ${index}:`, message);
       const messageElement = this.createMessageElement(message);
       this.chatMessages.appendChild(messageElement);
     });
 
     this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    console.log('Messages rendered successfully');
   }
 
   private createMessageElement(message: ApiMessage): HTMLElement {
@@ -122,21 +150,21 @@ export class ChatManager {
       messageDiv.innerHTML = `
         <div class="flex items-start gap-3 justify-end">
           <div class="flex-1">
-            <div class="bg-blue-600 text-white p-3 rounded-lg shadow-sm">
+            <div class="bg-neon-green text-terminal-border p-3 rounded-lg shadow-sm">
               <p>${this.escapeHtml(message.content)}</p>
             </div>
             <div class="text-xs text-slate-500 mt-1 text-right">${displayTime}</div>
           </div>
-          <div class="w-8 h-8 bg-green-400 rounded-full flex items-center justify-center text-white text-sm font-bold">ME</div>
+          <div class="w-8 h-8 bg-neon-green rounded-full flex items-center justify-center text-terminal-border text-sm font-bold">ME</div>
         </div>
       `;
     } else {
       messageDiv.innerHTML = `
         <div class="flex items-start gap-3">
-          <div class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-white text-sm font-bold">U</div>
+          <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-neon-blue text-sm font-bold">U</div>
           <div class="flex-1">
             <div class="bg-white p-3 rounded-lg shadow-sm">
-              <p class="text-slate-800">${this.escapeHtml(message.content)}</p>
+              <p class="text-terminal-border">${this.escapeHtml(message.content)}</p>
             </div>
             <div class="text-xs text-slate-500 mt-1">${displayTime}</div>
           </div>
@@ -156,9 +184,34 @@ export class ChatManager {
     this.sendBtn.disabled = true;
 
     try {
+      // Mesajı gönderilen mesajlar listesine ekle
+      const messageKey = `${this.friendUserId}-${message}-${Date.now()}`;
+      this.sentMessages.add(messageKey);
+
+      // Hemen mesajı kendi ekranında göster
+      const sentMessage: ApiMessage = {
+        id: Date.now(),
+        senderId: this.currentUserId,
+        receiverId: this.friendUserId,
+        content: message,
+        isRead: 0,
+        delivered: 0,
+        createdAt: new Date().toISOString().slice(0, 19).replace('T', ' ')
+      };
+
+      const messageElement = this.createMessageElement(sentMessage);
+      this.chatMessages.appendChild(messageElement);
+      this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+
+      // Sonra WebSocket ile gönder
       this.chatService.sendMessage(this.friendUserId, message);
+
+      // 5 saniye sonra sent mesajları temizle (memory leak önlemek için)
+      setTimeout(() => {
+        this.sentMessages.delete(messageKey);
+      }, 5000);
+
     } catch (error) {
-      console.error('Failed to send message:', error);
       notify('Failed to send message. Please try again.', 'red');
     } finally {
       this.chatInput.disabled = false;
@@ -170,6 +223,31 @@ export class ChatManager {
   private async handleReceiveMessage(message: any): Promise<void> {
     if (!message || (!message.from && !message.to)) return;
     
+    console.log('handleReceiveMessage received:', message);
+    
+    // Gönderdiğimiz mesajları kontrol et
+    const messageKey = `${message.to}-${message.content}`;
+    const isRecentlySent = Array.from(this.sentMessages).some(key => key.includes(messageKey));
+    
+    // Kendi gönderdiğiniz mesajları tekrar render etmeyin 
+    const isFromMe = message.from === this.currentUserId || 
+                     (message.from === undefined && message.to === this.friendUserId) ||
+                     isRecentlySent;
+    
+    console.log('Message analysis:', {
+      from: message.from,
+      to: message.to,
+      currentUserId: this.currentUserId,
+      friendUserId: this.friendUserId,
+      isFromMe,
+      isRecentlySent
+    });
+    
+    if (isFromMe) {
+      console.log('Skipping own message');
+      return;
+    }
+    
     const isForCurrentChat = 
       (message.from === this.friendUserId) ||  
       (message.to === this.friendUserId);      
@@ -178,8 +256,8 @@ export class ChatManager {
 
     const apiMessage: ApiMessage = {
       id: message.id || Date.now(),
-      senderId: message.from || this.currentUserId,
-      receiverId: message.to || this.friendUserId,
+      senderId: message.from || this.friendUserId,
+      receiverId: message.to || this.currentUserId,
       content: message.content,
       isRead: message.isRead || 0,
       delivered: message.delivered || 1,

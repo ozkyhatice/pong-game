@@ -91,6 +91,9 @@ export const API_CONFIG = {
       // POST /api/friends/:id/block
       BLOCK: (id: string) => `/api/friends/${id}/block`,
 
+	  // GET /api/friends/:id/blocked
+      BLOCKED: (id: string) => `/api/friends/${id}/blocked`,
+
       // POST /api/friends/:id/unblock
       UNBLOCK: (id: string) => `/api/friends/${id}/unblock`,
 
