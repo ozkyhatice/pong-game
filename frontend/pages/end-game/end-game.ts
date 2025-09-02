@@ -31,7 +31,7 @@ export function init() {
 		try {
 			const gameResult = JSON.parse(gameResultString);
 			const playerIds = Object.keys(gameResult.finalScore || {});
-			
+
 			if (playerIds.length < 2) return;
 
 			const [currentUser, player1, player2] = await Promise.all([
@@ -47,10 +47,10 @@ export function init() {
 			if (gameResultStatus) {
 				if (isCurrentUserWinner) {
 					gameResultStatus.textContent = '> RESULT: VICTORY!';
-					gameResultStatus.className = 'text-neon-green flex items-center gap-1 mb-1';
+					gameResultStatus.className = 'text-neon-green font-bold';
 				} else {
 					gameResultStatus.textContent = '> RESULT: DEFEAT...';
-					gameResultStatus.className = 'text-neon-red flex items-center gap-1 mb-1';
+					gameResultStatus.className = 'text-neon-red font-bold';
 				}
 			}
 
