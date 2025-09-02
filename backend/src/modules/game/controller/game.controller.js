@@ -5,6 +5,7 @@ import { getClientById } from "../../../websocket/services/client.service.js";
 import { joinMatchmakingQueue, leaveMatchmakingQueue, cancelMatchmaking, getMatchmakingStatus } from "./match-making.controller.js";
 import { getMatchHistoryByUserId } from "../services/game.service.js";
 import { sanitizeGameInput, validateGameInput, isValidUserId } from "../utils/security.utils.js";
+import { isUserBlocked } from "../../friend/service/friend.service.js";
 
 export const rooms = new Map();
 export const userRoom = new Map(); // userId -> roomId
@@ -403,6 +404,17 @@ export async function handleGameInvite(data, userId, connection) {
     
     console.log(`Game invite from user ${userId} to user ${receiverId}`);
     
+    // Check if either user has blocked the other
+    const isBlocked = await isUserBlocked(userId, receiverId);
+    const isBlockedReverse = await isUserBlocked(receiverId, userId);
+    
+    if (isBlocked || isBlockedReverse) {
+        await sendMessage(connection, 'game', 'error', {
+            message: 'Cannot send game invite to this user'
+        });
+        return;
+    }
+    
     // Get recipient's WebSocket connection
     const recipientClient = getClientById(receiverId);
     if (!recipientClient) {
@@ -497,4 +509,41 @@ export async function handleInviteAccepted(data, userId, connection) {
     });
     
     console.log(`🏠 ROOM CREATED: Invite room created -> Users: ${userId}, ${senderId}, Room: ${roomId}`);
+}
+
+// HTTP endpoint for getting match history
+export async function getMatchHistory(request, reply) {
+    const { userId } = request.params;
+
+    // Validate userId to prevent injection
+    if (!isValidUserId(userId)) {
+        console.error(`🛡️ SECURITY: Invalid user ID format in getMatchHistory -> ${userId}`);
+        return reply.code(400).send({ error: 'Invalid user ID format' });
+    }
+
+    try {
+        const matches = await getMatchHistoryByUserId(userId);
+        
+        // Format the response with additional user details if needed
+        const formattedMatches = matches.map(match => ({
+            id: match.id,
+            player1Id: match.player1Id,
+            player2Id: match.player2Id,
+            player1Score: match.player1Score,
+            player2Score: match.player2Score,
+            winnerId: match.winnerId,
+            startedAt: match.startedAt,
+            endedAt: match.endedAt,
+            tournamentId: match.tournamentId,
+            round: match.round
+        }));
+
+        reply.send({
+            matches: formattedMatches,
+            totalMatches: formattedMatches.length
+        });
+    } catch (error) {
+        console.error('Error fetching match history:', error);
+        reply.code(500).send({ error: 'Internal Server Error' });
+    }
 }

@@ -12,6 +12,7 @@ import twoFARoutes from './modules/2fa/routes/2fa.routes.js';
 import friendRoutes from './modules/friend/routes/friend.routes.js';
 import userRoutes from './modules/user/routes/user.routes.js';
 import chatRoutes from './modules/chat/routes/chat.routes.js';
+import gameRoutes from './modules/game/routes/game.routes.js';
 import { websocketHandler } from './websocket/websocket.handler.js';
 import metricsPlugin, { metrics } from './plugins/metrics.js';
 import path from 'path';
@@ -81,6 +82,7 @@ await app.register(twoFARoutes, { prefix: '/api/2fa' });
 await app.register(friendRoutes, { prefix: '/api/friends' });
 await app.register(userRoutes, { prefix: '/api/users' });
 await app.register(chatRoutes, { prefix: '/api/chat' });
+await app.register(gameRoutes, { prefix: '/api/game' });
 app.get('/ws', { websocket: true }, websocketHandler);
 
 
