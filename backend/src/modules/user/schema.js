@@ -96,3 +96,15 @@ export const getUserByIdSchema = {
     }
   }
 };
+
+export const deleteMyAvatarSchema = {
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+        user: userResponseSchema
+      }
+    }
+  }
+};

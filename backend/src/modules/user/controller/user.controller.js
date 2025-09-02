@@ -180,6 +180,45 @@ export async function updateMyAvatar(request, reply) {
   }
 }
 
+export async function deleteMyAvatar(request, reply) {
+  const userId = request.user.id;
+
+  try {
+    // Get current user to check avatar
+    const currentUser = await getUserByIdService(userId);
+    if (!currentUser) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+
+    // Check if user has uploaded avatar (not default or Google avatar)
+    const hasUploadedAvatar = currentUser.avatar && currentUser.avatar.includes('/api/uploads/avatars/');
+    
+    if (hasUploadedAvatar) {
+      // Extract filename from URL and delete physical file
+      const filename = currentUser.avatar.split('/').pop();
+      const filePath = path.join(process.cwd(), 'uploads', 'avatars', filename);
+      
+      // Delete physical file if exists
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log('Deleted avatar file:', filePath);
+      }
+    }
+
+    // Set default Dicebear avatar
+    const defaultAvatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${currentUser.username}`;
+    const updatedUser = await updateAvatar(userId, defaultAvatar);
+
+    reply.send({ 
+      message: 'Avatar deleted successfully, default avatar set',
+      user: updatedUser 
+    });
+  } catch (error) {
+    console.error('Error deleting user avatar:', error);
+    reply.code(500).send({ error: 'Internal Server Error' });
+  }
+}
+
 export async function getUserById(request, reply) {
   const { id } = request.params;
   

@@ -5,6 +5,7 @@ import {
   getUserByUsername,
   updateMyProfile,
   updateMyAvatar,
+  deleteMyAvatar,
   getUserTournamentStatus
 } from '../controller/user.controller.js';
 import { 
@@ -12,7 +13,8 @@ import {
   getUserByIdSchema,
   getUserByUsernameSchema,
   updateProfileSchema,
-  updateMyAvatarSchema
+  updateMyAvatarSchema,
+  deleteMyAvatarSchema
 } from '../schema.js';
 
 export default async function userRoutes(app, options) {
@@ -34,11 +36,11 @@ export default async function userRoutes(app, options) {
     schema: updateMyAvatarSchema
   }, updateMyAvatar);
 
-  // // avatar delete
-  // app.delete('/me/avatar', {
-  //   preHandler: verifyToken,
-  //   schema: deleteMyAvatarSchema
-  // }, deleteMyAvatar);
+  // avatar delete
+  app.delete('/me/avatar', {
+    preHandler: verifyToken,
+    schema: deleteMyAvatarSchema
+  }, deleteMyAvatar);
 
   // Get user by id
   app.get('/id/:id', {
