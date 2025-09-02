@@ -1,16 +1,66 @@
 import { registerUser, loginUser, handleGoogleUser } from '../service/auth.service.js';
 import { escapeFields } from '../../../utils/security.js';
+import { 
+  isValidEmail, 
+  isValidUsername, 
+  validatePassword, 
+  containsSqlInjection,
+  sanitizeGeneralInput 
+} from '../../../utils/validation.js';
 
 export async function register(request, reply) {
   const { username, email, password } = request.body;
   
-  // XSS koruması için input'ları escape et
-  const sanitizedData = escapeFields({ username, email }, ['username', 'email']);
+  // Temel validation kontrolü
+  if (!username || !email || !password) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Username, email and password are required'
+    });
+  }
+
+  // Email validation
+  if (!isValidEmail(email)) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Please provide a valid email address'
+    });
+  }
+
+  // Username validation
+  if (!isValidUsername(username)) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Username must be 3-20 characters long and contain only letters, numbers, and underscores'
+    });
+  }
+
+  // will be activated later for stronger
+  // Password validation
+  // const passwordValidation = validatePassword(password);
+  // if (!passwordValidation.isValid) {
+  //   return reply.code(400).send({
+  //     success: false,
+  //     message: passwordValidation.message
+  //   });
+  // }
+
+  // SQL injection kontrolü
+  if (containsSqlInjection(username) || containsSqlInjection(email)) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Invalid characters detected in input'
+    });
+  }
+
+  // XSS koruması için input'ları sanitize et
+  const sanitizedUsername = sanitizeGeneralInput(username, { maxLength: 20 });
+  const sanitizedEmail = sanitizeGeneralInput(email, { maxLength: 255 });
 
   try {
     const user = await registerUser({ 
-      username: sanitizedData.username, 
-      email: sanitizedData.email, 
+      username: sanitizedUsername, 
+      email: sanitizedEmail, 
       password 
     });
 
@@ -36,11 +86,35 @@ export async function register(request, reply) {
 export async function login(request, reply) {
   const { email, password } = request.body;
   
-  // XSS koruması için email'i escape et
-  const sanitizedData = escapeFields({ email }, ['email']);
+  // Temel validation kontrolü
+  if (!email || !password) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Email and password are required'
+    });
+  }
+
+  // Email validation
+  if (!isValidEmail(email)) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Please provide a valid email address'
+    });
+  }
+
+  // SQL injection kontrolü
+  if (containsSqlInjection(email)) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Invalid characters detected in email'
+    });
+  }
+
+  // XSS koruması için email'i sanitize et
+  const sanitizedEmail = sanitizeGeneralInput(email, { maxLength: 255 });
 
   try {
-    const user = await loginUser({ email: sanitizedData.email, password });
+    const user = await loginUser({ email: sanitizedEmail, password });
     console.log('2FA is enabled for user:', user.isTwoFAEnabled);
 
     // Eğer kullanıcı 2FA etkinleştirmişse, 2FA doğrulaması yapılacak
