@@ -69,8 +69,9 @@ export async function init() {
       if (response.ok) {
         notify(`Registration successful! Welcome ${username}!`, 'green');
         router.navigate('login');
-      } else
+      } else {
         throw new Error(data.message || 'Registration failed');
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed';
       notify(`${errorMessage}`, 'red');
