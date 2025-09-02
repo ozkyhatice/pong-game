@@ -67,19 +67,25 @@ export function validatePassword(password) {
  * @returns {boolean} - Şüpheli SQL pattern var mı?
  */
 export function containsSqlInjection(input) {
-  if (typeof input !== 'string') return false;
+  if (typeof input !== 'string') {
+    return false;
+  }
   
-  const sqlPatterns = [
-    /('|(\\')|(;\s*(drop|delete|insert|update|select|union|exec|execute)))/i,
-    /(union\s+select)/i,
-    /(select\s+.*\s+from)/i,
-    /(insert\s+into)/i,
-    /(delete\s+from)/i,
-    /(update\s+.*\s+set)/i,
-    /(drop\s+table)/i
+  // SQL Injection için yaygın patternleri kontrol et
+  const sqlInjectionPatterns = [
+    /(\s|^)(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|UNION)(\s)/i,
+    /(\s|^)(FROM|INTO|WHERE|GROUP BY|ORDER BY|HAVING)(\s)/i,
+    /'(''|[^'])*';/i,
+    /--/,
+    /\/\*/,
+    /;\s*$/,
+    /UNION\s+ALL\s+SELECT/i,
+    /OR\s+1=1/i,
+    /OR\s+'1'='1'/i,
+    /OR\s+a=a/i
   ];
   
-  return sqlPatterns.some(pattern => pattern.test(input));
+  return sqlInjectionPatterns.some(pattern => pattern.test(input));
 }
 
 /**

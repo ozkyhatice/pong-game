@@ -50,85 +50,91 @@ export async function onlineClientsController(connection) {
  * @param {number} userId - The ID of the sender
  */
 export async function processChatMessage(message, userId) {
-  const msgStr = message.toString();
-  const msgObj = JSON.parse(msgStr);
-  const { receiverId, content, senderId } = msgObj;
-  const type = msgObj.type || 'message';
+  try {
+    // Parse message with security measures
+    const { parseWebSocketMessage } = await import('../../../websocket/utils/security.js');
+    const msgObj = parseWebSocketMessage(message);
+    const { receiverId, content, senderId } = msgObj;
+    const type = msgObj.type || 'message';
 
-  if (type === 'read') {
-    // Eğer senderId belirtilmişse sadece o kullanıcıdan gelen mesajları okundu yap
-    if (senderId) {
-      // Güvenlik: senderId'yi doğrula ve sanitize et
-      const sanitizedSenderId = parseInt(senderId);
-      if (isNaN(sanitizedSenderId)) {
-        throw new Error('Invalid sender ID format');
-      }
-      
-      await markSpecificMessagesAsRead(userId, sanitizedSenderId);
-    } else {
-      // Yoksa tüm mesajları okundu yap (eski davranış)
-      await markMessagesAsRead(userId);
-    }
-  } else if (type === 'message') {
-    if (!receiverId || !content) {
-      throw new Error('Receiver ID and content are required');
-    }
-    
-    // Güvenlik: receiverId'yi doğrula ve sanitize et
-    const sanitizedReceiverId = parseInt(receiverId);
-    if (isNaN(sanitizedReceiverId)) {
-      throw new Error('Invalid receiver ID format');
-    }
-    
-    // Chat mesajı validation
-    const messageValidation = validateChatMessage(content);
-    if (!messageValidation.isValid) {
-      throw new Error(messageValidation.message);
-    }
-
-    // SQL injection kontrolü
-    if (containsSqlInjection(content)) {
-      throw new Error('Invalid characters detected in message');
-    }
-    
-    // Validation sonucunda sanitize edilmiş mesajı kullan
-    const sanitizedContent = messageValidation.sanitizedMessage;
-    
-    if (userId === sanitizedReceiverId) {
-      throw new Error('You cannot send a message to yourself');
-    }
-    
-    // Check if the sender is blocked by the receiver
-    const isBlocked = await isUserBlocked(userId, sanitizedReceiverId);
-    if (isBlocked) {
-      throw new Error('You cannot send a message to this user as they have blocked you');
-    }
-
-    // Mesajı her zaman DB'ye kaydet (online/offline fark etmez)
-    const newMessage = await addMessageToDb(userId, sanitizedReceiverId, sanitizedContent);
-    
-    if (newMessage) {
-      const messageObj = {
-        id: newMessage.lastID,
-        senderId: userId,
-        receiverId: sanitizedReceiverId,
-        content: sanitizedContent,
-        isRead: 0,
-        delivered: 0,
-        createdAt: new Date().toISOString()
-      };
-      
-      // Sadece her iki user da online ise mesajı gönder
-      if (await isConnected(sanitizedReceiverId) && await isConnected(userId)) {
-        try {
-          await handleRealtimeMessage(userId, sanitizedReceiverId, sanitizedContent, messageObj);
-        } catch (err) {
-          console.error('Error sending message:', err);
+    if (type === 'read') {
+      // Eğer senderId belirtilmişse sadece o kullanıcıdan gelen mesajları okundu yap
+      if (senderId) {
+        // Güvenlik: senderId'yi doğrula ve sanitize et
+        const sanitizedSenderId = parseInt(senderId);
+        if (isNaN(sanitizedSenderId)) {
+          throw new Error('Invalid sender ID format');
         }
+        
+        await markSpecificMessagesAsRead(userId, sanitizedSenderId);
       } else {
-        console.log(`User ${sanitizedReceiverId} is offline, message saved to DB and will be delivered when online`);
+        // Yoksa tüm mesajları okundu yap (eski davranış)
+        await markMessagesAsRead(userId);
+      }
+    } else if (type === 'message') {
+      if (!receiverId || !content) {
+        throw new Error('Receiver ID and content are required');
+      }
+      
+      // Güvenlik: receiverId'yi doğrula ve sanitize et
+      const sanitizedReceiverId = parseInt(receiverId);
+      if (isNaN(sanitizedReceiverId)) {
+        throw new Error('Invalid receiver ID format');
+      }
+      
+      // Chat mesajı validation
+      const messageValidation = validateChatMessage(content);
+      if (!messageValidation.isValid) {
+        throw new Error(messageValidation.message);
+      }
+
+      // SQL injection kontrolü
+      if (containsSqlInjection(content)) {
+        throw new Error('Invalid characters detected in message');
+      }
+      
+      // Validation sonucunda sanitize edilmiş mesajı kullan
+      const sanitizedContent = messageValidation.sanitizedMessage;
+      
+      if (userId === sanitizedReceiverId) {
+        throw new Error('You cannot send a message to yourself');
+      }
+      
+      // Check if the sender is blocked by the receiver
+      const isBlocked = await isUserBlocked(userId, sanitizedReceiverId);
+      if (isBlocked) {
+        throw new Error('You cannot send a message to this user as they have blocked you');
+      }
+
+      // Mesajı her zaman DB'ye kaydet (online/offline fark etmez)
+      const newMessage = await addMessageToDb(userId, sanitizedReceiverId, sanitizedContent);
+      
+      if (newMessage) {
+        const messageObj = {
+          id: newMessage.lastID,
+          senderId: userId,
+          receiverId: sanitizedReceiverId,
+          content: sanitizedContent,
+          isRead: 0,
+          delivered: 0,
+          createdAt: new Date().toISOString()
+        };
+        
+        // Sadece her iki user da online ise mesajı gönder
+        if (await isConnected(sanitizedReceiverId) && await isConnected(userId)) {
+          try {
+            await handleRealtimeMessage(userId, sanitizedReceiverId, sanitizedContent, messageObj);
+          } catch (err) {
+            console.error('Error sending message:', err);
+          }
+        } else {
+          console.log(`User ${sanitizedReceiverId} is offline, message saved to DB and will be delivered when online`);
+        }
       }
     }
+  } catch (error) {
+    console.error('Error processing chat message:', error);
+    throw error;
   }
 }
 
