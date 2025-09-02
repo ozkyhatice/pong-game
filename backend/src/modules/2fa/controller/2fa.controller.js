@@ -5,6 +5,7 @@ import {
 } from "../service/2fa.service.js";
 import { initDB } from "../../../config/db.js";
 import { sanitizeInput } from "../../../utils/security.js";
+import { containsSqlInjection, sanitizeGeneralInput } from '../../../utils/validation.js';
 
 export async function handle2FASetup(request, reply) {
   try {
@@ -31,8 +32,23 @@ export async function handle2FAVerify(request, reply) {
     const userId = request.user.id;
     const { token } = request.body;
 
+    // 2FA token validation
+    if (!token || typeof token !== 'string') {
+      return reply.status(400).send({ error: "2FA token is required" });
+    }
+
+    // 2FA token format kontrolü (6 haneli sayı olmalı)
+    if (!/^\d{6}$/.test(token)) {
+      return reply.status(400).send({ error: "2FA token must be 6 digits" });
+    }
+
+    // SQL injection kontrolü
+    if (containsSqlInjection(token)) {
+      return reply.status(400).send({ error: "Invalid characters detected in token" });
+    }
+
     // XSS koruması için token'ı sanitize et
-    const sanitizedToken = sanitizeInput(token);
+    const sanitizedToken = sanitizeGeneralInput(token, { maxLength: 6 });
 
     const isValid = await verify2FACode(userId, sanitizedToken);
     if (!isValid) {
