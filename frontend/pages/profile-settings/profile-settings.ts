@@ -58,18 +58,24 @@ function displayProfile(user: User): void {
     const profileDiv = document.getElementById('profileInfo');
     if (profileDiv) {
         profileDiv.innerHTML = `
-            <p>ID: ${user.id}</p>
-            <p>Username: ${user.username}</p>
-            <p>Email: ${user.email}</p>
-            <p>Wins: ${user.wins} | Losses: ${user.losses}</p>
+            <div class="text-neon-green text-xs space-y-1">
+                <p class="uppercase tracking-wide">USER ID: <span class="text-neon-white">${user.id}</span></p>
+                <p class="uppercase tracking-wide">USERNAME: <span class="text-neon-white">${user.username}</span></p>
+                <p class="uppercase tracking-wide">EMAIL: <span class="text-neon-white">${user.email}</span></p>
+                <p class="uppercase tracking-wide">STATS: <span class="text-neon-white">${user.wins}W / ${user.losses}L</span></p>
+            </div>
         `;
     }
 }
 
 function displayAvatar(avatar: string | null): void {
     const avatarDiv = document.getElementById('avatarPreview');
-    if (avatarDiv && avatar) {
-        avatarDiv.innerHTML = `<img src="${avatar}" width="100" height="100">`;
+    if (avatarDiv) {
+        if (avatar) {
+            avatarDiv.innerHTML = `<img src="${avatar}" class="w-full h-full object-cover rounded-full">`;
+        } else {
+            avatarDiv.innerHTML = `<span class="text-neon-green text-xs uppercase">No Avatar</span>`;
+        }
     }
 }
 
@@ -80,12 +86,17 @@ function update2FAStatus(isEnabled: boolean): void {
     const qrContainer = document.getElementById('qrCodeContainer');
 
     if (statusDiv) {
-        statusDiv.innerHTML = `<p><strong>2FA Status:</strong> ${isEnabled ? 'Enabled ✅' : 'Disabled ❌'}</p>`;
+        statusDiv.innerHTML = `
+            <div class="text-center">
+                <p class="text-neon-green text-xs uppercase tracking-wide mb-1">2FA Status:</p>
+                <p class="text-neon-white text-xs font-bold">${isEnabled ? 'ENABLED ✅' : 'DISABLED ❌'}</p>
+            </div>
+        `;
     }
 
     if (enableBtn && disableBtn) {
-        enableBtn.style.display = isEnabled ? 'none' : 'inline-block';
-        disableBtn.style.display = isEnabled ? 'inline-block' : 'none';
+        enableBtn.style.display = isEnabled ? 'none' : 'block';
+        disableBtn.style.display = isEnabled ? 'block' : 'none';
     }
 
     if (qrContainer) qrContainer.style.display = 'none';
@@ -264,7 +275,7 @@ export function init() {
     const disable2faBtn = document.getElementById('disable2faBtn');
     const verifyBtn = document.getElementById('verifyBtn');
     const backHomeBtn = document.getElementById('backHomeBtn');
-    
+
     updateBtn?.addEventListener('click', updateProfile);
     uploadBtn?.addEventListener('click', uploadAvatar);
     enable2faBtn?.addEventListener('click', setup2FA);
@@ -275,4 +286,3 @@ export function init() {
 
     loadProfile();
 }
-
