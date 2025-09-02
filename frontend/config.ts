@@ -59,6 +59,10 @@ export const API_CONFIG = {
       // Headers: { Authorization: Bearer <token> }
       UPDATE_AVATAR: '/api/users/me/avatar',
 
+      // DELETE /api/users/me/avatar
+      // Headers: { Authorization: Bearer <token> }
+      DELETE_AVATAR: '/api/users/me/avatar',
+
       // GET /api/users/id/:id
       // Headers: { Authorization: Bearer <token> }
       BY_ID: (id: string) => `/api/users/id/${id}`,
@@ -114,6 +118,12 @@ export const API_CONFIG = {
       // PUT /api/chat/mark-read/:userId
       // Headers: { Authorization: Bearer <token> }
       MARK_READ: (userId: string) => `/api/chat/mark-read/${userId}`
+    },
+
+    GAME: {
+      // GET /api/game/matches/history/:userId
+      // Headers: { Authorization: Bearer <token> }
+      MATCH_HISTORY: (userId: string) => `/api/game/matches/history/${userId}`
     }
   }
 };
