@@ -22,6 +22,8 @@ export function init() {
   
   const challengeBtn = document.getElementById('challenge-btn') as HTMLButtonElement;
   const backBtn = document.getElementById('back-btn') as HTMLButtonElement;
+  const removeFriendBtn = document.getElementById('remove-friend-btn') as HTMLButtonElement;
+  const blockFriendBtn = document.getElementById('block-friend-btn') as HTMLButtonElement;
 
   let currentUserId: number | null = null;
   let currentUsername: string | null = null;
@@ -50,6 +52,8 @@ export function init() {
     });
     
     challengeBtn?.addEventListener('click', () => handleChallenge());
+    removeFriendBtn?.addEventListener('click', () => handleRemoveFriend());
+    blockFriendBtn?.addEventListener('click', () => handleBlockFriend());
     
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && isSidebarOpen) {
@@ -158,9 +162,11 @@ export function init() {
       const viewingUser = appState.getViewingUser();
       if (viewingUser) {
         friendUserId = viewingUser.id;
+        console.log('Set friendUserId to:', friendUserId, 'for user:', viewingUser);
         updatePageContent(viewingUser);
         initializeChatManager();
       } else {
+        console.error('No user selected to view');
         notify('No user selected to view');
       }
     } catch (error) {
@@ -364,6 +370,98 @@ async function handleChallenge() {
     } catch (error) {
       console.error('Failed to send game invitation:', error);
       notify('Failed to send game invitation', 'red');
+    }
+}
+
+async function handleRemoveFriend() {
+    if (!friendUserId) {
+      notify('NO FRIEND SELECTED', 'red');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        notify('NO AUTHENTICATION TOKEN FOUND', 'red');
+        return;
+      }
+
+      const viewingUser = appState.getViewingUser();
+      if (!viewingUser) {
+        notify('NO USER SELECTED', 'red');
+        return;
+      }
+
+      console.log('Calling remove friend API with friendUserId:', friendUserId);
+
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.REMOVE(friendUserId.toString())), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Remove friend error response:', errorData);
+        throw new Error(`Failed to remove friend: ${response.status} ${response.statusText} - ${errorData}`);
+      }
+
+      notify(`Removed ${viewingUser.username} from friends`, 'green');
+
+      setTimeout(() => {
+        window.location.href = '#/home';
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error removing friend:', error);
+      notify('Failed to remove friend', 'red');
+    }
+}
+
+async function handleBlockFriend() {
+    if (!friendUserId) {
+      notify('NO FRIEND SELECTED', 'red');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        notify('NO AUTHENTICATION TOKEN FOUND', 'red');
+        return;
+      }
+
+      const viewingUser = appState.getViewingUser();
+      if (!viewingUser) {
+        notify('NO USER SELECTED', 'red');
+        return;
+      }
+
+      console.log('Calling block friend API with friendUserId:', friendUserId);
+
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.BLOCK(friendUserId.toString())), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Block friend error response:', errorData);
+        throw new Error(`Failed to block user: ${response.status} ${response.statusText} - ${errorData}`);
+      }
+
+      notify(`Blocked ${viewingUser.username}`, 'green');
+      
+      setTimeout(() => {
+        window.location.href = '#/home';
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      notify('Failed to block user', 'red');
     }
 }
 
