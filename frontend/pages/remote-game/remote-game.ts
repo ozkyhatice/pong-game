@@ -133,13 +133,13 @@ export async function init() {
   // Get canvas elements
   const desktopCanvas = document.getElementById('game-canvas') as HTMLCanvasElement | null;
   const mobileCanvas = document.getElementById('mobile-game-canvas') as HTMLCanvasElement | null;
-  
+
   if (!desktopCanvas && !mobileCanvas) {
     console.error('No canvas found');
     notify('Game canvas not found!');
     return;
   }
-  
+
   // Get UI elements
   const player1NameEl = document.getElementById('player1-name');
   const player2NameEl = document.getElementById('player2-name');
@@ -150,12 +150,12 @@ export async function init() {
   const roomIdEl = document.getElementById('room-id');
   const gameStatusEl = document.getElementById('game-status');
   const leaveGameBtn = document.getElementById('leave-game-btn');
-  
+
   // Pause elements
   const pauseMessageEl = document.getElementById('pause-message');
   const pauseTextEl = document.getElementById('pause-text');
   const pauseCountdownEl = document.getElementById('pause-countdown');
-  
+
   // Mobile elements
   const mobilePlayer1NameEl = document.getElementById('mobile-player1-name');
   const mobilePlayer2NameEl = document.getElementById('mobile-player2-name');
@@ -167,7 +167,7 @@ export async function init() {
   const mobileLeaveBtn = document.getElementById('mobile-leave-btn');
   const mobileUpBtn = document.getElementById('mobile-up-btn');
   const mobileDownBtn = document.getElementById('mobile-down-btn');
-  
+
   // Mobile pause elements
   const mobilePauseMessageEl = document.getElementById('mobile-pause-message');
   const mobilePauseTextEl = document.getElementById('mobile-pause-text');
@@ -187,14 +187,14 @@ export async function init() {
   if (roomIdEl) roomIdEl.textContent = `ROOM: ${currentRoom.roomId}`;
   if (leaveGameBtn) leaveGameBtn.addEventListener('click', handleLeaveGame);
   if (mobileLeaveBtn) mobileLeaveBtn.addEventListener('click', handleLeaveGame);
-  
+
   // Initialize 3D scene
   init3DScene();
-  
+
   // Setup controls
   setupMobileControls();
   setupKeyboardControls();
-  
+
   initPlayerInfo();
   initRoomPlayerNames();
 
@@ -202,7 +202,7 @@ export async function init() {
   gameService.onStateUpdate((data) => {
     if (gameStatusEl) gameStatusEl.textContent = '⚔️ CYBER BATTLE ⚔️';
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚔️ BATTLE ⚔️';
-    
+
     gameState = data.state;
     update3DGameState();
     updateScores();
@@ -273,35 +273,35 @@ export async function init() {
   tournamentService.onTournamentEnded((data: any) => {
     console.log('🏆 Tournament ended during game:', data);
     const isWinner = data.winnerId === myPlayerId;
-    const message = isWinner 
-      ? '🎉 Congratulations! You won the tournament!' 
+    const message = isWinner
+      ? '🎉 Congratulations! You won the tournament!'
       : `🏆 Tournament ended. Winner: ${data.winnerUsername}`;
-    
+
     notify(message);
-    
+
     // Immediately stop the game and clean up
     gameState = null;
     players = [];
     myPlayerId = null;
-    
+
     // Clear mobile control intervals
     if (mobileControlInterval) {
       clearInterval(mobileControlInterval);
       mobileControlInterval = null;
     }
-    
+
     // Clear pause countdown
     if (pauseCountdownTimer) {
       clearTimeout(pauseCountdownTimer);
       pauseCountdownTimer = null;
     }
-    
+
     // Show tournament end result
     setTimeout(() => {
       appState.clearCurrentRoom();
       appState.clearCurrentTournament();
       cleanup3D();
-      
+
       // Store tournament result for end-game page
       localStorage.setItem('tournamentResult', JSON.stringify({
         isWinner,
@@ -309,7 +309,7 @@ export async function init() {
         message: data.message,
         timestamp: Date.now()
       }));
-      
+
       router.navigate('end-game');
     }, 3000);
   });
@@ -324,47 +324,47 @@ export async function init() {
 
   function init3DScene() {
     console.log('🎮 Initializing Enhanced 3D Pong Arena...');
-    
+
     // If engine already exists, clean it up first
     if (engine) {
       console.log('🧹 Cleaning up existing engine...');
       cleanup3D();
     }
-    
+
     const isMobile = window.innerWidth < 1024;
     const targetCanvas = (isMobile && mobileCanvas) ? mobileCanvas : desktopCanvas;
-    
+
     if (!targetCanvas) {
       console.error('No target canvas available');
       return;
     }
 
     // Initialize Babylon.js engine with enhanced settings
-    engine = new BABYLON.Engine(targetCanvas, true, { 
-      antialias: true, 
+    engine = new BABYLON.Engine(targetCanvas, true, {
+      antialias: true,
       adaptToDeviceRatio: true,
       powerPreference: "high-performance",
       stencil: true
     });
-    
+
     scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
 
     // Setup fixed camera - 45 degree view from the other side
-    camera = new BABYLON.ArcRotateCamera('camera', 
+    camera = new BABYLON.ArcRotateCamera('camera',
       -Math.PI / 2,          // Alpha: -90 degrees (opposite side view)
       Math.PI / 4,           // Beta: 45 degrees (45 degree angle from top)
       12,                    // Radius: distance from target
       BABYLON.Vector3.Zero(), // Target: center of the table
       scene
     );
-    
+
     // Lock camera - no user controls
     camera.inputs.clear(); // Remove all camera inputs (mouse, keyboard, etc.)
-    
+
     // Set camera target to center of game area
     camera.setTarget(BABYLON.Vector3.Zero());
-    
+
     console.log('🎮 Fixed camera setup: 45° view from opposite side');
 
     // Skip CRT post-processing for cleaner look
@@ -396,14 +396,14 @@ export async function init() {
     if (resizeHandler) {
       window.removeEventListener('resize', resizeHandler);
     }
-    
+
     resizeHandler = () => {
       if (engine) {
         engine.resize();
         setupResponsiveCanvas(targetCanvas);
       }
     };
-    
+
     window.addEventListener('resize', resizeHandler);
 
     console.log('✅ Enhanced 3D Pong Arena initialized successfully');
@@ -413,12 +413,12 @@ export async function init() {
   // function setupPostProcessing(targetCanvas: HTMLCanvasElement) { ... }
 
   function createEnhancedTable() {
-    table = BABYLON.MeshBuilder.CreateBox('table', { 
-      width: PONG_3D_CONFIG.TABLE.width, 
-      height: PONG_3D_CONFIG.TABLE.height, 
-      depth: PONG_3D_CONFIG.TABLE.depth 
+    table = BABYLON.MeshBuilder.CreateBox('table', {
+      width: PONG_3D_CONFIG.TABLE.width,
+      height: PONG_3D_CONFIG.TABLE.height,
+      depth: PONG_3D_CONFIG.TABLE.depth
     }, scene);
-    
+
     tableMat = new BABYLON.StandardMaterial('tableMat', scene);
     tableMat.diffuseColor = new BABYLON.Color3(PONG_3D_CONFIG.COLORS.TABLE.r, PONG_3D_CONFIG.COLORS.TABLE.g, PONG_3D_CONFIG.COLORS.TABLE.b);
     tableMat.emissiveColor = new BABYLON.Color3(PONG_3D_CONFIG.COLORS.TABLE.r, PONG_3D_CONFIG.COLORS.TABLE.g, PONG_3D_CONFIG.COLORS.TABLE.b);
@@ -433,7 +433,7 @@ export async function init() {
       height: 0.02,
       depth: PONG_3D_CONFIG.TABLE.depth * 0.8
     }, scene);
-    
+
     const centerLineMat = new BABYLON.StandardMaterial('centerLineMat', scene);
     centerLineMat.emissiveColor = new BABYLON.Color3(PONG_3D_CONFIG.COLORS.BORDER.r, PONG_3D_CONFIG.COLORS.BORDER.g, PONG_3D_CONFIG.COLORS.BORDER.b);
     centerLineMat.alpha = 0.6;
@@ -460,14 +460,14 @@ export async function init() {
     borderConfigs.forEach((config, index) => {
       const border = BABYLON.MeshBuilder.CreateBox(config.name + 'Border', config.size, scene);
       border.position = new BABYLON.Vector3(config.pos.x, config.pos.y, config.pos.z);
-      
+
       const borderMat = new BABYLON.StandardMaterial(config.name + 'BorderMat', scene);
       borderMat.diffuseColor = new BABYLON.Color3(PONG_3D_CONFIG.COLORS.BORDER.r, PONG_3D_CONFIG.COLORS.BORDER.g, PONG_3D_CONFIG.COLORS.BORDER.b);
       borderMat.emissiveColor = new BABYLON.Color3(PONG_3D_CONFIG.COLORS.BORDER.r, PONG_3D_CONFIG.COLORS.BORDER.g, PONG_3D_CONFIG.COLORS.BORDER.b);
       borderMat.specularColor = new BABYLON.Color3(PONG_3D_CONFIG.COLORS.BORDER.r, PONG_3D_CONFIG.COLORS.BORDER.g, PONG_3D_CONFIG.COLORS.BORDER.b);
       borderMat.alpha = 0.8;
       border.material = borderMat;
-      
+
       borders.push(border);
       borderMats.push(borderMat);
       glowLayer.addIncludedOnlyMesh(border);
@@ -476,14 +476,14 @@ export async function init() {
 
   function createEnhancedPaddles() {
     const paddleConfig = PONG_3D_CONFIG.PADDLE;
-    
+
     // Left paddle (Player 1) - Enhanced design
-    paddle1 = BABYLON.MeshBuilder.CreateBox('paddle1', { 
-      width: paddleConfig.width, 
-      height: paddleConfig.height, 
-      depth: paddleConfig.depth 
+    paddle1 = BABYLON.MeshBuilder.CreateBox('paddle1', {
+      width: paddleConfig.width,
+      height: paddleConfig.height,
+      depth: paddleConfig.depth
     }, scene);
-    
+
     paddle1Mat = new BABYLON.StandardMaterial('paddle1Mat', scene);
     paddle1Mat.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1);
     paddle1Mat.emissiveColor = new BABYLON.Color3(PONG_3D_CONFIG.COLORS.LEFT_PADDLE.r, PONG_3D_CONFIG.COLORS.LEFT_PADDLE.g, PONG_3D_CONFIG.COLORS.LEFT_PADDLE.b);
@@ -491,19 +491,19 @@ export async function init() {
     paddle1Mat.specularPower = 64;
     paddle1Mat.alpha = 0.9;
     paddle1.material = paddle1Mat;
-    
+
     paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5;
     paddle1.position.y = paddleConfig.height/2; // On table surface
     paddle1.position.z = paddleConfig.depth/2; // Half paddle depth toward user
     glowLayer.addIncludedOnlyMesh(paddle1);
 
     // Right paddle (Player 2) - Enhanced design
-    paddle2 = BABYLON.MeshBuilder.CreateBox('paddle2', { 
-      width: paddleConfig.width, 
-      height: paddleConfig.height, 
-      depth: paddleConfig.depth 
+    paddle2 = BABYLON.MeshBuilder.CreateBox('paddle2', {
+      width: paddleConfig.width,
+      height: paddleConfig.height,
+      depth: paddleConfig.depth
     }, scene);
-    
+
     paddle2Mat = new BABYLON.StandardMaterial('paddle2Mat', scene);
     paddle2Mat.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1);
     paddle2Mat.emissiveColor = new BABYLON.Color3(PONG_3D_CONFIG.COLORS.RIGHT_PADDLE.r, PONG_3D_CONFIG.COLORS.RIGHT_PADDLE.g, PONG_3D_CONFIG.COLORS.RIGHT_PADDLE.b);
@@ -511,7 +511,7 @@ export async function init() {
     paddle2Mat.specularPower = 64;
     paddle2Mat.alpha = 0.9;
     paddle2.material = paddle2Mat;
-    
+
     paddle2.position.x = PONG_3D_CONFIG.TABLE.width/2 - 0.5;
     paddle2.position.y = paddleConfig.height/2; // On table surface
     paddle2.position.z = paddleConfig.depth/2; // Half paddle depth toward user
@@ -519,11 +519,11 @@ export async function init() {
   }
 
   function createEnhancedBall() {
-    ball = BABYLON.MeshBuilder.CreateSphere('pongBall', { 
+    ball = BABYLON.MeshBuilder.CreateSphere('pongBall', {
       diameter: PONG_3D_CONFIG.BALL.radius * 2,
       segments: 16
     }, scene);
-    
+
     ballMat = new BABYLON.StandardMaterial('ballMat', scene);
     ballMat.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1);
     ballMat.emissiveColor = new BABYLON.Color3(PONG_3D_CONFIG.COLORS.BALL.r, PONG_3D_CONFIG.COLORS.BALL.g, PONG_3D_CONFIG.COLORS.BALL.b);
@@ -588,21 +588,21 @@ export async function init() {
 
   function setupResponsiveCanvas(targetCanvas: HTMLCanvasElement) {
     const isMobile = window.innerWidth < 1024;
-    
+
     if (isMobile && mobileCanvas) {
       const maxWidth = Math.min(window.innerWidth - 32, 400);
       const aspectRatio = 0.75; // Better aspect ratio for 3D view
       mobileCanvas.width = maxWidth;
       mobileCanvas.height = maxWidth * aspectRatio;
-      
+
       console.log(`📱 Enhanced 3D Mobile canvas: ${mobileCanvas.width}x${mobileCanvas.height}`);
     } else if (desktopCanvas) {
       desktopCanvas.width = 1000;
       desktopCanvas.height = 600; // Enhanced resolution for desktop
-      
+
       console.log(`🖥️ Enhanced 3D Desktop canvas: ${desktopCanvas.width}x${desktopCanvas.height}`);
     }
-    
+
     if (engine) {
       engine.resize();
     }
@@ -610,13 +610,13 @@ export async function init() {
 
   function handleEnhancedAnimations() {
     if (!scene || !engine) return;
-    
+
     const deltaTime = engine.getDeltaTime() / 1000;
 
     // Handle flash animations
     handleBorderFlashes(deltaTime);
     handlePaddleFlashes(deltaTime);
-    
+
     // Update light positions
     if (paddle1Light && paddle1) {
       paddle1Light.position.x = paddle1.position.x;
@@ -644,7 +644,7 @@ export async function init() {
       if (flashTime > 0) {
         borderFlashTimes[index] -= deltaTime;
         const flashIntensity = Math.max(0, borderFlashTimes[index] / 1.5);
-        
+
         if (borderMats[index]) {
           borderMats[index].emissiveColor = new BABYLON.Color3(
             PONG_3D_CONFIG.COLORS.BORDER.r + (PONG_3D_CONFIG.COLORS.BORDER_FLASH.r - PONG_3D_CONFIG.COLORS.BORDER.r) * flashIntensity,
@@ -663,7 +663,7 @@ export async function init() {
     if (paddleFlashTimes[0] > 0) {
       paddleFlashTimes[0] -= deltaTime;
       const flashIntensity = Math.max(0, paddleFlashTimes[0] / 1.0);
-      
+
       if (paddle1Mat) {
         paddle1Mat.emissiveColor = new BABYLON.Color3(
           PONG_3D_CONFIG.COLORS.LEFT_PADDLE.r + (PONG_3D_CONFIG.COLORS.PADDLE_FLASH.r - PONG_3D_CONFIG.COLORS.LEFT_PADDLE.r) * flashIntensity,
@@ -671,7 +671,7 @@ export async function init() {
           PONG_3D_CONFIG.COLORS.LEFT_PADDLE.b + (PONG_3D_CONFIG.COLORS.PADDLE_FLASH.b - PONG_3D_CONFIG.COLORS.LEFT_PADDLE.b) * flashIntensity
         );
       }
-      
+
       if (paddle1Light) {
         paddle1Light.intensity = 1.5 + 2.0 * flashIntensity;
       }
@@ -684,7 +684,7 @@ export async function init() {
     if (paddleFlashTimes[1] > 0) {
       paddleFlashTimes[1] -= deltaTime;
       const flashIntensity = Math.max(0, paddleFlashTimes[1] / 1.0);
-      
+
       if (paddle2Mat) {
         paddle2Mat.emissiveColor = new BABYLON.Color3(
           PONG_3D_CONFIG.COLORS.RIGHT_PADDLE.r + (PONG_3D_CONFIG.COLORS.PADDLE_FLASH.r - PONG_3D_CONFIG.COLORS.RIGHT_PADDLE.r) * flashIntensity,
@@ -692,7 +692,7 @@ export async function init() {
           PONG_3D_CONFIG.COLORS.RIGHT_PADDLE.b + (PONG_3D_CONFIG.COLORS.PADDLE_FLASH.b - PONG_3D_CONFIG.COLORS.RIGHT_PADDLE.b) * flashIntensity
         );
       }
-      
+
       if (paddle2Light) {
         paddle2Light.intensity = 1.5 + 2.0 * flashIntensity;
       }
@@ -710,14 +710,14 @@ export async function init() {
     // 3D coordinates: x: -4 to 4, z: -2 to 2 (table bounds)
     const ballX = ((gameState.ball.x / 800) - 0.5) * PONG_3D_CONFIG.TABLE.width * 0.9; // Scale to table width
     const ballZ = ((gameState.ball.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9; // Scale to table depth
-    
+
     ball.position.x = ballX;
     ball.position.z = ballZ;
     ball.position.y = PONG_3D_CONFIG.BALL.radius;
 
     // Update paddle positions - proper coordinate mapping
     const playerIds = Object.keys(gameState.paddles).map(id => parseInt(id)).sort();
-    
+
     if (playerIds.length >= 2) {
       // Left paddle (Player 1)
       const paddle1Data = gameState.paddles[playerIds[0]];
@@ -725,7 +725,7 @@ export async function init() {
         // Map game Y (0-400) to 3D Z (-2.1 to 2.1)
         const paddleZ = ((paddle1Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.7;
         const maxZ = PONG_3D_CONFIG.TABLE.depth * 0.35; // Keep paddle within borders
-        
+
         // Move paddle toward user (bottom of canvas) by half paddle depth
         const paddleOffset = PONG_3D_CONFIG.PADDLE.depth / 2;
         paddle1.position.z = Math.max(-maxZ, Math.min(maxZ, paddleZ)) + paddleOffset;
@@ -734,13 +734,13 @@ export async function init() {
         paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5;
       }
 
-      // Right paddle (Player 2) 
+      // Right paddle (Player 2)
       const paddle2Data = gameState.paddles[playerIds[1]];
       if (paddle2Data) {
         // Map game Y (0-400) to 3D Z (-2.1 to 2.1)
         const paddleZ = ((paddle2Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.7;
         const maxZ = PONG_3D_CONFIG.TABLE.depth * 0.35; // Keep paddle within borders
-        
+
         // Move paddle toward user (bottom of canvas) by half paddle depth
         const paddleOffset = PONG_3D_CONFIG.PADDLE.depth / 2;
         paddle2.position.z = Math.max(-maxZ, Math.min(maxZ, paddleZ)) + paddleOffset;
@@ -758,7 +758,7 @@ export async function init() {
     if (!ball || !gameState) return;
 
     const ballSpeed = Math.sqrt(gameState.ball.dx * gameState.ball.dx + gameState.ball.dy * gameState.ball.dy);
-    
+
     // Trigger paddle flash on collision (approximate detection)
     if (Math.abs(gameState.ball.x - 50) < 30 && ballSpeed > 0.1) { // Left paddle area
       paddleFlashTimes[0] = 1.0;
@@ -778,7 +778,7 @@ export async function init() {
     let count = 5;
     if (gameStatusEl) gameStatusEl.textContent = `⚡ BATTLE STARTS IN ${count}... ⚡`;
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = `⚡ ${count} ⚡`;
-    
+
     const countdownInterval = setInterval(() => {
       count--;
       if (count > 0) {
@@ -786,7 +786,7 @@ export async function init() {
         if (mobileGameStatusEl) mobileGameStatusEl.textContent = `⚡ ${count} ⚡`;
       } else {
         clearInterval(countdownInterval);
-        
+
         const isFirstPlayer = currentRoom && currentRoom.players[0] === myPlayerId;
         if (isFirstPlayer) {
           console.log('🎮 Starting game as first player...');
@@ -798,7 +798,7 @@ export async function init() {
           if (gameStatusEl) gameStatusEl.textContent = '⚡ WAITING FOR BATTLE START... ⚡';
           if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚡ WAIT ⚡';
         }
-        
+
         setTimeout(() => {
           requestGameState();
         }, 500);
@@ -808,21 +808,21 @@ export async function init() {
 
   function handleKeyPress() {
     if (!currentRoom || !gameState || gameState.gameOver || myPlayerId === null) return;
-    
+
     const myPaddle = gameState.paddles[myPlayerId];
     if (!myPaddle) return;
-    
+
     let newY: number | null = null;
     const paddleSpeed = 18; // Enhanced speed for better responsiveness
     const paddleHeight = 100;
     const gameHeight = 400;
-    
+
     if (keysPressed['KeyW'] || keysPressed['ArrowUp']) {
-      newY = Math.max(1, myPaddle.y - paddleSpeed);
-    } else if (keysPressed['KeyS'] || keysPressed['ArrowDown']) {
       newY = Math.min(gameHeight - paddleHeight - 1, myPaddle.y + paddleSpeed);
+    } else if (keysPressed['KeyS'] || keysPressed['ArrowDown']) {
+      newY = Math.max(1, myPaddle.y - paddleSpeed);
     }
-    
+
     if (newY !== null) {
       gameService.movePlayer(currentRoom.roomId, newY);
     }
@@ -891,7 +891,7 @@ export async function init() {
 
     function startMobileMovement() {
       if (mobileControlInterval) return;
-      
+
       handleMobileMovement();
       mobileControlInterval = setInterval(handleMobileMovement, 16) as any;
     }
@@ -906,7 +906,7 @@ export async function init() {
 
     function handleMobileMovement() {
       if (!currentRoom || !gameState || gameState.gameOver || !mobileControlDirection || myPlayerId === null) return;
-      
+
       const myPaddle = gameState.paddles[myPlayerId];
       if (!myPaddle) return;
 
@@ -954,10 +954,10 @@ export async function init() {
   function showPauseMessage(message: string, countdownSeconds?: number) {
     if (pauseMessageEl) pauseMessageEl.classList.remove('hidden');
     if (pauseTextEl) pauseTextEl.textContent = message;
-    
+
     if (mobilePauseMessageEl) mobilePauseMessageEl.classList.remove('hidden');
     if (mobilePauseTextEl) mobilePauseTextEl.textContent = '⏸️ PAUSED';
-    
+
     if (countdownSeconds) {
       startPauseCountdown(countdownSeconds);
     }
@@ -966,7 +966,7 @@ export async function init() {
   function hidePauseMessage() {
     if (pauseMessageEl) pauseMessageEl.classList.add('hidden');
     if (mobilePauseMessageEl) mobilePauseMessageEl.classList.add('hidden');
-    
+
     if (pauseCountdownTimer) {
       clearInterval(pauseCountdownTimer);
       pauseCountdownTimer = null;
@@ -977,22 +977,22 @@ export async function init() {
     if (pauseCountdownTimer) {
       clearInterval(pauseCountdownTimer);
     }
-    
+
     let remaining = seconds;
-    
+
     const updateCountdown = () => {
       const text = `Reconnecting in ${remaining}s...`;
       if (pauseCountdownEl) pauseCountdownEl.textContent = text;
       if (mobilePauseCountdownEl) mobilePauseCountdownEl.textContent = text;
-      
+
       remaining--;
-      
+
       if (remaining < 0) {
         clearInterval(pauseCountdownTimer!);
         pauseCountdownTimer = null;
       }
     };
-    
+
     updateCountdown();
     pauseCountdownTimer = setInterval(updateCountdown, 1000) as any;
   }
@@ -1004,7 +1004,7 @@ export async function init() {
 
   async function updatePlayerNames() {
     if (!gameState?.score) return;
-    
+
     const playerIds = Object.keys(gameState.score).map(id => parseInt(id)).sort();
     if (playerIds.length < 2) return;
 
@@ -1019,7 +1019,7 @@ export async function init() {
       if (player2NameEl) player2NameEl.textContent = player2?.username || `WARRIOR ${playerIds[1]}`;
       if (player1InitialEl) player1InitialEl.textContent = player1?.username?.[0]?.toUpperCase() || 'W1';
       if (player2InitialEl) player2InitialEl.textContent = player2?.username?.[0]?.toUpperCase() || 'W2';
-      
+
       // Update mobile elements
       if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1?.username || `WARRIOR ${playerIds[0]}`;
       if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2?.username || `WARRIOR ${playerIds[1]}`;
@@ -1032,16 +1032,16 @@ export async function init() {
 
   function updateScores() {
     if (!gameState?.score) return;
-    
+
     const playerIds = Object.keys(gameState.score).map(id => parseInt(id)).sort();
     if (playerIds.length >= 2) {
       const score1 = gameState.score[playerIds[0]] || 0;
       const score2 = gameState.score[playerIds[1]] || 0;
-      
+
       // Update desktop scores
       if (player1ScoreEl) player1ScoreEl.textContent = score1.toString();
       if (player2ScoreEl) player2ScoreEl.textContent = score2.toString();
-      
+
       // Update mobile scores
       if (mobilePlayer1ScoreEl) mobilePlayer1ScoreEl.textContent = score1.toString();
       if (mobilePlayer2ScoreEl) mobilePlayer2ScoreEl.textContent = score2.toString();
@@ -1073,18 +1073,18 @@ export async function init() {
       if (player2NameEl) player2NameEl.textContent = player2Name;
       if (player1InitialEl) player1InitialEl.textContent = player1Initial;
       if (player2InitialEl) player2InitialEl.textContent = player2Initial;
-      
+
       // Mobile elements
       if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1Name;
       if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2Name;
       if (mobilePlayer1InitialEl) mobilePlayer1InitialEl.textContent = player1Initial;
       if (mobilePlayer2InitialEl) mobilePlayer2InitialEl.textContent = player2Initial;
-      
+
       // Initialize scores
       [player1ScoreEl, player2ScoreEl, mobilePlayer1ScoreEl, mobilePlayer2ScoreEl].forEach(el => {
         if (el) el.textContent = '0';
       });
-      
+
       console.log('🎮 Enhanced player names initialized:', {
         player1: player1Name,
         player2: player2Name
@@ -1106,42 +1106,42 @@ export async function init() {
         engine.dispose();
         engine = null;
       }
-      
+
       // Remove window event listeners
       if (resizeHandler) {
         window.removeEventListener('resize', resizeHandler);
         resizeHandler = null;
       }
-      
+
       // Reset all variables
       scene = null;
       camera = null;
       glowLayer = null;
       // CRT post-process removed
-      
+
       table = null;
       borders = [];
       paddle1 = null;
       paddle2 = null;
       ball = null;
       ballTrail = null;
-      
+
       tableMat = null;
       borderMats = [];
       paddle1Mat = null;
       paddle2Mat = null;
       ballMat = null;
-      
+
       mainLight = null;
       paddle1Light = null;
       paddle2Light = null;
       ballLight = null;
       ambientLight = null;
-      
+
       hitParticles = null;
       scoreParticles = null;
       ballTrailParticles = null;
-      
+
       console.log('🧹 Enhanced 3D scene cleaned up');
     } catch (e) {
       console.error('Error cleaning up enhanced 3D scene:', e);
