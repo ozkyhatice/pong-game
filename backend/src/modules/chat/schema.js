@@ -8,6 +8,7 @@ export const getChatHistorySchema = {
     properties: {
       userId: {
         type: 'integer',
+        minimum: 1,
         description: 'ID of the user to get chat history with'
       }
     }
@@ -17,10 +18,10 @@ export const getChatHistorySchema = {
     properties: {
       limit: {
         type: 'integer',
-        minimum: 1,
+        minimum: -1,  // -1 değeri tüm mesajları getirmek için kullanılabilir
         maximum: 100,
         default: 50,
-        description: 'Number of messages to retrieve'
+        description: 'Number of messages to retrieve. Use -1 to get all messages.'
       },
       offset: {
         type: 'integer',
@@ -109,6 +110,7 @@ export const markMessagesAsReadSchema = {
     properties: {
       userId: {
         type: 'integer',
+        minimum: 1,
         description: 'ID of the user whose messages to mark as read'
       }
     }
