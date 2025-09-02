@@ -78,14 +78,20 @@ export async function getChatHistory(userId, otherUserId, options = {}) {
 /**
  * Get paginated messages for a conversation
  * Delegates to getChatHistory with page-based parameters
+ * Supports loading all messages with limit=-1
  * 
  * @param {number} userId - Current user ID
  * @param {number} otherUserId - Other user ID
  * @param {number} page - Page number
- * @param {number} limit - Items per page
+ * @param {number} limit - Items per page, -1 for all messages
  * @returns {Object} Paginated messages
  */
 export async function getPaginatedMessages(userId, otherUserId, page = 1, limit = 50) {
+  // Handle special case for getting all messages
+  if (limit === -1 || limit === '-1') {
+    return await getChatHistory(userId, otherUserId, { limit: -1 });
+  }
+  
   // Validate and sanitize input
   const sanitizedPage = Number.isInteger(Number(page)) && Number(page) > 0 ? Number(page) : 1;
   const sanitizedLimit = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Number(limit) : 50;
