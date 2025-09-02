@@ -1,8 +1,34 @@
 import { initDB } from '../../../config/db.js';
 import argon2 from 'argon2';
+import { 
+  isValidEmail, 
+  isValidUsername, 
+  validatePassword, 
+  containsSqlInjection 
+} from '../../../utils/validation.js';
 
 export async function registerUser({ username, email, password }) {
   const db = await initDB();
+  
+  // Server-side validation for security
+  if (!isValidEmail(email)) {
+    throw new Error('Invalid email format');
+  }
+
+  if (!isValidUsername(username)) {
+    throw new Error('Username must be 3-20 characters and contain only letters, numbers, and underscores');
+  }
+
+  // Password validation (uncomment to enforce strong passwords)
+  // const passwordValidation = validatePassword(password);
+  // if (!passwordValidation.isValid) {
+  //   throw new Error(passwordValidation.message);
+  // }
+
+  // SQL injection kontrolü
+  if (containsSqlInjection(username) || containsSqlInjection(email)) {
+    throw new Error('Invalid characters detected in input');
+  }
 
   // Username'i temizle (boşluk ve özel karakterleri kaldır)
   const cleanUsername = username.replace(/[^a-zA-Z0-9_]/g, '');
@@ -43,6 +69,16 @@ export async function registerUser({ username, email, password }) {
 
 export async function loginUser({ email, password }) {
   const db = await initDB();
+
+  // Server-side validation for security
+  if (!isValidEmail(email)) {
+    throw new Error('Invalid email format');
+  }
+
+  // SQL injection kontrolü
+  if (containsSqlInjection(email)) {
+    throw new Error('Invalid characters detected in email');
+  }
 
   const user = await db.get(
     'SELECT * FROM users WHERE email = ?',

@@ -4,25 +4,31 @@ const PADSPEED = 0.09;
 const BALLSPEEDXDEFAULT = 0.09;
 const BALLSPEEDZDEFAULT = 0.07;
 
-// Color Configuration
+type RGB = { r: number; g: number; b: number };
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const lerpColor = (a: RGB, b: RGB, t: number): RGB => ({
+  r: clamp01(a.r + (b.r - a.r) * t),
+  g: clamp01(a.g + (b.g - a.g) * t),
+  b: clamp01(a.b + (b.b - a.b) * t)
+});
 const COLORS = {
-  BORDER: { r: 0, g: 1, b: 0 }, // Green borders
-  LEFT_PADDLE: { r: 1, g: 0, b: 0 }, // Red left paddle
-  RIGHT_PADDLE: { r: 0, g: 0, b: 1 }, // Blue right paddle
-  BORDER_FLASH: { r: 1, g: 0, b: 1 }, // Bright magenta border flash
-  PADDLE_FLASH: { r: 1, g: 1, b: 0 }, // Yellow paddle flash
+  BORDER: { r: 0, g: 1, b: 0 },
+  LEFT_PADDLE: { r: 1, g: 0, b: 0 },
+  RIGHT_PADDLE: { r: 0, g: 0, b: 1 },
+  BORDER_FLASH: { r: 1, g: 0, b: 1 },
+  PADDLE_FLASH: { r: 1, g: 1, b: 0 },
   BALL_COLORS: [
-    { r: 1, g: 1, b: 1 }, // White
-    { r: 1, g: 0, b: 1 }, // Magenta
-    { r: 0, g: 1, b: 1 }, // Cyan
-    { r: 1, g: 0.5, b: 0 }, // Orange
-    { r: 0.5, g: 0, b: 1 }, // Purple
-    { r: 1, g: 1, b: 0 }, // Yellow
-    { r: 0, g: 1, b: 0.5 } // Green-cyan
+    { r: 1, g: 1, b: 1 },
+    { r: 1, g: 0, b: 1 },
+    { r: 0, g: 1, b: 1 },
+    { r: 1, g: 0.5, b: 0 },
+    { r: 0.5, g: 0, b: 1 },
+    { r: 1, g: 1, b: 0 },
+    { r: 0, g: 1, b: 0.5 }
   ],
-  BACKGROUND: { r: 1, g: 1, b: 1 }, // white background
-  TABLE: { r: 0, g: 0, b: 0 } // Gray table
-};
+  BACKGROUND: { r: 1, g: 1, b: 1 },
+  TABLE: { r: 0, g: 0, b: 0 }
+} as const;
 
 let currentBallColorIndex = 0;
 
@@ -98,6 +104,8 @@ export function init() {
   const scene = new BABYLON.Scene(engine);
   scene.clearColor = new BABYLON.Color4(0.5, 0.5, 0.5, 0.5);
 
+  const toColor3 = (c: RGB) => new BABYLON.Color3(c.r, c.g, c.b);
+
   function resizeCanvas() {
     realCanvas.width = window.innerWidth;
     realCanvas.height = window.innerHeight;
@@ -136,7 +144,7 @@ export function init() {
   const table = BABYLON.MeshBuilder.CreateBox('table', { width: 8, height: 0.1, depth: 4 }, scene);
   const tableMat = new BABYLON.StandardMaterial('tableMat', scene);
   tableMat.diffuseColor = new BABYLON.Color3(0, 0, 0);
-  tableMat.emissiveColor = new BABYLON.Color3(COLORS.TABLE.r, COLORS.TABLE.g, COLORS.TABLE.b);
+  tableMat.emissiveColor = toColor3(COLORS.TABLE);
   tableMat.specularColor = new BABYLON.Color3(0,0,0);
   table.material = tableMat;
   table.position.y = -0.05;
@@ -146,9 +154,9 @@ export function init() {
   leftBorder.position.x = -4 + borderThickness/2;
   leftBorder.position.y = 0.01;
   const leftMat = new BABYLON.StandardMaterial('leftMat', scene);
-  leftMat.diffuseColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
-  leftMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
-  leftMat.specularColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+  leftMat.diffuseColor = toColor3(COLORS.BORDER);
+  leftMat.emissiveColor = toColor3(COLORS.BORDER);
+  leftMat.specularColor = toColor3(COLORS.BORDER);
   leftMat.alpha = 0.8;
   leftBorder.material = leftMat;
   glowLayer.addIncludedOnlyMesh(leftBorder);
@@ -157,9 +165,9 @@ export function init() {
   rightBorder.position.x = 4 - borderThickness/2;
   rightBorder.position.y = 0.01;
   const rightMat = new BABYLON.StandardMaterial('rightMat', scene);
-  rightMat.diffuseColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
-  rightMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
-  rightMat.specularColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+  rightMat.diffuseColor = toColor3(COLORS.BORDER);
+  rightMat.emissiveColor = toColor3(COLORS.BORDER);
+  rightMat.specularColor = toColor3(COLORS.BORDER);
   rightMat.alpha = 0.8;
   rightBorder.material = rightMat;
   glowLayer.addIncludedOnlyMesh(rightBorder);
@@ -167,10 +175,10 @@ export function init() {
   topBorder.position.z = 2 - borderThickness/2;
   topBorder.position.y = 0.01;
   const topMat = new BABYLON.StandardMaterial('topMat', scene);
-  topMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
-  topMat.diffuseColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+  topMat.emissiveColor = toColor3(COLORS.BORDER);
+  topMat.diffuseColor = toColor3(COLORS.BORDER);
   topMat.alpha = 0.8;
-  topMat.specularColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+  topMat.specularColor = toColor3(COLORS.BORDER);
   topBorder.material = topMat;
   glowLayer.addIncludedOnlyMesh(topBorder);
 
@@ -178,10 +186,10 @@ export function init() {
   bottomBorder.position.z = -2 + borderThickness/2;
   bottomBorder.position.y = 0.01;
   const bottomMat = new BABYLON.StandardMaterial('bottomMat', scene);
-  bottomMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
-  bottomMat.diffuseColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+  bottomMat.emissiveColor = toColor3(COLORS.BORDER);
+  bottomMat.diffuseColor = toColor3(COLORS.BORDER);
   bottomMat.alpha = 0.8;
-  bottomMat.specularColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+  bottomMat.specularColor = toColor3(COLORS.BORDER);
   bottomBorder.material = bottomMat;
   glowLayer.addIncludedOnlyMesh(bottomBorder);
 
@@ -190,13 +198,13 @@ export function init() {
   const paddle2 = BABYLON.MeshBuilder.CreateBox('paddle2', { width: paddleWidth, height: paddleHeight, depth: paddleDepth }, scene);
   const paddle1Mat = new BABYLON.StandardMaterial('paddle1Mat', scene);
   paddle1Mat.diffuseColor = new BABYLON.Color3(0, 0, 0);
-  paddle1Mat.emissiveColor = new BABYLON.Color3(COLORS.LEFT_PADDLE.r, COLORS.LEFT_PADDLE.g, COLORS.LEFT_PADDLE.b);
+  paddle1Mat.emissiveColor = toColor3(COLORS.LEFT_PADDLE);
   paddle1Mat.specularColor = new BABYLON.Color3(0, 0, 0);
   paddle1Mat.alpha = 0.7;
   paddle1.material = paddle1Mat;
   const paddle2Mat = new BABYLON.StandardMaterial('paddle2Mat', scene);
   paddle2Mat.diffuseColor = new BABYLON.Color3(0, 0, 0);
-  paddle2Mat.emissiveColor = new BABYLON.Color3(COLORS.RIGHT_PADDLE.r, COLORS.RIGHT_PADDLE.g, COLORS.RIGHT_PADDLE.b);
+  paddle2Mat.emissiveColor = toColor3(COLORS.RIGHT_PADDLE);
   paddle2Mat.specularColor = new BABYLON.Color3(0, 0, 0);
   paddle2Mat.alpha = 0.7;
   paddle2.material = paddle2Mat;
@@ -215,32 +223,34 @@ export function init() {
   const paddleZClamp = fieldHalfDepth - borderHalf - paddleHalfDepth - safetyGap; // e.g., ~1.43
 
   const leftBorderLight = new BABYLON.PointLight("leftBorderLight", new BABYLON.Vector3(-3.8, 0.5, 0), scene);
-  leftBorderLight.diffuse = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+  leftBorderLight.diffuse = toColor3(COLORS.BORDER);
   leftBorderLight.intensity = 0.8;
   leftBorderLight.range = 3.0;
 
   const rightBorderLight = new BABYLON.PointLight("rightBorderLight", new BABYLON.Vector3(3.8, 0.5, 0), scene);
-  rightBorderLight.diffuse = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+  rightBorderLight.diffuse = toColor3(COLORS.BORDER);
   rightBorderLight.intensity = 0.8;
   rightBorderLight.range = 3.0;
 
   const paddle1Light = new BABYLON.PointLight("paddle1Light", new BABYLON.Vector3(-3.6, 0.5, 0), scene);
-  paddle1Light.diffuse = new BABYLON.Color3(COLORS.LEFT_PADDLE.r, COLORS.LEFT_PADDLE.g, COLORS.LEFT_PADDLE.b);
+  paddle1Light.diffuse = toColor3(COLORS.LEFT_PADDLE);
   paddle1Light.intensity = 1.2;
   paddle1Light.range = 2.5;
 
   const paddle2Light = new BABYLON.PointLight("paddle2Light", new BABYLON.Vector3(3.6, 0.5, 0), scene);
-  paddle2Light.diffuse = new BABYLON.Color3(COLORS.RIGHT_PADDLE.r, COLORS.RIGHT_PADDLE.g, COLORS.RIGHT_PADDLE.b);
+  paddle2Light.diffuse = toColor3(COLORS.RIGHT_PADDLE);
   paddle2Light.intensity = 1.2;
   paddle2Light.range = 2.5;
 
   const ball = BABYLON.MeshBuilder.CreateSphere('pongBall', { diameter: 0.3 }, scene);
   const ballMat = new BABYLON.StandardMaterial('ballMat', scene);
-  ballMat.diffuseColor = new BABYLON.Color3(COLORS.BALL_COLORS[currentBallColorIndex].r, COLORS.BALL_COLORS[currentBallColorIndex].g, COLORS.BALL_COLORS[currentBallColorIndex].b);
-  ballMat.emissiveColor = new BABYLON.Color3(COLORS.BALL_COLORS[currentBallColorIndex].r, COLORS.BALL_COLORS[currentBallColorIndex].g, COLORS.BALL_COLORS[currentBallColorIndex].b);
+  ballMat.diffuseColor = toColor3(COLORS.BALL_COLORS[currentBallColorIndex]);
+  ballMat.emissiveColor = toColor3(COLORS.BALL_COLORS[currentBallColorIndex]);
   ball.material = ballMat;
   ball.position.y = paddleHeight/2;
   glowLayer.addIncludedOnlyMesh(ball);
+
+  // Colors are initialized from a single neon palette. No theme switching.
 
   let BALLSPEEDX = BALLSPEEDXDEFAULT;
   let BALLSPEEDZ = BALLSPEEDZDEFAULT;
@@ -311,24 +321,16 @@ export function init() {
       leftBorderFlashTime -= deltaTime;
       const flashIntensity = leftBorderFlashTime / 2.0; // 2 second duration
       if (flashIntensity > 0) {
-        leftMat.emissiveColor = new BABYLON.Color3(
-          COLORS.BORDER.r + (COLORS.BORDER_FLASH.r - COLORS.BORDER.r) * flashIntensity,
-          COLORS.BORDER.g + (COLORS.BORDER_FLASH.g - COLORS.BORDER.g) * flashIntensity,
-          COLORS.BORDER.b + (COLORS.BORDER_FLASH.b - COLORS.BORDER.b) * flashIntensity
-        );
+        leftMat.emissiveColor = toColor3(lerpColor(COLORS.BORDER, COLORS.BORDER_FLASH, flashIntensity));
         leftBorderLight.intensity = 0.8 + 3.0 * flashIntensity; // Brighter flash
-        leftBorderLight.diffuse = new BABYLON.Color3(
-          COLORS.BORDER.r + (COLORS.BORDER_FLASH.r - COLORS.BORDER.r) * flashIntensity,
-          COLORS.BORDER.g + (COLORS.BORDER_FLASH.g - COLORS.BORDER.g) * flashIntensity,
-          COLORS.BORDER.b + (COLORS.BORDER_FLASH.b - COLORS.BORDER.b) * flashIntensity
-        );
+        leftBorderLight.diffuse = toColor3(lerpColor(COLORS.BORDER, COLORS.BORDER_FLASH, flashIntensity));
       } else {
-        leftMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+        leftMat.emissiveColor = toColor3(COLORS.BORDER);
         leftBorderLight.intensity = 0.8;
-        leftBorderLight.diffuse = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+        leftBorderLight.diffuse = toColor3(COLORS.BORDER);
       }
     } else {
-      leftMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+      leftMat.emissiveColor = toColor3(COLORS.BORDER);
       leftBorderLight.intensity = 0.8;
     }
 
@@ -336,24 +338,16 @@ export function init() {
       rightBorderFlashTime -= deltaTime;
       const flashIntensity = rightBorderFlashTime / 2.0; // 2 second duration
       if (flashIntensity > 0) {
-        rightMat.emissiveColor = new BABYLON.Color3(
-          COLORS.BORDER.r + (COLORS.BORDER_FLASH.r - COLORS.BORDER.r) * flashIntensity,
-          COLORS.BORDER.g + (COLORS.BORDER_FLASH.g - COLORS.BORDER.g) * flashIntensity,
-          COLORS.BORDER.b + (COLORS.BORDER_FLASH.b - COLORS.BORDER.b) * flashIntensity
-        );
+        rightMat.emissiveColor = toColor3(lerpColor(COLORS.BORDER, COLORS.BORDER_FLASH, flashIntensity));
         rightBorderLight.intensity = 0.8 + 3.0 * flashIntensity; // Brighter flash
-        rightBorderLight.diffuse = new BABYLON.Color3(
-          COLORS.BORDER.r + (COLORS.BORDER_FLASH.r - COLORS.BORDER.r) * flashIntensity,
-          COLORS.BORDER.g + (COLORS.BORDER_FLASH.g - COLORS.BORDER.g) * flashIntensity,
-          COLORS.BORDER.b + (COLORS.BORDER_FLASH.b - COLORS.BORDER.b) * flashIntensity
-        );
+        rightBorderLight.diffuse = toColor3(lerpColor(COLORS.BORDER, COLORS.BORDER_FLASH, flashIntensity));
       } else {
-        rightMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+        rightMat.emissiveColor = toColor3(COLORS.BORDER);
         rightBorderLight.intensity = 0.8;
-        rightBorderLight.diffuse = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+        rightBorderLight.diffuse = toColor3(COLORS.BORDER);
       }
     } else {
-      rightMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
+      rightMat.emissiveColor = toColor3(COLORS.BORDER);
       rightBorderLight.intensity = 0.8;
     }
 
@@ -362,85 +356,37 @@ export function init() {
       paddle1FlashTime -= deltaTime;
       const flashIntensity = paddle1FlashTime / 1.0; // 1 second duration
       if (flashIntensity > 0) {
-        paddle1Mat.emissiveColor = new BABYLON.Color3(
-          COLORS.LEFT_PADDLE.r + (COLORS.PADDLE_FLASH.r - COLORS.LEFT_PADDLE.r) * flashIntensity,
-          COLORS.LEFT_PADDLE.g + (COLORS.PADDLE_FLASH.g - COLORS.LEFT_PADDLE.g) * flashIntensity,
-          COLORS.LEFT_PADDLE.b + (COLORS.PADDLE_FLASH.b - COLORS.LEFT_PADDLE.b) * flashIntensity
-        );
+        paddle1Mat.emissiveColor = toColor3(lerpColor(COLORS.LEFT_PADDLE, COLORS.PADDLE_FLASH, flashIntensity));
         paddle1Light.intensity = 1.2 + 2.0 * flashIntensity;
-        paddle1Light.diffuse = new BABYLON.Color3(
-          COLORS.LEFT_PADDLE.r + (COLORS.PADDLE_FLASH.r - COLORS.LEFT_PADDLE.r) * flashIntensity,
-          COLORS.LEFT_PADDLE.g + (COLORS.PADDLE_FLASH.g - COLORS.LEFT_PADDLE.g) * flashIntensity,
-          COLORS.LEFT_PADDLE.b + (COLORS.PADDLE_FLASH.b - COLORS.LEFT_PADDLE.b) * flashIntensity
-        );
+        paddle1Light.diffuse = toColor3(lerpColor(COLORS.LEFT_PADDLE, COLORS.PADDLE_FLASH, flashIntensity));
       } else {
-        paddle1Mat.emissiveColor = new BABYLON.Color3(COLORS.LEFT_PADDLE.r, COLORS.LEFT_PADDLE.g, COLORS.LEFT_PADDLE.b);
+        paddle1Mat.emissiveColor = toColor3(COLORS.LEFT_PADDLE);
         paddle1Light.intensity = 1.2;
-        paddle1Light.diffuse = new BABYLON.Color3(COLORS.LEFT_PADDLE.r, COLORS.LEFT_PADDLE.g, COLORS.LEFT_PADDLE.b);
+        paddle1Light.diffuse = toColor3(COLORS.LEFT_PADDLE);
       }
     } else {
-      paddle1Mat.emissiveColor = new BABYLON.Color3(COLORS.LEFT_PADDLE.r, COLORS.LEFT_PADDLE.g, COLORS.LEFT_PADDLE.b);
+      paddle1Mat.emissiveColor = toColor3(COLORS.LEFT_PADDLE);
       paddle1Light.intensity = 1.2;
-      paddle1Light.diffuse = new BABYLON.Color3(COLORS.LEFT_PADDLE.r, COLORS.LEFT_PADDLE.g, COLORS.LEFT_PADDLE.b);
+      paddle1Light.diffuse = toColor3(COLORS.LEFT_PADDLE);
     }
 
     if (paddle2FlashTime > 0) {
       paddle2FlashTime -= deltaTime;
       const flashIntensity = paddle2FlashTime / 1.0; // 1 second duration
       if (flashIntensity > 0) {
-        paddle2Mat.emissiveColor = new BABYLON.Color3(
-          COLORS.RIGHT_PADDLE.r + (COLORS.PADDLE_FLASH.r - COLORS.RIGHT_PADDLE.r) * flashIntensity,
-          COLORS.RIGHT_PADDLE.g + (COLORS.PADDLE_FLASH.g - COLORS.RIGHT_PADDLE.g) * flashIntensity,
-          COLORS.RIGHT_PADDLE.b + (COLORS.PADDLE_FLASH.b - COLORS.RIGHT_PADDLE.b) * flashIntensity
-        );
+        paddle2Mat.emissiveColor = toColor3(lerpColor(COLORS.RIGHT_PADDLE, COLORS.PADDLE_FLASH, flashIntensity));
         paddle2Light.intensity = 1.2 + 2.0 * flashIntensity;
-        paddle2Light.diffuse = new BABYLON.Color3(
-          COLORS.RIGHT_PADDLE.r + (COLORS.PADDLE_FLASH.r - COLORS.RIGHT_PADDLE.r) * flashIntensity,
-          COLORS.RIGHT_PADDLE.g + (COLORS.PADDLE_FLASH.g - COLORS.RIGHT_PADDLE.g) * flashIntensity,
-          COLORS.RIGHT_PADDLE.b + (COLORS.PADDLE_FLASH.b - COLORS.RIGHT_PADDLE.b) * flashIntensity
-        );
+        paddle2Light.diffuse = toColor3(lerpColor(COLORS.RIGHT_PADDLE, COLORS.PADDLE_FLASH, flashIntensity));
       } else {
-        paddle2Mat.emissiveColor = new BABYLON.Color3(COLORS.RIGHT_PADDLE.r, COLORS.RIGHT_PADDLE.g, COLORS.RIGHT_PADDLE.b);
+        paddle2Mat.emissiveColor = toColor3(COLORS.RIGHT_PADDLE);
         paddle2Light.intensity = 1.2;
-        paddle2Light.diffuse = new BABYLON.Color3(COLORS.RIGHT_PADDLE.r, COLORS.RIGHT_PADDLE.g, COLORS.RIGHT_PADDLE.b);
+        paddle2Light.diffuse = toColor3(COLORS.RIGHT_PADDLE);
       }
     } else {
-      paddle2Mat.emissiveColor = new BABYLON.Color3(COLORS.RIGHT_PADDLE.r, COLORS.RIGHT_PADDLE.g, COLORS.RIGHT_PADDLE.b);
+      paddle2Mat.emissiveColor = toColor3(COLORS.RIGHT_PADDLE);
       paddle2Light.intensity = 1.2;
-      paddle2Light.diffuse = new BABYLON.Color3(COLORS.RIGHT_PADDLE.r, COLORS.RIGHT_PADDLE.g, COLORS.RIGHT_PADDLE.b);
+      paddle2Light.diffuse = toColor3(COLORS.RIGHT_PADDLE);
     }
-
-    // if (topBorderFlashTime > 0) {
-    //   topBorderFlashTime -= deltaTime;
-    //   const flashIntensity = topBorderFlashTime / 1.0; // 1 second duration
-    //   if (flashIntensity > 0) {
-    //     topMat.emissiveColor = new BABYLON.Color3(
-    //       COLORS.BORDER.r + (COLORS.BORDER_FLASH.r - COLORS.BORDER.r) * flashIntensity,
-    //       COLORS.BORDER.g + (COLORS.BORDER_FLASH.g - COLORS.BORDER.g) * flashIntensity,
-    //       COLORS.BORDER.b + (COLORS.BORDER_FLASH.b - COLORS.BORDER.b) * flashIntensity
-    //     );
-    //   } else {
-    //     topMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
-    //   }
-    // } else {
-    //   topMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
-    // }
-
-    // if (bottomBorderFlashTime > 0) {
-    //   bottomBorderFlashTime -= deltaTime;
-    //   const flashIntensity = bottomBorderFlashTime / 1.0; // 1 second duration
-    //   if (flashIntensity > 0) {
-    //     bottomMat.emissiveColor = new BABYLON.Color3(
-    //       COLORS.BORDER.r + (COLORS.BORDER_FLASH.r - COLORS.BORDER.r) * flashIntensity,
-    //       COLORS.BORDER.g + (COLORS.BORDER_FLASH.g - COLORS.BORDER.g) * flashIntensity,
-    //       COLORS.BORDER.b + (COLORS.BORDER_FLASH.b - COLORS.BORDER.b) * flashIntensity
-    //     );
-    //   } else {
-    //     bottomMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
-    //   }
-    // } else {
-    //   bottomMat.emissiveColor = new BABYLON.Color3(COLORS.BORDER.r, COLORS.BORDER.g, COLORS.BORDER.b);
-    // }
 
     paddle1Light.position.z = paddle1.position.z;
     paddle2Light.position.z = paddle2.position.z;
@@ -550,16 +496,8 @@ export function init() {
       ballDirZ = (Math.random() > 0.5 ? 1 : -1) * BALLSPEEDZ;
 
       // Update ball color
-      ballMat.diffuseColor = new BABYLON.Color3(
-        COLORS.BALL_COLORS[currentBallColorIndex].r,
-        COLORS.BALL_COLORS[currentBallColorIndex].g,
-        COLORS.BALL_COLORS[currentBallColorIndex].b
-      );
-      ballMat.emissiveColor = new BABYLON.Color3(
-        COLORS.BALL_COLORS[currentBallColorIndex].r,
-        COLORS.BALL_COLORS[currentBallColorIndex].g,
-        COLORS.BALL_COLORS[currentBallColorIndex].b
-      );
+      ballMat.diffuseColor = toColor3(COLORS.BALL_COLORS[currentBallColorIndex]);
+      ballMat.emissiveColor = toColor3(COLORS.BALL_COLORS[currentBallColorIndex]);
 
       return scene.render();
     }

@@ -1,16 +1,22 @@
-// Usage: import { notify } from './core/notify.js';
-// notify('msg', 'color?');
-
 const timeoutMS = 2000;
 
 export function notify(message: string, color?: string) {
   let colorValue: string;
-  if (color === 'green')
-    colorValue = '#16a34a';
-  else if (color === 'red')
-    colorValue = '#dc2626';
-  else
-    colorValue = '#222';
+  let borderColor: string;
+  let shadowColor: string;
+  if (color === 'green') {
+    colorValue = '#39FF14';
+    borderColor = '#39FF14';
+    shadowColor = '0 0 15px rgba(57, 255, 20, 0.5)';
+  } else if (color === 'red') {
+    colorValue = '#FF073A';
+    borderColor = '#FF073A';
+    shadowColor = '0 0 15px rgba(255, 7, 58, 0.5)';
+  } else {
+    colorValue = '#39FF14';
+    borderColor = '#39FF14';
+    shadowColor = '0 0 15px rgba(57, 255, 20, 0.3)';
+  }
 
   const existing = document.getElementById('notify-toast');
   if (existing)
@@ -25,21 +31,25 @@ export function notify(message: string, color?: string) {
 
   let displayMsg = message;
 
-  toast.style.background = '#fff';
+  toast.style.background = 'rgba(0, 0, 0, 0.95)';
   toast.style.color = colorValue;
-  toast.style.padding = '0.42rem 4.2rem';
-  toast.style.borderRadius = '9999px';
-  toast.style.boxShadow = '0 4px 24px rgba(0,0,0,0.13)';
-  toast.style.fontSize = '1rem';
-  toast.style.fontWeight = '500';
-  toast.style.letterSpacing = '0.01em';
+  toast.style.padding = '0.75rem 2rem';
+  toast.style.borderRadius = '4px';
+  toast.style.border = `2px solid ${borderColor}`;
+  toast.style.boxShadow = shadowColor;
+  toast.style.fontSize = '0.875rem';
+  toast.style.fontWeight = '700';
+  toast.style.letterSpacing = '0.05em';
+  toast.style.textTransform = 'uppercase';
+  toast.style.fontFamily = 'Orbitron, monospace';
   toast.style.zIndex = '9999';
   toast.style.display = 'flex';
   toast.style.alignItems = 'center';
-  toast.style.gap = '1rem';
+  toast.style.gap = '0.5rem';
   toast.style.pointerEvents = 'auto';
-  toast.style.transition = 'opacity 0.3s';
+  toast.style.transition = 'all 0.3s ease';
   toast.style.opacity = '1';
+  toast.style.textShadow = `0 0 5px ${colorValue}`;
 
   const msg = document.createElement('b');
   msg.textContent = displayMsg;

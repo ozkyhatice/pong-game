@@ -1,32 +1,41 @@
-<div class="min-h-screen bg-radial-bg flex items-center justify-center p-4">
-	<div class="bg-terminal-border rounded-lg shadow-xl border-2 border-neon-green shadow-[0_0_10px_#39FF14] p-6 w-full max-w-md leading-relaxed">
-		<div class="bg-terminal-border px-3 py-2 border-b border-neon-green w-full border-opacity-30 text-[10px] leading-relaxed text-center mb-4">
-      <div class="text-neon-green text-2xl font-bold tracking-wide mb-1" style="text-shadow: 0 0 5px #39FF14;">
-		GAME OVER
+<div class="min-h-screen bg-radial-bg flex items-center justify-center p-2 sm:p-4 font-orbitron text-neon-green">
+  <div class="bg-terminal-bg border-2 border-neon-green rounded shadow-terminal w-full max-w-sm sm:max-w-md mx-auto">
+
+    <!-- Game Results Section -->
+    <div class="bg-console-bg p-4 sm:p-6">
+      <div class="text-neon-white text-base sm:text-lg font-bold mb-4 text-center uppercase tracking-widest" style="text-shadow: 0 0 10px #62A6FA;">
+        GAME OVER
       </div>
-      <div class="flex items-center gap-1 mb-1 text-neon-white">
-        <div class="status-dot"></div>
-        <span>GAME STATUS: FINISHED</span>
+
+      <!-- Score Display -->
+      <div class="text-center mb-6">
+        <p id="score-text" class="text-neon-white text-4xl font-bold mb-4" style="text-shadow: 0 0 5px #DDf6f8;">0 - 0</p>
+        <p id="winner-text" class="text-neon-yellow text-lg font-semibold mb-3 uppercase tracking-wide">- WINS!</p>
       </div>
-      <div class="text-neon-white flex items-center gap-1 mb-1" id="game-result-status">
-        > RESULT: MATCH COMPLETED
+
+      <!-- Players Display -->
+      <div class="flex justify-between items-center mb-6 bg-black bg-opacity-40 border border-neon-green border-opacity-30 rounded-sm p-4">
+        <div class="flex flex-col items-center flex-1">
+          <img id="player1-avatar" src="https://placehold.co/400x400?text=Player\n1" alt="P1" class="w-12 h-12 rounded-full bg-black object-cover mb-2 border border-neon-green border-opacity-50" />
+          <span class="text-neon-green text-xs font-medium uppercase tracking-wide" id="player1-name">-</span>
+        </div>
+        <div class="flex items-center justify-center mx-4">
+          <span class="text-neon-white text-xl font-bold" style="text-shadow: 0 0 5px #39FF14;">VS</span>
+        </div>
+        <div class="flex flex-col items-center flex-1">
+          <img id="player2-avatar" src="https://placehold.co/400x400?text=Player\n2" alt="P2" class="w-12 h-12 rounded-full bg-black object-cover mb-2 border border-neon-green border-opacity-50" />
+          <span class="text-neon-green text-xs font-medium uppercase tracking-wide" id="player2-name">-</span>
+        </div>
+      </div>
+
+      <!-- Navigation Button -->
+      <div class="flex flex-col gap-3">
+        <button id="back-btn"
+                class="terminal-btn bg-btn-gradient border-2 border-neon-green text-neon-green px-4 sm:px-5 py-2 sm:py-3 font-orbitron text-xs sm:text-sm font-bold uppercase tracking-wide cursor-pointer rounded-sm flex items-center justify-center relative overflow-hidden">
+          BACK HOME
+        </button>
+      </div>
       </div>
     </div>
-		<div class="text-center mb-4">
-			<p id="score-text" class="text-neon-white text-4xl font-bold mb-4" style="text-shadow: 0 0 5px #DDf6f8;">0 - 0</p>
-			<p id="winner-text" class="text-neon-yellow text-lg font-semibold mb-3">- WINS!</p>
-		</div>
-		<div class="flex justify-between items-center mb-4">
-			<div class="flex flex-col items-center flex-1">
-				<img id="player1-avatar" src="https://placehold.co/400x400?text=Player\n1" alt="P1" class="w-12 h-12 rounded-full bg-black object-cover mb-2" />
-				<span class="text-neon-white text-sm font-medium" id="player1-name">-</span>
-			</div>
-			<span class="text-neon-white mx-4 text-xl font-bold" style="text-shadow: 0 0 5px #39FF14;">VS</span>
-			<div class="flex flex-col items-center flex-1">
-				<img id="player2-avatar" src="https://placehold.co/400x400?text=Player\n2" alt="P2" class="w-12 h-12 rounded-full bg-black object-cover mb-2" />
-				<span class="text-neon-white text-sm font-medium" id="player2-name">-</span>
-			</div>
-		</div>
-		<button id="back-btn" class="w-full bg-transparent border border-neon-blue text-neon-blue hover:bg-neon-blue hover:text-terminal-border font-bold py-2 rounded transition-colors mt-2">BACK HOME</button>
-	</div>
+  </div>
 </div>

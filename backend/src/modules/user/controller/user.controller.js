@@ -5,19 +5,41 @@ import {
   updateAvatar
 } from '../service/user.service.js';
 import { escapeFields, sanitizeInput } from '../../../utils/security.js';
+import { 
+  isValidEmail, 
+  isValidUsername, 
+  containsSqlInjection,
+  sanitizeGeneralInput 
+} from '../../../utils/validation.js';
 import fs from 'fs';
 import path from 'path';
 import { initDB } from '../../../config/db.js';
+import { 
+  sanitizeUserInput, 
+  validateUserInput, 
+  isValidUserId, 
+  prepareSqlParams,
+  sanitizeUserProfile 
+} from '../utils/security.utils.js';
 
 export async function getMyProfile(request, reply) {
   const userId = request.user.id;
+  
+  // Validate userId to prevent injection
+  if (!isValidUserId(userId)) {
+    console.error(`🛡️ SECURITY: Invalid user ID format -> ${userId}`);
+    return reply.code(400).send({ error: 'Invalid user ID format' });
+  }
 
   try {
     const user = await getUserByIdService(userId);
     if (!user) {
       return reply.code(404).send({ error: 'User not found' });
     }
-    reply.send({ user });
+    
+    // Sanitize user data before sending to client
+    const sanitizedUser = sanitizeUserProfile(user);
+    reply.send({ user: sanitizedUser });
   } catch (error) {
     console.error('Error getting user profile:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
@@ -27,15 +49,33 @@ export async function getMyProfile(request, reply) {
 export async function getUserByUsername(request, reply) {
   const { username } = request.params;
   
+  // Username validation
+  if (!isValidUsername(username)) {
+    return reply.code(400).send({ 
+      error: 'Invalid username format' 
+    });
+  }
+
+  // SQL injection kontrolü
+  if (containsSqlInjection(username)) {
+    console.error(`🛡️ SECURITY: SQL injection attempt detected in username -> ${username}`);
+    return reply.code(400).send({ 
+      error: 'Invalid characters detected in username' 
+    });
+  }
+  
   // XSS koruması için username'i sanitize et
-  const sanitizedUsername = sanitizeInput(username);
+  const sanitizedUsername = sanitizeGeneralInput(username, { maxLength: 20 });
   
   try {
     const user = await getUserByUsernameService(sanitizedUsername);
     if (!user) {
       return reply.code(404).send({ error: 'User not found' });
     }
-    reply.send({ user });
+    
+    // Sanitize user data before sending to client
+    const sanitizedUser = sanitizeUserProfile(user);
+    reply.send({ user: sanitizedUser });
   } catch (error) {
     console.error('Error getting user by username:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
@@ -44,15 +84,47 @@ export async function getUserByUsername(request, reply) {
 
 export async function updateMyProfile(request, reply) {
   const userId = request.user.id;
+  
+  // Validate userId to prevent injection
+  if (!isValidUserId(userId)) {
+    console.error(`🛡️ SECURITY: Invalid user ID format -> ${userId}`);
+    return reply.code(400).send({ error: 'Invalid user ID format' });
+  }
+  
   const { username, email } = request.body;
 
-  // XSS koruması için input'ları escape et
-  const sanitizedData = escapeFields({ username, email }, ['username', 'email']);
+  // Validate input using our validation utility
+  const validation = validateUserInput({ username, email });
+  if (!validation.isValid) {
+    return reply.code(400).send({ error: validation.message });
+  }
+
+  // Temel validation kontrolü
+  if (!username && !email) {
+    return reply.code(400).send({
+      error: 'At least one field (username or email) is required'
+    });
+  }
+
+  // SQL injection kontrolü
+  if ((username && containsSqlInjection(username)) || (email && containsSqlInjection(email))) {
+    console.error(`🛡️ SECURITY: SQL injection attempt detected in profile update`);
+    return reply.code(400).send({
+      error: 'Invalid characters detected in input'
+    });
+  }
+
+  // XSS koruması için input'ları sanitize et
+  const sanitizedData = sanitizeUserInput({ username, email });
 
   try {
     const updatedUser = await updateProfile(userId, sanitizedData);
-    reply.send({ user: updatedUser });
+    
+    // Sanitize user data before sending to client
+    const sanitizedUpdatedUser = sanitizeUserProfile(updatedUser);
+    reply.send({ user: sanitizedUpdatedUser });
   } catch (error) {
+    console.error('Error updating user profile:', error);
     reply.code(400).send({ error: error.message });
   }
 }
@@ -110,13 +182,22 @@ export async function updateMyAvatar(request, reply) {
 
 export async function getUserById(request, reply) {
   const { id } = request.params;
+  
+  // Validate userId to prevent injection
+  if (!isValidUserId(id)) {
+    console.error(`🛡️ SECURITY: Invalid user ID format -> ${id}`);
+    return reply.code(400).send({ error: 'Invalid user ID format' });
+  }
 
   try {
     const user = await getUserByIdService(id);
     if (!user) {
       return reply.code(404).send({ error: 'User not found' });
     }
-    reply.send({ user });
+    
+    // Sanitize user data before sending to client
+    const sanitizedUser = sanitizeUserProfile(user);
+    reply.send({ user: sanitizedUser });
   } catch (error) {
     console.error('Error getting user by id:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
@@ -127,11 +208,21 @@ export async function getUserById(request, reply) {
 export async function getUserTournamentStatus(request, reply) {
   const { id } = request.params;
   
+  // Validate userId to prevent injection
+  if (!isValidUserId(id)) {
+    console.error(`🛡️ SECURITY: Invalid user ID format -> ${id}`);
+    return reply.code(400).send({ error: 'Invalid user ID format' });
+  }
+  
   try {
     const db = await initDB();
+    
+    // Use prepareSqlParams to prevent SQL injection
+    const params = prepareSqlParams([id]);
+    
     const user = await db.get(
       'SELECT currentTournamentId, isEliminated FROM users WHERE id = ?', 
-      [id]
+      params
     );
     
     if (!user) {
@@ -147,10 +238,11 @@ export async function getUserTournamentStatus(request, reply) {
       });
     }
     
-    // Get tournament info
+    // Get tournament info - use prepareSqlParams for the tournamentId
+    const tournamentParams = prepareSqlParams([user.currentTournamentId]);
     const tournament = await db.get(
       'SELECT status FROM tournaments WHERE id = ?',
-      [user.currentTournamentId]
+      tournamentParams
     );
     
     reply.send({

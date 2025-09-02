@@ -69,6 +69,7 @@ export function init() {
     const roomId = currentRoom?.roomId || '';
     if (!roomId) {
       notify('No room found');
+      router.navigate('home');
       return;
     }
     gameService.setPlayerReady(roomId);
