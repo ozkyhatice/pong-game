@@ -95,7 +95,6 @@ export class GameService {
   onMatchmakingLeft(callback: (data: any) => void): void { this.wsManager.on('matchmaking-left', callback); }
   onMatchmakingStatus(callback: (data: any) => void): void { this.wsManager.on('matchmaking-status', callback); }
   onMatchFound(callback: (data: any) => void): void { this.wsManager.on('match-found', callback); }
-  onMatchHistory(callback: (data: any) => void): void { this.wsManager.on('history', callback); }
 
   private send(event: GameMessage['event'], data: any = {}): void {
     this.wsManager.send({ type: 'game', event, data });

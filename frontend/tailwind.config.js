@@ -18,6 +18,7 @@ module.exports = {
         'neon-red': '#F07171',
         'neon-white': '#DDF6F8',
 		'neon-yellow': '#FACD1E',
+		'neon-purple': '#c187fc',
         'terminal-bg': '#0A0A0A',
         'terminal-border': '#1A1A1A',
         'console-bg': '#111111',
@@ -40,6 +41,7 @@ module.exports = {
         'btn-gradient-hover': 'linear-gradient(145deg, #2a2a2a, #1a1a1a)',
         'divider-gradient': 'linear-gradient(90deg, transparent, #39FF14, transparent)',
         'radial-bg': 'radial-gradient(circle, black 0%, #2a2a2a 100%)',
+		'radial-bg-green': 'radial-gradient(circle, #39FF14 0%, #2a2a2a 100%)',
       }
     },
   },

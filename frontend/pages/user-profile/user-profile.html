@@ -1,7 +1,7 @@
-<div class="min-h-screen bg-black p-4">
+<div class="min-h-screen bg-radial-bg relative items-center justify-center h-screen p-4 ">
   <!-- Header -->
-  <div class="max-w-3xl mx-auto mb-8 px-4">
-    <div class="flex items-center justify-between bg-terminal-border border-2 border-neon-green rounded-xl shadow-sm p-3 md:p-4">
+  <div class="max-w-2xl mx-auto mb-8 px-4">
+    <div class="flex items-center justify-between bg-console-bg border-2 border-neon-green rounded-xl shadow-sm p-3 md:p-4">
       <button id="back-btn" class="flex items-center gap-2 px-2 md:px-4 py-2 text-neon-blue hover:text-terminal-border hover:bg-neon-blue rounded-lg transition-colors">
         <svg class="w-4 md:w-5 h-4 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -12,11 +12,11 @@
       <!-- User Tab - Clickable to show sidebar -->
       <button id="user-info-tab" class="flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2 text-neon-green rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-neon-green/30">
         <div id="header-user-avatar" class="w-6 md:w-8 h-6 md:h-8 rounded-full bg-transparent flex items-center justify-center text-neon-white text-xs md:text-sm font-bold transition-colors">
-          JD
+          <img id="header-user-avatar-img" src="https://placehold.co/400x400?text=Player" alt="User Avatar" class="w-full h-full object-cover rounded-full">
         </div>
         <h1 id="header-username" class="text-lg md:text-xl font-bold text-neon-green transition-colors">JANEDOE</h1>
-        <svg id="sidebar-toggle-icon" class="w-5 md:w-6 h-5 md:h-6 text-neon-yellow hover:text-neon-blue transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path>
+        <svg id="sidebar-toggle-icon" class="w-5 md:w-6 h-5 md:h-6 text-neon-blue  transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
         </svg>
       </button>
       
@@ -24,53 +24,52 @@
     </div>
   </div>
 
-  <div class="max-w-3xl mx-auto relative px-4">
+  <div class="max-w-2xl mx-auto relative px-4">
     
     <!-- Main Chat Area (Fixed Width) -->
     <div id="main-chat-area" class="">
-      <div class="bg-terminal-border border-2 border-neon-green rounded-lg shadow-[0_0_10px_#39FF14] text-white">
-        
+      <div class="bg-console-bg border-2 shadow-terminal border-neon-green rounded-lg text-white ">
+
         <!-- Chat Header -->
-        <div class="bg-[#1A1A1A] border-b border-neon-green border-opacity-30 p-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <div class="text-neon-green text-xl font-bold tracking-wide mb-2" style="text-shadow: 0 0 5px #39FF14;">
+        <div class="bg-header-gradient rounded-lg p-4">
+          <div class="flex items-center justify-center">
+            <div class="text-center">
+              <div class="text-neon-white text-2xl font-bold tracking-wide mb-2" style="text-shadow: 0 0 10px #62A6FA;">
                 PONG CHAT
               </div>
-              <div class="flex items-center gap-1 mb-1 text-neon-white text-xs">
-                <div class="w-1.5 h-1.5 bg-neon-green rounded-full animate-pulse"></div>
-                <span>CHAT STATUS: LOADED</span>
+              <div class="flex items-center justify-center gap-1 mb-1 text-neon-white text-xs">
+                <div class="w-1 h-1 bg-neon-green rounded-full animate-pulse"></div>
+                <span class="text-[10px] text-neon-green">CHAT STATUS: LOADED</span>
               </div>
-              <div class="text-neon-white flex items-center gap-1 text-xs">
-                <span>> WAITING FOR CHATTING...</span>
+              <div class="text-neon-white flex items-center justify-center gap-1 text-xs waiting-status">
+                <span class="text-[10px]">> WAITING FOR CHATTING... </span>
               </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="w-2 h-2 bg-neon-green rounded-full animate-pulse"></div>
-              <span class="text-sm text-neon-white">Online</span>
             </div>
           </div>
         </div>
 
         <!-- Chat Messages -->
-        <div class="h-80 md:h-96 p-3 md:p-6 overflow-y-auto bg-terminal-border" id="chat-messages">
+        <div class="h-80 md:h-96 p-3 md:p-6 overflow-y-auto border-t border-b border-neon-green bg-console-bg" id="chat-messages">
           <div class="text-center text-neon-white py-8">
             <div class="animate-spin w-6 h-6 border-2 border-neon-green border-t-transparent rounded-full mx-auto mb-2"></div>
-            <p class="text-neon-white">Loading messages...</p>
+            <p class="text-neon-white">LOADING MESSAGES...</p>
           </div>
         </div>
 
         <!-- Chat Input -->
-        <div class="p-3 md:p-4 border-t border-neon-green bg-[#1A1A1A]">
-          <div class="flex gap-2 md:gap-3">
+        <div class="p-3 md:p-4 rounded-lg bg-header-gradient">
+          <div class="flex gap-2 md:gap-3 items-center">
             <input 
               type="text" 
               id="chat-input" 
               placeholder="TYPE SOMETHING..." 
-              class="flex-1 px-3 md:px-4 py-2 md:py-3 bg-terminal-border border border-neon-green rounded-lg focus:ring-2 focus:ring-neon-blue focus:border-neon-blue text-neon-white placeholder-neon-white/50 text-sm md:text-base"
+              class="flex-1 min-w-0 px-3 md:px-4 py-2 md:py-3 bg-terminal-border border border-neon-green rounded-lg focus:ring-2 focus:ring-neon-blue focus:border-neon-blue text-neon-white placeholder-neon-white/50 text-sm md:text-base"
             >
-            <button id="send-message-btn" class="bg-transparent border border-neon-blue text-neon-blue hover:bg-neon-blue hover:text-terminal-border px-3 md:px-6 py-2 md:py-3 rounded-lg font-medium transition-colors tracking-wide text-sm md:text-base">
+            <button id="send-message-btn" class="flex-shrink-0 bg-transparent border border-neon-blue text-neon-blue hover:bg-neon-blue hover:text-terminal-border px-3 md:px-6 py-2 md:py-3 rounded-lg font-medium transition-colors tracking-wide text-sm md:text-base whitespace-nowrap">
               SEND
+            </button>
+            <button id="challenge-btn" class="flex-shrink-0 bg-transparent border border-neon-purple text-neon-purple hover:bg-neon-purple hover:text-terminal-border px-3 md:px-6 py-2 md:py-3 rounded-lg font-medium transition-colors tracking-wide text-sm md:text-base whitespace-nowrap">
+              PLAY
             </button>
           </div>
         </div>
@@ -79,15 +78,15 @@
     </div>
 
     <!-- User Info Sidebar (Hidden Initially) -->
-    <div id="user-sidebar" class="fixed top-0 right-0 h-full w-80 md:w-80 sm:w-full bg-terminal-border border-l-2 border-neon-green shadow-[0_0_20px_#39FF14] transform translate-x-full transition-transform duration-300 ease-in-out z-50 overflow-y-auto">
+    <div id="user-sidebar" class="fixed top-0 right-0 h-full w-80 md:w-80 sm:w-full bg-terminal-border border-l-2 border-neon-green transform translate-x-full transition-transform duration-300 ease-in-out z-50 overflow-y-auto">
       
       <!-- Sidebar Header -->
-      <div class="p-4 border-b border-neon-green bg-[#1A1A1A] border-opacity-30">
+      <div class="p-4 border-b border-neon-green bg-console-bg">
         <div class="flex items-center justify-between">
-          <h2 class="text-neon-green font-bold tracking-wide text-lg md:text-base" style="text-shadow: 0 0 5px #39FF14;">USER PROFILE</h2>
-          <button id="close-sidebar" class="text-neon-red hover:text-white transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          <h2 class="text-neon-white font-bold tracking-wide text-lg md:text-base" style="text-shadow: 0 0 10px #62A6FA;">USER PROFILE</h2>
+          <button id="close-sidebar" class="w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors group">
+            <svg class="w-3 h-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
@@ -97,10 +96,10 @@
       <div class="p-4 md:p-6 space-y-4 md:space-y-6">
         
         <!-- Profile Card -->
-        <div class="text-center bg-[#1A1A1A] border border-neon-green border-opacity-30 rounded-lg p-4">
+        <div class="text-center bg-radial-bg border border-neon-green border-opacity-30 rounded-lg p-4">
           <div class="relative inline-block mb-4">
             <div id="user-avatar" class="w-24 h-24 rounded-full bg-terminal-border border-2 border-neon-blue flex items-center justify-center text-neon-white text-2xl font-bold shadow-[0_0_10px_#62a6fa] mx-auto">
-              JD
+				<img id="sidebar-user-avatar-img" src="https://placehold.co/400x400?text=Player" alt="User Avatar" class="w-full h-full object-cover rounded-full">
             </div>
           </div>
           
@@ -111,14 +110,19 @@
           </div>
           
           <div class="flex flex-col gap-3">
-            <button id="add-friend-btn" class="bg-transparent border border-neon-green text-neon-green hover:bg-neon-green hover:text-terminal-border px-6 py-2 rounded-lg font-medium transition-colors tracking-wide">
-              ADD FRIEND
+            <button id="remove-friend-btn" class="bg-transparent border border-neon-yellow text-neon-yellow hover:bg-neon-yellow hover:text-terminal-border px-6 py-2 rounded-lg font-medium transition-colors tracking-wide mb-2">
+              REMOVE FRIEND
+            </button>
+          </div>
+		  <div class="flex flex-col gap-3">
+            <button id="block-friend-btn" class="bg-transparent border border-neon-red text-neon-red hover:bg-neon-red hover:text-terminal-border px-6 py-2 rounded-lg font-medium transition-colors tracking-wide">
+              BLOCK
             </button>
           </div>
         </div>
 
         <!-- Stats Card -->
-        <div class="bg-[#1A1A1A] border border-neon-green border-opacity-30 rounded-lg p-6">
+        <div class="bg-console-bg border border-neon-green border-opacity-30 rounded-lg p-6">
           <h3 class="text-lg font-bold text-neon-green mb-4 tracking-wide">GAME STATISTICS</h3>
           
           <div class="grid grid-cols-2 gap-4 mb-4">
@@ -146,7 +150,7 @@
         </div>
 
         <!-- Recent Matches -->
-        <div class="bg-[#1A1A1A] border border-neon-green border-opacity-30 rounded-lg p-6">
+        <div class="bg-console-bg border border-neon-green border-opacity-30 rounded-lg p-6">
           <h3 class="text-lg font-bold text-neon-green mb-4 tracking-wide">RECENT MATCHES</h3>
           
           <div class="space-y-3" id="match-history">

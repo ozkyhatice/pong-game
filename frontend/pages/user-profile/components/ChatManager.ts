@@ -130,7 +130,6 @@ export class ChatManager {
     }
     
     messages.forEach((message, index) => {
-      console.log(`Rendering message ${index}:`, message);
       const messageElement = this.createMessageElement(message);
       this.chatMessages.appendChild(messageElement);
     });
@@ -143,30 +142,34 @@ export class ChatManager {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'mb-4';
 
-    const displayTime = message.createdAt;
+    // Türkiye saati için +3 saat ekle
+    const messageDate = new Date(message.createdAt);
+    messageDate.setHours(messageDate.getHours() + 3);
+    const displayTime = messageDate.toISOString().slice(11, 16); // HH:MM formatında
+    
     const isFromMe = message.senderId === this.currentUserId;
 
     if (isFromMe) {
       messageDiv.innerHTML = `
-        <div class="flex items-start gap-3 justify-end">
-          <div class="flex-1">
-            <div class="bg-neon-green text-terminal-border p-3 rounded-lg shadow-sm">
-              <p>${this.escapeHtml(message.content)}</p>
+        <div class="flex items-end gap-2 justify-end">
+          <div class="max-w-[280px] min-w-[60px]">
+            <div class="text-neon-white border border-neon-yellow border-opacity-50 p-3 rounded-lg shadow-sm bg-terminal-border break-words">
+              <p class="leading-relaxed">${this.escapeHtml(message.content)}</p>
             </div>
-            <div class="text-xs text-slate-500 mt-1 text-right">${displayTime}</div>
+            <div class="text-[10px] text-neon-white/30 mt-1 text-right">${displayTime}</div>
           </div>
-          <div class="w-8 h-8 bg-neon-green rounded-full flex items-center justify-center text-terminal-border text-sm font-bold">ME</div>
+          <div class="w-8 h-8 bg-neon-yellow rounded-full flex items-center justify-center text-console-bg text-sm font-bold flex-shrink-0">ME</div>
         </div>
       `;
     } else {
       messageDiv.innerHTML = `
-        <div class="flex items-start gap-3">
-          <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-neon-blue text-sm font-bold">U</div>
-          <div class="flex-1">
-            <div class="bg-white p-3 rounded-lg shadow-sm">
-              <p class="text-terminal-border">${this.escapeHtml(message.content)}</p>
+        <div class="flex items-end gap-2">
+          <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-console-bg text-sm font-bold flex-shrink-0">U</div>
+          <div class="max-w-[280px] min-w-[60px]">
+            <div class="border border-neon-white border-opacity-50 p-3 rounded-lg shadow-sm bg-terminal-border break-words">
+              <p class="text-neon-white leading-relaxed">${this.escapeHtml(message.content)}</p>
             </div>
-            <div class="text-xs text-slate-500 mt-1">${displayTime}</div>
+            <div class="text-[10px] text-neon-white/30 mt-1">${displayTime}</div>
           </div>
         </div>
       `;
@@ -189,6 +192,9 @@ export class ChatManager {
       this.sentMessages.add(messageKey);
 
       // Hemen mesajı kendi ekranında göster
+      const now = new Date();
+      now.setHours(now.getHours() + 3); // Türkiye saati için +3 saat
+      
       const sentMessage: ApiMessage = {
         id: Date.now(),
         senderId: this.currentUserId,
@@ -196,7 +202,7 @@ export class ChatManager {
         content: message,
         isRead: 0,
         delivered: 0,
-        createdAt: new Date().toISOString().slice(0, 19).replace('T', ' ')
+        createdAt: now.toISOString().slice(0, 19).replace('T', ' ')
       };
 
       const messageElement = this.createMessageElement(sentMessage);
@@ -261,7 +267,11 @@ export class ChatManager {
       content: message.content,
       isRead: message.isRead || 0,
       delivered: message.delivered || 1,
-      createdAt: message.createdAt ? message.createdAt.slice(0, 19).replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' ')
+      createdAt: message.createdAt ? message.createdAt.slice(0, 19).replace('T', ' ') : (() => {
+        const now = new Date();
+        now.setHours(now.getHours() + 3);
+        return now.toISOString().slice(0, 19).replace('T', ' ');
+      })()
     };
 
     const messageElement = this.createMessageElement(apiMessage);
