@@ -7,9 +7,8 @@
  * Add security headers to all friend module responses
  * @param {object} request - Fastify request object
  * @param {object} reply - Fastify reply object
- * @param {function} done - Callback to continue processing
  */
-export async function addSecurityHeaders(request, reply, done) {
+export async function addSecurityHeaders(request, reply) {
   // Prevent XSS attacks
   reply.header('X-XSS-Protection', '1; mode=block');
   
@@ -29,5 +28,5 @@ export async function addSecurityHeaders(request, reply, done) {
   reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
   reply.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
   
-  done();
+  // No done() callback needed with async functions
 }

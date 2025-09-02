@@ -2,8 +2,8 @@
  * Friend module validation and sanitization functions
  */
 
-import { sanitizeGeneralInput, containsSqlInjection } from './../../utils/validation.js';
-import { escapeHTML } from './../../utils/security.js';
+import { sanitizeGeneralInput, containsSqlInjection } from '../../../utils/validation.js';
+import { escapeHTML } from '../../../utils/security.js';
 
 /**
  * Validates and sanitizes user IDs for friend-related operations
