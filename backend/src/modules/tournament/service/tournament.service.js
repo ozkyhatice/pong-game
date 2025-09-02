@@ -1,34 +1,49 @@
 import { initDB } from '../../../config/db.js';
 import { sendMessage } from '../../chat/service/websocket.service.js';
 import { getActiveTournamentId, broadcastToTournamentPlayers, getTournamentParticipants, broadcastTournamentUpdateToAll} from '../utils/tournament.utils.js';
+import { sanitizeTournamentInput, prepareSqlParams, isValidUserId, sanitizeTournamentMessage } from '../utils/security.utils.js';
 
 export async function createTournamentService(data, userId, connection) {
+    // Validate userId
+    if (!isValidUserId(userId)) {
+        throw new Error('Invalid user ID format');
+    }
+    
     const db = await initDB();
-    const tournamentName = data.name;
-    const maxPlayers = data.maxPlayers || 4;
+    
+    // Sanitize input
+    const sanitizedData = sanitizeTournamentInput(data);
+    const tournamentName = sanitizedData.name;
+    const maxPlayers = sanitizedData.maxPlayers || 4;
+    
     if (maxPlayers < 2 || maxPlayers > 4) {
         throw new Error('Max players must be between 2 and 4');
     }
     if (!tournamentName) {
         throw new Error('Tournament name is required');
     }
+    
     const sql = `
         INSERT INTO tournaments (name, startAt, endAt, maxPlayers, status) 
         VALUES (?, NULL, NULL, ?, 'pending')
     `;
     try {
-        await db.run(sql, [
+        // Prepare parameters to prevent SQL injection
+        const params = prepareSqlParams([
             tournamentName,
-            data.maxPlayers
+            maxPlayers
         ]);
-    }catch (error) {
+        
+        await db.run(sql, params);
+    } catch (error) {
         console.error('Error creating tournament:', error);
         throw error;
     }
     
     const newTournamentId = await getActiveTournamentId();    
-    // Tüm online kullanıcılara yeni tournament oluşturulduğunu bildir
-    await broadcastTournamentUpdateToAll({
+    
+    // Sanitize before broadcasting
+    const updateMessage = sanitizeTournamentMessage({
         type: 'tournament',
         event: 'newTournamentCreated',
         data: { 
@@ -39,6 +54,9 @@ export async function createTournamentService(data, userId, connection) {
             message: 'New tournament created! Join now!'
         }
     });
+    
+    // Tüm online kullanıcılara yeni tournament oluşturulduğunu bildir
+    await broadcastTournamentUpdateToAll(updateMessage);
 }
 
 
@@ -49,14 +67,26 @@ export async function createTournamentService(data, userId, connection) {
 //userId: katılacak kullanıcı
 //connection: kullanıcının WebSocket bağlantısı
 export async function joinTournamentService(data, userId, connection) {
+    // Validate userId and tournamentId
+    if (!isValidUserId(userId)) {
+        throw new Error('Invalid user ID format');
+    }
+    
     const tournamentId = data.tournamentId;
+    if (!tournamentId) {
+        throw new Error('Tournament ID is required');
+    }
+    
     const db = await initDB();
+    
     // user tablosunda currentTournamentId alanını güncelle ve isEliminated'ı sıfırla
     const sql = `
         UPDATE users SET currentTournamentId = ?, isEliminated = 0 WHERE id = ?
     `;
     try {
-        const result = await db.run(sql, [tournamentId, userId]);
+        // Prepare parameters to prevent SQL injection
+        const params = prepareSqlParams([tournamentId, userId]);
+        const result = await db.run(sql, params);
         return result;
     } catch (error) {
         console.error('Error joining tournament:', error);
