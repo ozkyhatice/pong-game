@@ -4,6 +4,7 @@ import { startGameLoop, stopGameLoop, pauseGame, resumeGame } from "../utils/gam
 import { getClientById } from "../../../websocket/services/client.service.js";
 import { joinMatchmakingQueue, leaveMatchmakingQueue, cancelMatchmaking, getMatchmakingStatus } from "./match-making.controller.js";
 import { getMatchHistoryByUserId } from "../services/game.service.js";
+import { sanitizeGameInput, validateGameInput, isValidUserId } from "../utils/security.utils.js";
 
 export const rooms = new Map();
 export const userRoom = new Map(); // userId -> roomId
@@ -11,13 +12,36 @@ export const userRoom = new Map(); // userId -> roomId
 export async function handleGameMessage(msgObj, userId, connection) {
     console.log(`🎮 GAME: Message received -> User: ${userId}, Event: ${msgObj.event}`);
     
-    const { event, data} = msgObj;
+    // Validate userId to prevent injection
+    if (!isValidUserId(userId)) {
+        console.error(`🛡️ SECURITY: Invalid user ID format -> ${userId}`);
+        await sendMessage(connection, 'game', 'error', {
+            message: 'Invalid user ID format'
+        });
+        return;
+    }
+    
+    const { event, data } = msgObj;
+    
+    // Sanitize input data to prevent XSS attacks
+    const sanitizedData = sanitizeGameInput(data);
+    
+    // Validate input data to prevent SQL injection
+    const validation = validateGameInput(sanitizedData);
+    if (!validation.isValid) {
+        console.error(`🛡️ SECURITY: Input validation failed -> ${validation.message}`);
+        await sendMessage(connection, 'game', 'error', {
+            message: validation.message
+        });
+        return;
+    }
+    
     const handler = eventHandlers[event];
     if (!handler) {
         console.error(`❌ GAME: No handler for event: ${event}`);
         throw new Error(`No handler for event: ${event}`);
     }
-    return await handler(data, userId, connection);
+    return await handler(sanitizedData, userId, connection);
 }
 const eventHandlers = {
     join: joinGame,
@@ -275,11 +299,22 @@ export async function handlePlayerReady(data, userId, connection) {
 
 
 export async function handleReconnection(connection, userId) {
+    // Validate userId to prevent SQL injection
+    if (!isValidUserId(userId)) {
+        console.error(`🛡️ SECURITY: Invalid user ID format for reconnection -> ${userId}`);
+        await sendMessage(connection, 'game', 'error', {
+            message: 'Invalid user ID format'
+        });
+        return;
+    }
+    
     const roomId = userRoom.get(userId);
     
     // Check if user has active tournament or game to reconnect to
     const { initDB } = await import('../../../config/db.js');
     const db = await initDB();
+    
+    // Use parameterized query to prevent SQL injection
     const user = await db.get('SELECT currentTournamentId FROM users WHERE id = ?', [userId]);
     
     // If user is in an active game, redirect to remote-game
@@ -355,7 +390,16 @@ export async function handleReconnection(connection, userId) {
 }
 
 export async function handleGameInvite(data, userId, connection) {
-    const { receiverId, senderUsername } = data;
+    // Validate userId and receiverId to prevent SQL injection
+    if (!isValidUserId(userId) || !isValidUserId(data.receiverId)) {
+        console.error(`🛡️ SECURITY: Invalid user ID format for game invite -> ${userId} or ${data.receiverId}`);
+        await sendMessage(connection, 'game', 'error', {
+            message: 'Invalid user ID format'
+        });
+        return;
+    }
+    
+    const { receiverId, senderUsername } = sanitizeGameInput(data);
     
     console.log(`Game invite from user ${userId} to user ${receiverId}`);
     
@@ -384,7 +428,16 @@ export async function handleGameInvite(data, userId, connection) {
 }
 
 export async function handleInviteAccepted(data, userId, connection) {
-    const { senderId } = data;
+    // Validate userId and senderId to prevent SQL injection
+    if (!isValidUserId(userId) || !isValidUserId(data.senderId)) {
+        console.error(`🛡️ SECURITY: Invalid user ID format for invite acceptance -> ${userId} or ${data.senderId}`);
+        await sendMessage(connection, 'game', 'error', {
+            message: 'Invalid user ID format'
+        });
+        return;
+    }
+    
+    const { senderId } = sanitizeGameInput(data);
     
     console.log(`✅ GAME INVITE: Invitation accepted -> From: ${senderId}, By: ${userId}`);
     
