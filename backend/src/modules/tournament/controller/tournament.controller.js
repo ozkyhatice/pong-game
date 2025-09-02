@@ -4,6 +4,7 @@ import { countTournamentPlayers, getActiveTournamentId, broadcastToTournamentPla
 import { getStatusOfTournament, isUserInTournament, getTournamentParticipants } from '../utils/tournament.utils.js';
 import { initDB } from '../../../config/db.js';
 import { sanitizeInput } from '../../../utils/security.js';
+import { validateTournamentName, containsSqlInjection } from '../../../utils/validation.js';
 
 export async function handleTournamentMessage(msgObj, userId, connection) {
   const { event, data} = msgObj;
@@ -35,10 +36,25 @@ export async function createTournament(data, userId, connection) {
         return;
     }
     
-    // XSS koruması için tournament adını sanitize et
+    // Tournament adı validation
+    if (!data.name) {
+        throw new Error('Tournament name is required');
+    }
+    
+    const nameValidation = validateTournamentName(data.name);
+    if (!nameValidation.isValid) {
+        throw new Error(nameValidation.message);
+    }
+
+    // SQL injection kontrolü
+    if (containsSqlInjection(data.name)) {
+        throw new Error('Invalid characters detected in tournament name');
+    }
+    
+    // Validation sonucunda sanitize edilmiş tournament adını kullan
     const sanitizedData = {
         ...data,
-        name: data.name ? sanitizeInput(data.name) : data.name
+        name: nameValidation.sanitizedName
     };
     
     await createTournamentService(sanitizedData, userId);

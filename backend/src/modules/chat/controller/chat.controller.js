@@ -18,6 +18,7 @@ import {
   isUserBlocked
 } from '../../friend/service/friend.service.js';
 import { sanitizeInput } from '../../../utils/security.js';
+import { validateChatMessage, containsSqlInjection } from '../../../utils/validation.js';
 
 export async function undeliveredMessageController(userId, connection) {
   // Tek seferde hem undelivered hem unread mesajları gönder
@@ -52,8 +53,19 @@ export async function processChatMessage(message, userId) {
       throw new Error('Receiver ID and content are required');
     }
     
-    // XSS koruması için mesaj içeriğini sanitize et
-    const sanitizedContent = sanitizeInput(content);
+    // Chat mesajı validation
+    const messageValidation = validateChatMessage(content);
+    if (!messageValidation.isValid) {
+      throw new Error(messageValidation.message);
+    }
+
+    // SQL injection kontrolü
+    if (containsSqlInjection(content)) {
+      throw new Error('Invalid characters detected in message');
+    }
+    
+    // Validation sonucunda sanitize edilmiş mesajı kullan
+    const sanitizedContent = messageValidation.sanitizedMessage;
     
     if (userId === receiverId) {
       throw new Error('You cannot send a message to yourself');

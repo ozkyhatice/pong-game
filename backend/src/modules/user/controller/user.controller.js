@@ -5,6 +5,12 @@ import {
   updateAvatar
 } from '../service/user.service.js';
 import { escapeFields, sanitizeInput } from '../../../utils/security.js';
+import { 
+  isValidEmail, 
+  isValidUsername, 
+  containsSqlInjection,
+  sanitizeGeneralInput 
+} from '../../../utils/validation.js';
 import fs from 'fs';
 import path from 'path';
 import { initDB } from '../../../config/db.js';
@@ -27,8 +33,22 @@ export async function getMyProfile(request, reply) {
 export async function getUserByUsername(request, reply) {
   const { username } = request.params;
   
+  // Username validation
+  if (!isValidUsername(username)) {
+    return reply.code(400).send({ 
+      error: 'Invalid username format' 
+    });
+  }
+
+  // SQL injection kontrolü
+  if (containsSqlInjection(username)) {
+    return reply.code(400).send({ 
+      error: 'Invalid characters detected in username' 
+    });
+  }
+  
   // XSS koruması için username'i sanitize et
-  const sanitizedUsername = sanitizeInput(username);
+  const sanitizedUsername = sanitizeGeneralInput(username, { maxLength: 20 });
   
   try {
     const user = await getUserByUsernameService(sanitizedUsername);
@@ -46,8 +66,42 @@ export async function updateMyProfile(request, reply) {
   const userId = request.user.id;
   const { username, email } = request.body;
 
-  // XSS koruması için input'ları escape et
-  const sanitizedData = escapeFields({ username, email }, ['username', 'email']);
+  // Temel validation kontrolü
+  if (!username && !email) {
+    return reply.code(400).send({
+      error: 'At least one field (username or email) is required'
+    });
+  }
+
+  // Username validation (eğer verilmişse)
+  if (username && !isValidUsername(username)) {
+    return reply.code(400).send({
+      error: 'Username must be 3-20 characters long and contain only letters, numbers, and underscores'
+    });
+  }
+
+  // Email validation (eğer verilmişse)
+  if (email && !isValidEmail(email)) {
+    return reply.code(400).send({
+      error: 'Please provide a valid email address'
+    });
+  }
+
+  // SQL injection kontrolü
+  if ((username && containsSqlInjection(username)) || (email && containsSqlInjection(email))) {
+    return reply.code(400).send({
+      error: 'Invalid characters detected in input'
+    });
+  }
+
+  // XSS koruması için input'ları sanitize et
+  const sanitizedData = {};
+  if (username) {
+    sanitizedData.username = sanitizeGeneralInput(username, { maxLength: 20 });
+  }
+  if (email) {
+    sanitizedData.email = sanitizeGeneralInput(email, { maxLength: 255 });
+  }
 
   try {
     const updatedUser = await updateProfile(userId, sanitizedData);
