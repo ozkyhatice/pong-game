@@ -6,10 +6,37 @@ export const createFriendRequestSchema = {
     properties: {
       targetId: {
         type: 'integer',
-        description: "ID of the user to send friend request to"
+        description: "ID of the user to send friend request to",
+        minimum: 1 // Ensure positive integers only
       }
     },
     required: ['targetId']
+  },
+  response: {
+    201: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    },
+    400: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    404: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    500: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    }
   }
 };
 
@@ -21,10 +48,43 @@ export const acceptRequestSchema = {
     properties: {
       targetId: {
         type: 'integer',
-        description: "Sender's user ID"
+        description: "Sender's user ID",
+        minimum: 1 // Ensure positive integers only
       }
     },
     required: ['targetId']
+  },
+  response: {
+    201: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    },
+    400: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    404: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    },
+    409: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    },
+    500: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    }
   }
 };
 
@@ -36,10 +96,37 @@ export const rejectRequestSchema = {
     properties: {
       targetId: {
         type: 'integer',
-        description: "Sender's user ID"
+        description: "Sender's user ID",
+        minimum: 1 // Ensure positive integers only
       }
     },
     required: ['targetId']
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    },
+    400: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    404: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    },
+    500: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    }
   }
 };
 
@@ -150,10 +237,37 @@ export const deleteFriendSchema = {
     properties: {
       targetId: {
         type: 'integer',
-        description: "ID of the friend to remove"
+        description: "ID of the friend to remove",
+        minimum: 1 // Ensure positive integers only
       }
     },
     required: ['targetId']
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    },
+    400: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    404: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    500: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    }
   }
 };
 
@@ -165,10 +279,37 @@ export const blockFriendSchema = {
     properties: {
       id: {
         type: 'integer',
-        description: "ID of the user to block"
+        description: "ID of the user to block",
+        minimum: 1 // Ensure positive integers only
       }
     },
     required: ['id']
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    },
+    400: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    404: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    500: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    }
   }
 };
 
@@ -180,10 +321,37 @@ export const unblockFriendSchema = {
     properties: {
       id: {
         type: 'integer',
-        description: "ID of the user to unblock"
+        description: "ID of the user to unblock",
+        minimum: 1 // Ensure positive integers only
       }
     },
     required: ['id']
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    },
+    400: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    404: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    500: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    }
   }
 };
 
@@ -195,9 +363,42 @@ export const getBlockedUsersSchema = {
     properties: {
       id: {
         type: 'integer',
-        description: "ID of the user whose blocked list is to be fetched"
+        description: "ID of the user whose blocked list is to be fetched",
+        minimum: 1 // Ensure positive integers only
       }
     },
     required: ['id']  
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        blockedUsers: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'integer' },
+              username: { type: 'string' },
+              avatar: { type: ['string', 'null'] },
+              wins: { type: 'integer' },
+              losses: { type: 'integer' }
+            }
+          }
+        }
+      }
+    },
+    400: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    500: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    }
   }
 };

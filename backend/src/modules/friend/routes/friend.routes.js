@@ -23,8 +23,12 @@ import {
   getBlockedUsersController
 } from '../controller/friend.controller.js';
 import { verifyToken } from '../../../middleware/auth.js';
+import { addSecurityHeaders } from '../middleware/security.js';
 
 export default async function friendRoutes(app, options) {
+  // Register global security headers for all friend routes
+  app.addHook('onRequest', addSecurityHeaders);
+  
   // Friend list and requests
   app.get('/', {
     schema: getFriendsListSchema,
