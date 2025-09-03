@@ -28,7 +28,7 @@ export class SocialTabs {
   private render(): void {
     this.element.innerHTML = `
       <!-- Tab Headers -->
-      <div class="flex border-b">
+      <div class="flex bg-console-bg">
         <button class="tab-btn flex-1 px-3 py-3 text-center text-xs font-medium transition-all duration-300 ${
           this.activeTab === 'friends' 
             ? 'text-neon-green border-b-2 border-neon-green bg-header-gradient shadow-[4px_0_12px_rgba(0,255,102,0.4)] relative z-10' 
