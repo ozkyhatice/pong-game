@@ -127,25 +127,26 @@ function displayBlockedUsers(blockedUsers: any[]): void {
     if (blockedUsers.length === 0) {
         listDiv.innerHTML = `
             <div class="text-neon-red text-opacity-50 text-[10px] text-center py-4">
-                NO BLOCKED USERS
+                NO BLOCKED USERS, TRY ADDING SOME!
             </div>
         `;
         return;
     }
 
+	console.log(blockedUsers);
     listDiv.innerHTML = blockedUsers.map(user => `
         <div class="flex items-center justify-between p-2 bg-black bg-opacity-40 border border-neon-red border-opacity-30 rounded-sm">
             <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-full bg-neon-red bg-opacity-20 flex items-center justify-center">
+					<img id="header-user-avatar-img" src="${user.avatar || 'https://placehold.co/400x400?text=Player'}" alt="User Avatar" class="w-full h-full object-cover rounded-full">
                     <span class="text-neon-red text-[8px] font-bold"></span>
                 </div>
                 <div>
-                    <p class="text-neon-red text-[10px] font-medium">${user.username}</p>
-                    <p class="text-neon-red text-opacity-60 text-[8px]">BLOCKED USER</p>
+                    <p class="text-neon-red text-xs font-bold">${user.username}</p>
                 </div>
             </div>
             <button onclick="unblockUser(${user.id})" 
-                    class="bg-transparent border border-neon-yellow text-neon-yellow hover:bg-neon-yellow hover:text-terminal-border px-2 py-1 rounded text-[8px] font-bold transition-colors">
+                    class="terminal-btn bg-btn-gradient border border-neon-yellow text-neon-yellow px-3 py-2 font-orbitron text-xs font-bold tracking-wide cursor-pointer rounded-sm">
                 UNBLOCK
             </button>
         </div>
