@@ -124,7 +124,7 @@ export class FriendsTab {
                             data-username="${friend.friendInfo.username}">
                       CHAT
                     </button>
-                    <button class="play-btn px-2 py-0.5 text-[10px] ${status.isOnline ? 'bg-neon-red text-terminal-border hover:bg-neon-red/80' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} rounded transition-colors"
+                    <button class="play-btn px-2 py-0.5 text-[10px] ${status.isOnline ? 'bg-neon-red border border-neon-red text-terminal-border hover:bg-neon-red/80' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} rounded transition-colors"
                             data-user-id="${friend.friendInfo.id}" 
                             data-username="${friend.friendInfo.username}"
                             ${!status.isOnline ? 'disabled' : ''}>
