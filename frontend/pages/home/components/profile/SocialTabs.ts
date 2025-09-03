@@ -12,7 +12,7 @@ export class SocialTabs {
 
   constructor() {
     this.element = document.createElement('div');
-    this.element.className = 'flex-1 bg-white rounded-t-xl flex flex-col min-h-0';
+    this.element.className = 'flex-1 bg-terminal-border flex flex-col min-h-0';
 
     this.friendsTab = new FriendsTab();
     this.requestsTab = new RequestsTab();
@@ -29,8 +29,10 @@ export class SocialTabs {
     this.element.innerHTML = `
       <!-- Tab Headers -->
       <div class="flex border-b">
-        <button class="tab-btn flex-1 px-3 py-3 text-center text-xs font-medium transition-colors ${
-          this.activeTab === 'friends' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'
+        <button class="tab-btn flex-1 px-3 py-3 text-center text-xs font-medium transition-all duration-300 ${
+          this.activeTab === 'friends' 
+            ? 'text-neon-green border-b-2 border-neon-green bg-header-gradient shadow-[4px_0_12px_rgba(0,255,102,0.4)] relative z-10' 
+            : 'text-neon-green hover:bg-black/20'
         }" data-tab="friends">
           <div class="flex flex-col items-center">
             <div class="mb-1">
@@ -39,12 +41,14 @@ export class SocialTabs {
                 <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z"/>
               </svg>
             </div>
-            <span>Friends</span>
+            <span>FRIENDS</span>
           </div>
         </button>
 
-        <button class="tab-btn flex-1 px-3 py-3 text-center text-xs font-medium transition-colors ${
-          this.activeTab === 'requests' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'
+        <button class="tab-btn flex-1 px-3 py-3 text-center text-xs font-medium transition-all duration-300 ${
+          this.activeTab === 'requests' 
+            ? 'text-neon-green border-b-2 border-neon-green bg-header-gradient shadow-[-4px_0_12px_rgba(0,255,102,0.4),4px_0_12px_rgba(0,255,102,0.4)] relative z-10' 
+            : 'text-neon-green hover:bg-black/20'
         }" data-tab="requests">
           <div class="flex flex-col items-center">
             <div class="mb-1">
@@ -58,12 +62,14 @@ export class SocialTabs {
                 `}
               </svg>
             </div>
-            <span>Requests</span>
+            <span>REQUESTS</span>
           </div>
         </button>
 
-        <button class="tab-btn flex-1 px-3 py-3 text-center text-xs font-medium transition-colors ${
-          this.activeTab === 'add' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'
+        <button class="tab-btn flex-1 px-3 py-3 text-center text-xs font-medium transition-all duration-300 ${
+          this.activeTab === 'add' 
+            ? 'text-neon-green border-b-2 border-neon-green bg-header-gradient shadow-[-4px_0_12px_rgba(0,255,102,0.4)] relative z-10' 
+            : 'text-neon-green hover:bg-black/20'
         }" data-tab="add">
           <div class="flex flex-col items-center">
             <div class="mb-1">
@@ -71,7 +77,7 @@ export class SocialTabs {
                 <path d="M5.25 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM2.25 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM18.75 7.5a.75.75 0 0 0-1.5 0v2.25H15a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H21a.75.75 0 0 0 0-1.5h-2.25V7.5Z"/>
               </svg>
             </div>
-            <span>Add</span>
+            <span>ADD</span>
           </div>
         </button>
       </div>

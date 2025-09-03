@@ -1,6 +1,7 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
 import { AuthGuard } from '../../core/auth-guard.js';
+import { AppState } from '../../core/AppState.js';
 import { ProfileComponent, UserProfile } from './components/ProfileComponent.js';
 import { GameAreaComponent } from './components/GameAreaComponent.js';
 import { WebSocketManager } from '../../core/WebSocketManager.js';
@@ -15,6 +16,55 @@ let currentGameAreaComponent: GameAreaComponent | null = null;
 let currentChatService: ChatService | null = null;
 let currentGameService: GameService | null = null;
 let isInitialized = false;
+
+function setupHeaderButtons() {
+  const logoutBtn = document.getElementById('logout-btn');
+  const settingsBtn = document.getElementById('settings-btn');
+  const profileBtn = document.getElementById('profile-btn');
+
+  logoutBtn?.addEventListener('click', () => {
+    if (confirm('Are you sure you want to logout?')) {
+      // Clear auth token and redirect to landing
+      localStorage.removeItem('authToken');
+      
+      // Disconnect WebSocket
+      const wsManager = WebSocketManager.getInstance();
+      wsManager.disconnect();
+      
+      // Navigate to landing page
+      router.navigate('landing');
+      notify('Logged out successfully', 'green');
+    }
+  });
+
+  settingsBtn?.addEventListener('click', () => {
+    // Navigate to profile settings
+    router.navigate('profile-settings');
+  });
+
+  profileBtn?.addEventListener('click', async () => {
+    try {
+      // Get current user data and navigate to their profile
+      const authToken = localStorage.getItem('authToken');
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Set viewing user to self and navigate
+        const appState = AppState.getInstance();
+        appState.setViewingUser(data.user);
+        router.navigate('own-profile');
+      } else {
+        notify('Failed to load profile', 'red');
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      notify('Error loading profile', 'red');
+    }
+  });
+}
 
 export async function init() {
   // Prevent multiple initializations
@@ -31,6 +81,9 @@ export async function init() {
     console.error('Required containers not found');
     return;
   }
+
+  // Setup header buttons
+  setupHeaderButtons();
 
   // Clean up existing components only if they exist
   if (currentProfileComponent) {

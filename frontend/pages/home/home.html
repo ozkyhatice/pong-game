@@ -1,13 +1,50 @@
-<div class="h-screen bg-terminal-bg flex flex-col lg:flex-row">
-  <!-- Profile Panel -->
-  <div class="w-full lg:w-80 h-64 lg:h-full p-2 lg:p-4">
-    <div id="profile-container" class="h-full">
+<div class="h-screen bg-radial-bg flex flex-col">
+  <!-- macOS Style Header -->
+  <div class="w-full bg-radial-bg border-b-2 border-neon-green border-opacity-30 p-3 md:p-4">
+    <div class="flex items-center justify-between max-w-7xl mx-auto">
+      <!-- Traffic Light Buttons -->
+      <div class="flex items-center gap-2">
+        <button id="logout-btn" class="w-3 h-3 md:w-4 md:h-4 bg-neon-red hover:bg-neon-red-600 rounded-full flex items-center justify-center transition-colors group" title="LOGOUT">
+          <svg class="w-2 h-2 md:w-2.5 md:h-2.5 text-terminal-border opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        <button id="settings-btn" class="w-3 h-3 md:w-4 md:h-4 bg-neon-yellow hover:bg-neon-yellow-600 rounded-full flex items-center justify-center transition-colors group" title="SETTINGS">
+          <svg class="w-2 h-2 md:w-2.5 md:h-2.5 text-terminal-border opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </button>
+        <button id="profile-btn" class="w-3 h-3 md:w-4 md:h-4 bg-neon-green hover:bg-neon-green-600 rounded-full flex items-center justify-center transition-colors group" title="PROFILE">
+          <svg class="w-2 h-2 md:w-2.5 md:h-2.5 text-terminal-border opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Center Title -->
+      <div class="absolute left-1/2 transform -translate-x-1/2">
+        <h1 class="text-neon-white text-xl md:text-3xl font-bold tracking-wider" style="text-shadow: 0 0 15px #62A6FA;">
+          PONG
+        </h1>
+      </div>
+      
+      <!-- Right spacer to balance layout -->
+      <div class="w-16 md:w-20"></div>
     </div>
   </div>
 
-  <!-- Game Area Panel -->
-  <div class="flex-1 p-2 lg:p-4">
-    <div id="game-area-container" class="h-full">
+  <!-- Main Content Container -->
+  <div class="flex-1 flex flex-col lg:flex-row">
+    <!-- Profile Panel -->
+    <div class="w-full lg:w-80 h-64 lg:h-full p-2 lg:p-4">
+      <div id="profile-container" class="h-full">
+      </div>
+    </div>
+    <!-- Game Area Panel -->
+    <div class="flex-1 p-2 lg:p-4">
+      <div id="game-area-container" class="h-full">
+      </div>
     </div>
   </div>
 </div>

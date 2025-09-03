@@ -15,18 +15,18 @@ export class AddFriendTab {
     this.element.innerHTML = `
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Add Friend</label>
+          <label class="block text-[10px] font-medium text-neon-purple/50 mb-1">> ADD FRIEND</label>
+		  <p class="text-[10px] text-neon-green/50 uppercase mb-2">> Enter the exact username to send a FRIEND request</p>
           <div class="space-y-3">
             <input type="text" 
-                   placeholder="Enter username..." 
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                   placeholder="ENTER USERNAME..." 
+                   class="w-full text-neon-purple bg-transparent px-3 py-2 border border-neon-green border-opacity-50 rounded-lg text-sm focus:ring-2 focus:ring-neon-red focus:border-neon-red" 
                    id="friend-search">
             <button id="send-request" 
-                    class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
-              Send Request
+                    class="w-full px-4 py-2 bg-neon-purple border border-neon-purple text-terminal-border rounded-lg text-sm hover:bg-neon-purple/80 transition-colors">
+              SEND REQUEST
             </button>
           </div>
-          <p class="text-xs text-gray-500 mt-2">Enter the exact username to send a friend request</p>
         </div>
       </div>
     `;

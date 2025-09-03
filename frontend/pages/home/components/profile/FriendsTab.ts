@@ -95,13 +95,12 @@ export class FriendsTab {
 
     this.element.innerHTML = `
       <div class="overflow-hidden">
-        <div class="flex justify-between items-center mb-4">
-          <span class="text-sm font-medium text-gray-700">
-            Friends (${this.friends.length})
-          </span>
-          <span class="text-xs text-green-600 font-medium">
-            ${onlineCount} online
-          </span>
+        <div class="mb-4">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-[10px] font-medium text-neon-blue/50">> FRIENDS [${this.friends.length}]</span>
+            <span class="text-[10px] text-neon-green font-medium">[${onlineCount}] ONLINE</span>
+          </div>
+          <div class="text-[10px] text-neon-green/50 font-medium">> CHALLENGE YOUR FRIENDS OR CHAT WITH THEM</div>
         </div>
         <div class="space-y-3 overflow-y-auto max-h-96">
           ${sortedFriends.map(friend => {
@@ -110,30 +109,26 @@ export class FriendsTab {
               this.formatLastSeen(status.lastSeen) : '';
             
             return `
-              <div class="flex items-start p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors ${status.isOnline ? 'border-l-3 border-green-400' : ''}">
+              <div class="flex items-start p-3 bg-radial-bg border border-neon-blue rounded-lg transition-colors ${status.isOnline ? 'border-l-3 border-neon-green/50' : ''}">
                 <div class="relative mr-3 flex-shrink-0">
                   <img src="${friend.friendInfo.avatar}" alt="Avatar" class="w-12 h-12 rounded-full">
-                  ${status.isOnline ? '<div class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>' : ''}
                 </div>
-                
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="text-sm font-medium text-gray-900 truncate" title="${friend.friendInfo.username}">${friend.friendInfo.username}</span>
-                    ${status.isOnline ? '<div class="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>' : ''}
+                    <span class="text-sm text-neon-white font-medium truncate" title="${friend.friendInfo.username}">${friend.friendInfo.username}</span>
+                    ${status.isOnline ? '<div class="w-2 h-2 bg-neon-green rounded-full flex-shrink-0"></div>' : ''}
                   </div>
-                  ${!status.isOnline && lastSeenText ? `<div class="text-xs text-gray-500 mb-2">${lastSeenText}</div>` : ''}
-                  
                   <div class="flex space-x-2">
-                    <button class="view-profile-btn px-3 py-1.5 text-xs bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 transition-colors" 
+                    <button class="view-profile-btn px-2 py-0.5 text-[10px] border border-neon-blue bg-neon-blue text-terminal-border rounded hover:bg-neon-blue/50 transition-colors" 
                             data-user-id="${friend.friendInfo.id}" 
                             data-username="${friend.friendInfo.username}">
-                      Chat
+                      CHAT
                     </button>
-                    <button class="play-btn px-3 py-1.5 text-xs ${status.isOnline ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} rounded-md transition-colors"
+                    <button class="play-btn px-2 py-0.5 text-[10px] ${status.isOnline ? 'bg-neon-red text-terminal-border hover:bg-neon-red/80' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} rounded transition-colors"
                             data-user-id="${friend.friendInfo.id}" 
                             data-username="${friend.friendInfo.username}"
                             ${!status.isOnline ? 'disabled' : ''}>
-                      Play
+                      PLAY
                     </button>
                   </div>
                 </div>
