@@ -1,108 +1,126 @@
-  <!-- Tournament Header -->
-  <div class="bg-gradient-to-r from-green-800 to-green-900 p-6 shadow-lg border-b-2 border-green-400">
-    <div class="container mx-auto max-w-6xl">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-green-100 tracking-wide">🏆 TOURNAMENT MODE</h1>
-          <p class="text-green-300 mt-1 font-mono text-sm" id="tournament-subtitle">COMPETE FOR GLORY</p>
-        </div>
+  <div class="min-h-screen bg-radial-bg flex items-center justify-center p-4 font-orbitron">
+  <!-- Main Tournament Container -->
+  <div class="w-full max-w-6xl">
+    
+    <!-- Tournament Header -->
+    <div class="bg-terminal-border border-2 border-neon-green rounded-lg shadow-terminal mb-4">
+      <div class="bg-header-gradient rounded-t-lg px-6 py-3 border-b border-neon-green flex items-center justify-between">
         <div class="flex items-center space-x-4">
-          <div class="bg-black/30 backdrop-blur-sm rounded-lg px-4 py-2 border border-green-400/30">
-            <span class="text-sm text-green-300 font-mono">STATUS:</span>
-            <span class="ml-2 font-bold text-green-100 font-mono" id="tournament-status">LOADING...</span>
+          <div class="text-neon-green text-xl font-bold tracking-wide" style="text-shadow: 0 0 10px #39FF14;">
+            TOURNAMENT
           </div>
-          <button id="leave-tournament-btn" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg font-mono font-medium transition-all border border-red-400 shadow-lg hover:shadow-red-500/25">
-            EXIT TOURNAMENT
-          </button>
+          <div class="hidden sm:flex items-center space-x-4 text-xs">
+            <div class="flex items-center gap-2">
+              <div class="status-dot"></div>
+              <span class="text-neon-white">STATUS: <span id="tournament-status" class="text-neon-blue font-bold">LOADING...</span></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="status-dot"></div>
+              <span class="text-neon-white">PLAYERS: <span id="participant-count" class="text-neon-yellow font-bold">0</span>/4</span>
+            </div>
+          </div>
+        </div>
+        <button id="leave-tournament-btn" class="terminal-btn bg-btn-gradient border border-neon-red text-neon-red px-4 py-2 text-xs font-bold uppercase tracking-wide rounded hover:shadow-btn-glow transition-all">
+          EXIT
+        </button>
+      </div>
+      
+      <!-- Mobile Status Bar -->
+      <div class="sm:hidden bg-console-bg px-4 py-2 border-b border-neon-green border-opacity-30">
+        <div class="flex justify-between items-center text-xs">
+          <div class="flex items-center gap-2">
+            <div class="status-dot"></div>
+            <span class="text-neon-white">STATUS: <span id="tournament-status-mobile" class="text-neon-blue font-bold">LOADING...</span></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="status-dot"></div>
+            <span class="text-neon-white">PLAYERS: <span id="participant-count-mobile" class="text-neon-yellow font-bold">0</span>/4</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Tournament Content -->
-  <div class="flex-1 bg-black min-h-screen">
-    <div class="container mx-auto max-w-6xl p-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Left Panel: Participants -->
-        <div class="lg:col-span-1">
-          <div class="bg-gray-900 rounded-lg p-6 border border-green-400/30 shadow-lg">
-            <h2 class="text-xl font-bold text-green-100 mb-4 flex items-center font-mono">
-              <span class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 border border-green-400">
-                👥
-              </span>
-              PLAYERS (<span id="participant-count">0</span>/4)
-            </h2>
-            
-            <div id="participants-grid" class="space-y-3">
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      
+      <!-- Players Section -->
+      <div class="lg:col-span-1">
+        <div class="bg-terminal-border border-2 border-neon-purple rounded-lg shadow-terminal">
+          <div class="bg-header-gradient rounded-t-lg px-4 py-2 border-b border-neon-purple">
+            <div class="text-neon-purple text-sm font-bold tracking-wide flex items-center" style="text-shadow: 0 0 8px #c187fc;">
+              <span class="mr-2">WARRIORS</span>
+            </div>
+          </div>
+          
+          <div class="bg-console-bg p-3 rounded-b-lg">
+            <!-- Participants Grid -->
+            <div id="participants-grid" class="space-y-2 mb-3">
               <!-- Participants will be populated here -->
             </div>
             
-            <!-- Waiting Message with pulsing neon effect -->
-            <div id="waiting-message" class="mt-4 p-4 bg-yellow-500/10 border border-yellow-400 rounded-lg">
-              <p class="text-yellow-400 text-sm text-center font-mono animate-pulse">
-                <span class="inline-block animate-ping">⚡</span>
-                <span id="waiting-text">WAITING FOR PLAYERS...</span>
-                <span class="inline-block animate-ping">⚡</span>
-              </p>
-            </div>
-            
-            <!-- Countdown Timer -->
-            <div id="countdown-timer" class="mt-4 p-4 bg-green-500/10 border border-green-400 rounded-lg hidden">
-              <div class="text-center">
-                <p class="text-green-400 text-lg font-mono font-bold mb-2" id="countdown-message">TOURNAMENT STARTING</p>
-                <div class="text-3xl font-mono font-bold text-green-300 mb-2" id="countdown-display">6</div>
-                <div class="bg-gray-800 rounded-full h-3 overflow-hidden border border-green-400/50">
-                  <div class="bg-gradient-to-r from-green-500 to-green-300 h-full rounded-full transition-all duration-1000 w-0" id="countdown-bar"></div>
+            <!-- Status Messages -->
+            <div id="waiting-message" class="p-3 border border-neon-yellow rounded-lg bg-black bg-opacity-60 mb-3">
+              <div class="text-center text-neon-yellow text-xs">
+                <div class="flex items-center justify-center mb-1">
+                  <div class="status-dot mr-2"></div>
+                  <span id="waiting-text" class="font-bold uppercase tracking-wide">WAITING FOR PLAYERS...</span>
+                  <div class="status-dot ml-2"></div>
                 </div>
-                <p class="text-xs text-green-300 mt-2 font-mono" id="countdown-text">GET READY!</p>
               </div>
             </div>
             
-            <!-- Round Transition Info -->
-            <div id="round-transition" class="mt-4 p-4 bg-blue-500/10 border border-blue-400 rounded-lg hidden">
+            <!-- Countdown Timer -->
+            <div id="countdown-timer" class="p-3 border border-neon-green rounded-lg bg-gradient-to-r from-black to-green-900 bg-opacity-60 mb-3 hidden">
               <div class="text-center">
-                <p class="text-blue-400 text-sm font-mono font-medium" id="transition-message">ROUND COMPLETED</p>
-                <div class="mt-2 bg-gray-800 rounded-full h-2 overflow-hidden border border-blue-400/50">
-                  <div class="bg-gradient-to-r from-blue-500 to-blue-300 h-full rounded-full transition-all duration-1000 w-0" id="round-countdown-bar"></div>
+                <div class="text-neon-green text-xs uppercase tracking-wide mb-2" id="countdown-message">TOURNAMENT STARTING</div>
+                <div class="text-2xl font-bold text-neon-green mb-2" id="countdown-display" style="text-shadow: 0 0 20px #39FF14;">6</div>
+                <div class="bg-black rounded-full h-2 overflow-hidden border border-neon-green">
+                  <div class="bg-gradient-to-r from-neon-green to-neon-blue h-full rounded-full transition-all duration-1000 w-0" id="countdown-bar"></div>
                 </div>
-                <p class="text-xs text-blue-300 mt-1 font-mono" id="round-countdown-text">NEXT ROUND LOADING...</p>
+                <div class="text-xs text-neon-green mt-1" id="countdown-text">GET READY!</div>
+              </div>
+            </div>
+            
+            <!-- Round Transition -->
+            <div id="round-transition" class="p-3 border border-neon-blue rounded-lg bg-gradient-to-r from-black to-blue-900 bg-opacity-60 hidden">
+              <div class="text-center">
+                <div class="text-neon-blue text-xs uppercase tracking-wide mb-1" id="transition-message">ROUND COMPLETED</div>
+                <div class="bg-black rounded-full h-2 overflow-hidden border border-neon-blue">
+                  <div class="bg-gradient-to-r from-neon-blue to-neon-purple h-full rounded-full transition-all duration-1000 w-0" id="round-countdown-bar"></div>
+                </div>
+                <div class="text-xs text-neon-blue mt-1" id="round-countdown-text">NEXT ROUND LOADING...</div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Right Panel: Tournament Bracket -->
-        <div class="lg:col-span-2">
-          
-          <!-- Current Match Info -->
-          <div id="current-match-info" class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-lg p-6 mb-6 border border-purple-400/30 shadow-lg hidden">
-            <h3 class="text-xl font-bold text-purple-100 mb-4 font-mono">🎮 YOUR MATCH</h3>
-            <div id="match-details" class="flex items-center justify-center">
-              <!-- Match details will be populated here -->
-            </div>
-            <div class="text-center mt-4">
-              <button id="start-match-btn" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-lg font-mono font-medium transition-all border border-green-400 shadow-lg hover:shadow-green-500/25 disabled:opacity-50 disabled:cursor-not-allowed">
-                READY TO BATTLE
-              </button>
+      <!-- Tournament Bracket Section -->
+      <div class="lg:col-span-2">
+        <div class="bg-terminal-border border-2 border-neon-green rounded-lg shadow-terminal">
+          <div class="bg-header-gradient rounded-t-lg px-4 py-2 border-b border-neon-green">
+            <div class="text-neon-green text-sm font-bold tracking-wide flex items-center" style="text-shadow: 0 0 8px #39FF14;">
+              <span class="mr-2">TOURNAMENT BRACKET</span>
             </div>
           </div>
           
-          <!-- Tournament Bracket -->
-          <div class="bg-gray-900 rounded-lg p-6 border border-green-400/30 shadow-lg">
-            <h2 class="text-xl font-bold text-green-100 mb-6 flex items-center font-mono">
-              <span class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 border border-green-400">
-                🏆
-              </span>
-              TOURNAMENT BRACKET
-            </h2>
+          <div class="bg-console-bg p-3 rounded-b-lg">
+            <!-- Current Match Info -->
+            <div id="current-match-info" class="p-3 border border-neon-purple rounded-lg bg-gradient-to-r from-purple-900 to-black bg-opacity-60 mb-4 hidden">
+              <div class="text-center">
+                <div class="text-neon-purple text-xs uppercase tracking-wide mb-2 font-bold">YOUR NEXT BATTLE</div>
+                <div id="match-details" class="text-neon-white text-sm font-bold">
+                  <!-- Match details will be populated here -->
+                </div>
+              </div>
+            </div>
             
             <!-- Bracket Container -->
-            <div id="bracket-container" class="min-h-96">
-              <div class="flex items-center justify-center h-64 text-green-400">
+            <div id="bracket-container" class="min-h-80">
+              <div class="flex items-center justify-center h-48 text-neon-green">
                 <div class="text-center">
-                  <div class="animate-spin w-12 h-12 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                  <p class="font-mono">LOADING BRACKET...</p>
+                  <div class="status-dot mb-2 mx-auto"></div>
+                  <div class="text-xs uppercase tracking-wide">LOADING TOURNAMENT BRACKET...</div>
                 </div>
               </div>
             </div>
@@ -113,15 +131,25 @@
   </div>
 
   <!-- Tournament End Modal -->
-  <div id="tournament-end-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center hidden z-50">
-    <div class="bg-gray-900 rounded-lg p-8 max-w-md w-full mx-4 border border-green-400 shadow-2xl">
-      <div class="text-center">
-        <div class="w-20 h-20 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-yellow-300">
-          <span class="text-3xl">🏆</span>
+  <div id="tournament-end-modal" class="fixed inset-0 bg-black bg-opacity-95 items-center justify-center hidden z-50 p-4">
+    <div class="bg-terminal-border border-2 border-neon-yellow rounded-lg shadow-terminal w-full max-w-md">
+      <!-- Modal Header -->
+      <div class="bg-header-gradient rounded-t-lg px-6 py-3 border-b border-neon-yellow">
+        <div class="text-neon-yellow text-lg font-bold tracking-wide text-center" style="text-shadow: 0 0 10px #FACD1E;">
+          TOURNAMENT COMPLETE
         </div>
-        <h3 class="text-2xl font-bold text-green-100 mb-2 font-mono">TOURNAMENT COMPLETE</h3>
-        <p id="tournament-result-text" class="text-green-300 mb-6 font-mono">RESULTS LOADING...</p>
-        <button id="return-home-btn" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-lg font-mono font-medium transition-all border border-green-400 shadow-lg hover:shadow-green-500/25">
+      </div>
+
+      <!-- Modal Content -->
+      <div class="bg-console-bg p-6 rounded-b-lg text-center">
+        <div class="w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-600 border-3 border-neon-yellow rounded-full flex items-center justify-center mx-auto mb-4" style="box-shadow: 0 0 30px rgba(250,205,30,0.6);">
+          <span class="text-2xl text-black font-bold">★</span>
+        </div>
+        <div class="text-neon-white text-sm font-bold mb-2 uppercase tracking-wide">RESULTS</div>
+        <div id="tournament-result-text" class="text-neon-green text-xs mb-4 uppercase tracking-wide bg-black bg-opacity-50 p-3 rounded-lg border border-neon-green border-opacity-30">
+          RESULTS LOADING...
+        </div>
+        <button id="return-home-btn" class="terminal-btn bg-btn-gradient border-2 border-neon-green text-neon-green px-4 py-2 font-orbitron text-xs font-bold uppercase tracking-wide rounded hover:shadow-btn-glow transition-all">
           RETURN TO HOME
         </button>
       </div>
@@ -129,9 +157,10 @@
   </div>
 
   <!-- Connection Status -->
-  <div id="connection-status" class="fixed bottom-4 right-4 bg-gray-900 border border-green-400/50 rounded-lg p-3 hidden">
-    <div class="flex items-center space-x-2">
-      <div id="connection-indicator" class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-      <span id="connection-text" class="text-green-300 text-sm font-mono">RECONNECTING...</span>
+  <div id="connection-status" class="fixed bottom-4 right-4 bg-terminal-border border border-neon-red rounded-lg p-3 hidden shadow-terminal">
+    <div class="flex items-center space-x-3">
+      <div id="connection-indicator" class="w-3 h-3 bg-neon-red rounded-full animate-pulse"></div>
+      <span id="connection-text" class="text-neon-red text-xs uppercase tracking-wide font-bold">RECONNECTING...</span>
     </div>
   </div>
+</div>
