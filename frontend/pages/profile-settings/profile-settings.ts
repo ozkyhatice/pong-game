@@ -46,6 +46,7 @@ async function loadProfile(): Promise<void> {
             displayProfile(data.user);
             update2FAStatus(data.user.isTwoFAEnabled || false);
             displayAvatar(data.user.avatar);
+            loadBlockedUsers(data.user.id);
         } else {
             notify(data.error || 'Failed to load profile', 'red');
         }
@@ -58,8 +59,7 @@ function displayProfile(user: User): void {
     const profileDiv = document.getElementById('profileInfo');
     if (profileDiv) {
         profileDiv.innerHTML = `
-            <div class="text-neon-green text-xs space-y-1">
-                <p class="uppercase tracking-wide">USER ID: <span class="text-neon-white">${user.id}</span></p>
+            <div class="text-neon-blue text-xs space-y-1">
                 <p class="uppercase tracking-wide">USERNAME: <span class="text-neon-white">${user.username}</span></p>
                 <p class="uppercase tracking-wide">EMAIL: <span class="text-neon-white">${user.email}</span></p>
                 <p class="uppercase tracking-wide">STATS: <span class="text-neon-white">${user.wins}W / ${user.losses}L</span></p>
@@ -74,10 +74,119 @@ function displayAvatar(avatar: string | null): void {
         if (avatar) {
             avatarDiv.innerHTML = `<img src="${avatar}" class="w-full h-full object-cover rounded-full">`;
         } else {
-            avatarDiv.innerHTML = `<span class="text-neon-green text-xs uppercase">No Avatar</span>`;
+            avatarDiv.innerHTML = `<span class="text-neon-blue text-xs uppercase">NO AVATAR</span>`;
         }
     }
 }
+
+async function loadBlockedUsers(userId: number): Promise<void> {
+    const token = getToken();
+    if (!token) return;
+
+    const loadingDiv = document.getElementById('blockedUsersLoading');
+    const listDiv = document.getElementById('blockedUsersList');
+    
+    if (!listDiv) return;
+
+    try {
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.BLOCKED(userId.toString())), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (loadingDiv) {
+            loadingDiv.style.display = 'none';
+        }
+
+        if (response.ok) {
+            const data = await response.json();
+            displayBlockedUsers(data.blockedUsers || []);
+        } else {
+            listDiv.innerHTML = `
+                <div class="text-neon-red text-opacity-70 text-[10px] text-center py-4">
+                    FAILED TO LOAD BLOCKED USERS
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading blocked users:', error);
+        if (loadingDiv) {
+            loadingDiv.style.display = 'none';
+        }
+        listDiv.innerHTML = `
+            <div class="text-neon-red text-opacity-70 text-[10px] text-center py-4">
+                ERROR LOADING BLOCKED USERS
+            </div>
+        `;
+    }
+}
+
+function displayBlockedUsers(blockedUsers: any[]): void {
+    const listDiv = document.getElementById('blockedUsersList');
+    if (!listDiv) return;
+
+    if (blockedUsers.length === 0) {
+        listDiv.innerHTML = `
+            <div class="text-neon-red text-opacity-50 text-[10px] text-center py-4">
+                NO BLOCKED USERS
+            </div>
+        `;
+        return;
+    }
+
+    listDiv.innerHTML = blockedUsers.map(user => `
+        <div class="flex items-center justify-between p-2 bg-black bg-opacity-40 border border-neon-red border-opacity-30 rounded-sm">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-neon-red bg-opacity-20 flex items-center justify-center">
+                    <span class="text-neon-red text-[8px] font-bold">⛔</span>
+                </div>
+                <div>
+                    <p class="text-neon-red text-[10px] font-medium">${user.username}</p>
+                    <p class="text-neon-red text-opacity-60 text-[8px]">BLOCKED USER</p>
+                </div>
+            </div>
+            <button onclick="unblockUser(${user.id})" 
+                    class="bg-transparent border border-neon-yellow text-neon-yellow hover:bg-neon-yellow hover:text-terminal-border px-2 py-1 rounded text-[8px] font-bold transition-colors">
+                UNBLOCK
+            </button>
+        </div>
+    `).join('');
+}
+
+async function unblockUser(userId: number): Promise<void> {
+    const token = getToken();
+    if (!token) return notify('No token found', 'red');
+
+    try {
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.UNBLOCK(userId.toString())), {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            notify('User unblocked successfully', 'green');
+            // Reload the current user's profile to refresh blocked users list
+            const currentUserResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const currentUserData = await currentUserResponse.json();
+            if (currentUserData.user) {
+                loadBlockedUsers(currentUserData.user.id);
+            }
+        } else {
+            const errorData = await response.json();
+            notify(errorData.error || 'Failed to unblock user', 'red');
+        }
+    } catch (error) {
+        console.error('Error unblocking user:', error);
+        notify('Error unblocking user', 'red');
+    }
+}
+
+// Make unblockUser globally available
+(window as any).unblockUser = unblockUser;
 
 function update2FAStatus(isEnabled: boolean): void {
     const statusDiv = document.getElementById('twofaStatus');
@@ -88,8 +197,8 @@ function update2FAStatus(isEnabled: boolean): void {
     if (statusDiv) {
         statusDiv.innerHTML = `
             <div class="text-center">
-                <p class="text-neon-green text-xs uppercase tracking-wide mb-1">2FA Status:</p>
-                <p class="text-neon-white text-xs font-bold">${isEnabled ? 'ENABLED ✅' : 'DISABLED ❌'}</p>
+                <p class="text-neon-purple text-xs uppercase tracking-wide mb-1">2FA STATUS:</p>
+                <p class="text-neon-white text-xs font-bold">${isEnabled ? 'ENABLED' : 'DISABLED'}</p>
             </div>
         `;
     }
