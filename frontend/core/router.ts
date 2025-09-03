@@ -135,6 +135,18 @@ class Router {
   }
 
   private cleanupCurrentPage() {
+    // Page-specific cleanup
+    if (this.currentPage === 'home') {
+      // Call home page cleanup if available
+      import('../pages/home/home.js').then(module => {
+        if (module.cleanup) {
+          module.cleanup();
+        }
+      }).catch(() => {
+        // Cleanup method might not exist, that's ok
+      });
+    }
+
     // General cleanup for any page
     const allEventElements = this.container.querySelectorAll('[data-event-listener]');
     allEventElements.forEach(element => {

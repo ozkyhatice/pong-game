@@ -96,6 +96,22 @@ export class GameService {
   onMatchmakingStatus(callback: (data: any) => void): void { this.wsManager.on('matchmaking-status', callback); }
   onMatchFound(callback: (data: any) => void): void { this.wsManager.on('match-found', callback); }
 
+  // Cleanup method to remove all game-related listeners
+  cleanup(): void {
+    console.log('🧹 GameService cleanup: Removing all event listeners');
+    const gameEvents = [
+      'room-created', 'joined', 'game-started', 'state-update', 'error', 'game-invite',
+      'invite-accepted', 'player left', 'player-ready', 'all-ready', 'game-over',
+      'paused', 'resumed', 'reconnected', 'matchmaking-joined', 'matchmaking-left',
+      'matchmaking-status', 'match-found', 'game', 'room-state', 'move', 'player-move', 
+      'game-update', 'game-end'
+    ];
+    
+    gameEvents.forEach(event => {
+      this.wsManager.off(event);
+    });
+  }
+
   private send(event: GameMessage['event'], data: any = {}): void {
     this.wsManager.send({ type: 'game', event, data });
   }

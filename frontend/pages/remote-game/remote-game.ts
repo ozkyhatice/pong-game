@@ -109,6 +109,7 @@ let keysPressed: { [key: string]: boolean } = {};
 let pauseCountdownTimer: number | null = null;
 let mobileControlDirection: 'up' | 'down' | null = null;
 let mobileControlInterval: number | null = null;
+let keyboardControlInterval: number | null = null; // Add this for keyboard controls
 
 // Global resize handler
 let resizeHandler: (() => void) | null = null;
@@ -835,23 +836,26 @@ export async function init() {
   }
 
   function setupKeyboardControls() {
-    document.addEventListener('keydown', (e) => {
-      if (!keysPressed[e.code]) {
-        keysPressed[e.code] = true;
-        handleKeyPress();
-      }
-    });
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
 
-    document.addEventListener('keyup', (e) => {
-      keysPressed[e.code] = false;
-    });
-
-    // Continuous keyboard movement
-    setInterval(() => {
+    // Continuous keyboard movement - store interval for cleanup
+    keyboardControlInterval = setInterval(() => {
       if (Object.keys(keysPressed).some(key => keysPressed[key])) {
         handleKeyPress();
       }
-    }, 16); // 60 FPS
+    }, 16) as any; // 60 FPS
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (!keysPressed[e.code]) {
+      keysPressed[e.code] = true;
+      handleKeyPress();
+    }
+  }
+
+  function handleKeyUp(e: KeyboardEvent) {
+    keysPressed[e.code] = false;
   }
 
   function setupMobileControls() {
@@ -1096,6 +1100,43 @@ export async function init() {
 
   function cleanup3D() {
     try {
+      console.log('🧹 Starting complete cleanup of remote-game page...');
+
+      // Clear keyboard controls interval
+      if (keyboardControlInterval) {
+        clearInterval(keyboardControlInterval);
+        keyboardControlInterval = null;
+        console.log('✅ Keyboard control interval cleared');
+      }
+
+      // Clear mobile control interval  
+      if (mobileControlInterval) {
+        clearInterval(mobileControlInterval);
+        mobileControlInterval = null;
+        console.log('✅ Mobile control interval cleared');
+      }
+
+      // Clear pause countdown timer
+      if (pauseCountdownTimer) {
+        clearInterval(pauseCountdownTimer);
+        pauseCountdownTimer = null;
+        console.log('✅ Pause countdown timer cleared');
+      }
+
+      // Remove keyboard event listeners
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+      console.log('✅ Keyboard event listeners removed');
+
+      // Remove other document event listeners
+      document.removeEventListener('touchmove', () => {});
+      document.removeEventListener('visibilitychange', () => {});
+      window.removeEventListener('blur', () => {});
+
+      // Clear keys pressed state
+      keysPressed = {};
+
+      // Clean up 3D scene
       if (ballTrailParticles) {
         ballTrailParticles.dispose();
         ballTrailParticles = null;
@@ -1142,7 +1183,13 @@ export async function init() {
       scoreParticles = null;
       ballTrailParticles = null;
 
-      console.log('🧹 Enhanced 3D scene cleaned up');
+      // Clear game state
+      gameState = null;
+      players = [];
+      myPlayerId = null;
+      mobileControlDirection = null;
+
+      console.log('🧹 Enhanced 3D scene and controls cleaned up');
     } catch (e) {
       console.error('Error cleaning up enhanced 3D scene:', e);
     }
@@ -1150,4 +1197,17 @@ export async function init() {
 
   // Cleanup on page unload
   window.addEventListener('beforeunload', cleanup3D);
+
+  // Store cleanup function globally for external access
+  (window as any).remoteGameCleanup = cleanup3D;
+
+  // Export cleanup function for external use
+  return { cleanup: cleanup3D };
+}
+
+// Export cleanup function globally
+export function cleanup() {
+  if ((window as any).remoteGameCleanup) {
+    (window as any).remoteGameCleanup();
+  }
 }

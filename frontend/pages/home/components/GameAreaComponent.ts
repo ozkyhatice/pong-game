@@ -34,120 +34,128 @@ export class GameAreaComponent extends Component {
             <span class="text-green-400">⚡</span> GAME MODES <span class="text-green-400">⚡</span>
           </h2>
 
-          <!-- Tournament Section -->
-          <div class="mb-8 p-6 bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-lg border border-green-400/50 shadow-lg">
-            <h3 class="text-xl font-semibold text-green-300 mb-4 font-mono flex items-center">
-              <span class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 border border-green-400">🏆</span>
-              TOURNAMENT ARENA
-            </h3>
-            
-            <!-- Return to Tournament Button (shown when user is in active tournament) -->
-            <div id="tournament-return" class="mb-4 p-4 bg-gradient-to-r from-green-600/20 to-green-500/20 border border-green-400 rounded-lg hidden">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="font-medium text-green-200 font-mono">⚡ ACTIVE TOURNAMENT DETECTED</p>
-                  <p class="text-sm text-green-400 font-mono">Return to continue your battle</p>
-                </div>
-                <button id="return-tournament-btn" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition-all border border-green-400 shadow-lg hover:shadow-green-500/25 font-mono">
-                  ENTER ARENA
-                </button>
-              </div>
-            </div>
-            
-            <div id="tournament-info" class="mb-4">
-              <div id="no-tournament" class="text-green-400 text-sm font-mono text-center animate-pulse">
-                <span class="inline-block animate-spin">⟳</span> SCANNING FOR TOURNAMENTS...
-              </div>
-              <div id="tournament-details" class="hidden">
-                <div class="flex justify-between items-center mb-4 p-3 bg-black/30 rounded-lg border border-green-400/30">
-                  <span class="font-medium text-green-200 font-mono">PLAYERS: <span class="text-green-400" id="tournament-players">0</span>/4</span>
-                  <span class="text-sm bg-green-600/20 px-3 py-1 rounded-full border border-green-400/50 font-mono text-green-300" id="tournament-status">pending</span>
-                </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- LEFT COLUMN: Quick Match + Invites -->
+            <div class="space-y-6">
+              <!-- Matchmaking Section -->
+              <div class="p-6 bg-gradient-to-r from-blue-900/50 to-cyan-900/50 rounded-lg border border-blue-400/50 shadow-lg">
+                <h3 class="text-xl font-semibold text-blue-300 mb-4 font-mono flex items-center">
+                  <span class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3 border border-blue-400">🎮</span>
+                  QUICK MATCH
+                </h3>
                 
-                <!-- Participants List -->
-                <div id="tournament-participants" class="mb-4">
-                  <h4 class="font-medium text-sm text-green-300 mb-3 font-mono flex items-center">
-                    <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
-                    WARRIORS IN ARENA:
-                  </h4>
-                  <div id="participants-list" class="grid grid-cols-1 gap-2">
-                    <!-- Participants will be populated here -->
+                <div class="mb-4">
+                  <p class="text-blue-400 text-sm font-mono mb-4">Find an opponent automatically and start playing immediately!</p>
+                  
+                  <div id="matchmaking-status" class="mb-4 p-3 bg-black/30 rounded-lg border border-blue-400/30 hidden">
+                    <div class="flex items-center">
+                      <span class="inline-block animate-spin w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full mr-3"></span>
+                      <span class="text-blue-300 font-mono">Searching for opponent...</span>
+                    </div>
                   </div>
                 </div>
                 
-                <div class="text-xs text-green-400 mt-3 text-center font-mono animate-pulse" id="tournament-waiting">
-                  <span class="inline-block animate-ping">⚡</span> AWAITING MORE WARRIORS... <span class="inline-block animate-ping">⚡</span>
+                <div class="flex space-x-4">
+                  <button id="join-matchmaking-btn" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3 px-6 rounded-lg transition-all border border-blue-400 shadow-lg hover:shadow-blue-500/25 font-mono">
+                    <span class="mr-2">⚡</span> FIND MATCH
+                  </button>
+                  <button id="leave-matchmaking-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-lg transition-all border border-red-400 shadow-lg hover:shadow-red-500/25 font-mono hidden">
+                    <span class="mr-2">❌</span> CANCEL
+                  </button>
                 </div>
+              </div>
+
+              <!-- Game Invites -->
+              <div class="p-6 bg-gradient-to-r from-gray-900/50 to-slate-900/50 rounded-lg border border-green-400/30 shadow-lg">
+                <h3 class="text-xl font-semibold text-green-300 mb-4 font-mono flex items-center">
+                  <span class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 border border-green-400">🎯</span>
+                  BATTLE INVITATIONS
+                </h3>
+                <div id="invites-container" class="space-y-3">
+                  <div id="no-invites" class="text-green-400 text-sm text-center py-4 font-mono animate-pulse">
+                    <span class="inline-block animate-bounce">📡</span> NO INCOMING CHALLENGES
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Tournament -->
+            <div>
+              <!-- Tournament Section -->
+              <div class="p-6 bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-lg border border-green-400/50 shadow-lg">
+                <h3 class="text-xl font-semibold text-green-300 mb-4 font-mono flex items-center">
+                  <span class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 border border-green-400">🏆</span>
+                  TOURNAMENT ARENA
+                </h3>
                 
-                <!-- Tournament Bracket Preview -->
-                <div id="tournament-bracket-preview" class="mt-6 hidden">
-                  <h4 class="font-medium mb-3 text-green-300 font-mono flex items-center">
-                    <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
-                    BATTLE BRACKET:
-                  </h4>
-                  <div id="bracket-preview-container" class="text-sm bg-black/40 p-4 rounded-lg border border-green-400/30">
-                    <div class="text-center text-green-400 font-mono">BRACKET GENERATING...</div>
+                <!-- Return to Tournament Button (shown when user is in active tournament) -->
+                <div id="tournament-return" class="mb-4 p-4 bg-gradient-to-r from-green-600/20 to-green-500/20 border border-green-400 rounded-lg hidden">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="font-medium text-green-200 font-mono">⚡ ACTIVE TOURNAMENT DETECTED</p>
+                      <p class="text-sm text-green-400 font-mono">Return to continue your battle</p>
+                    </div>
+                    <button id="return-tournament-btn" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition-all border border-green-400 shadow-lg hover:shadow-green-500/25 font-mono">
+                      ENTER ARENA
+                    </button>
                   </div>
                 </div>
                 
-                <!-- Match Pairings -->
-                <div id="tournament-matches" class="mt-6 hidden">
-                  <h4 class="font-medium mb-3 text-green-300 font-mono flex items-center">
-                    <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
-                    CURRENT BATTLES:
-                  </h4>
-                  <div id="matches-container" class="space-y-3"></div>
+                <div id="tournament-info" class="mb-4">
+                  <div id="no-tournament" class="text-green-400 text-sm font-mono text-center animate-pulse">
+                    <span class="inline-block animate-spin">⟳</span> SCANNING FOR TOURNAMENTS...
+                  </div>
+                  <div id="tournament-details" class="hidden">
+                    <div class="flex justify-between items-center mb-4 p-3 bg-black/30 rounded-lg border border-green-400/30">
+                      <span class="font-medium text-green-200 font-mono">PLAYERS: <span class="text-green-400" id="tournament-players">0</span>/4</span>
+                      <span class="text-sm bg-green-600/20 px-3 py-1 rounded-full border border-green-400/50 font-mono text-green-300" id="tournament-status">pending</span>
+                    </div>
+                    
+                    <!-- Participants List -->
+                    <div id="tournament-participants" class="mb-4">
+                      <h4 class="font-medium text-sm text-green-300 mb-3 font-mono flex items-center">
+                        <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
+                        WARRIORS IN ARENA:
+                      </h4>
+                      <div id="participants-list" class="grid grid-cols-1 gap-2">
+                        <!-- Participants will be populated here -->
+                      </div>
+                    </div>
+                    
+                    <div class="text-xs text-green-400 mt-3 text-center font-mono animate-pulse" id="tournament-waiting">
+                      <span class="inline-block animate-ping">⚡</span> AWAITING MORE WARRIORS... <span class="inline-block animate-ping">⚡</span>
+                    </div>
+                    
+                    <!-- Tournament Bracket Preview -->
+                    <div id="tournament-bracket-preview" class="mt-6 hidden">
+                      <h4 class="font-medium mb-3 text-green-300 font-mono flex items-center">
+                        <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
+                        BATTLE BRACKET:
+                      </h4>
+                      <div id="bracket-preview-container" class="text-sm bg-black/40 p-4 rounded-lg border border-green-400/30">
+                        <div class="text-center text-green-400 font-mono">BRACKET GENERATING...</div>
+                      </div>
+                    </div>
+                    
+                    <!-- Match Pairings -->
+                    <div id="tournament-matches" class="mt-6 hidden">
+                      <h4 class="font-medium mb-3 text-green-300 font-mono flex items-center">
+                        <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
+                        CURRENT BATTLES:
+                      </h4>
+                      <div id="matches-container" class="space-y-3"></div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            
-            <div class="flex space-x-4">
-              <button id="join-tournament-btn" class="flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-3 px-6 rounded-lg transition-all border border-green-400 shadow-lg hover:shadow-green-500/25 font-mono">
-                <span class="mr-2">⚔️</span> JOIN TOURNAMENT
-              </button>
-              <button id="leave-tournament-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-lg transition-all border border-red-400 shadow-lg hover:shadow-red-500/25 font-mono hidden">
-                <span class="mr-2">🚪</span> RETREAT
-              </button>
-            </div>
-          </div>
-
-          <!-- Matchmaking Section -->
-          <div class="mb-8 p-6 bg-gradient-to-r from-blue-900/50 to-cyan-900/50 rounded-lg border border-blue-400/50 shadow-lg">
-            <h3 class="text-xl font-semibold text-blue-300 mb-4 font-mono flex items-center">
-              <span class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3 border border-blue-400">🎮</span>
-              QUICK MATCH
-            </h3>
-            
-            <div class="mb-4">
-              <p class="text-blue-400 text-sm font-mono mb-4">Find an opponent automatically and start playing immediately!</p>
-              
-              <div id="matchmaking-status" class="mb-4 p-3 bg-black/30 rounded-lg border border-blue-400/30 hidden">
-                <div class="flex items-center">
-                  <span class="inline-block animate-spin w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full mr-3"></span>
-                  <span class="text-blue-300 font-mono">Searching for opponent...</span>
+                
+                <div class="flex space-x-4">
+                  <button id="join-tournament-btn" class="flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-3 px-6 rounded-lg transition-all border border-green-400 shadow-lg hover:shadow-green-500/25 font-mono">
+                    <span class="mr-2">⚔️</span> JOIN TOURNAMENT
+                  </button>
+                  <button id="leave-tournament-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-lg transition-all border border-red-400 shadow-lg hover:shadow-red-500/25 font-mono hidden">
+                    <span class="mr-2">🚪</span> RETREAT
+                  </button>
                 </div>
-              </div>
-            </div>
-            
-            <div class="flex space-x-4">
-              <button id="join-matchmaking-btn" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3 px-6 rounded-lg transition-all border border-blue-400 shadow-lg hover:shadow-blue-500/25 font-mono">
-                <span class="mr-2">⚡</span> FIND MATCH
-              </button>
-              <button id="leave-matchmaking-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-lg transition-all border border-red-400 shadow-lg hover:shadow-red-500/25 font-mono hidden">
-                <span class="mr-2">❌</span> CANCEL
-              </button>
-            </div>
-          </div>
-
-          <!-- Game Invites -->
-          <div class="p-6 bg-gradient-to-r from-gray-900/50 to-slate-900/50 rounded-lg border border-green-400/30 shadow-lg">
-            <h3 class="text-xl font-semibold text-green-300 mb-4 font-mono flex items-center">
-              <span class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 border border-green-400">🎯</span>
-              BATTLE INVITATIONS
-            </h3>
-            <div id="invites-container" class="space-y-3">
-              <div id="no-invites" class="text-green-400 text-sm text-center py-4 font-mono animate-pulse">
-                <span class="inline-block animate-bounce">📡</span> NO INCOMING CHALLENGES
               </div>
             </div>
           </div>

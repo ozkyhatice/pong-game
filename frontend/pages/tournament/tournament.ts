@@ -85,6 +85,22 @@ export function init() {
         return;
       }
 
+      // Reload guard: If there is no active tournament in state, redirect to home
+      if (!appState.isInTournament()) {
+        console.log('❌ TOURNAMENT PAGE: No active tournament in AppState, redirecting to home');
+        (window as any).router.navigate('home');
+        return;
+      }
+
+      // Ensure WebSocket is connected on reload
+      const wsManager = (tournamentService as any)['wsManager'] as any;
+      if (!wsManager?.isConnected?.()) {
+        console.log('🔌 TOURNAMENT PAGE: WS not connected, attempting reconnect...');
+        if (wsManager?.reconnect) {
+          wsManager.reconnect();
+        }
+      }
+
       // Tournament durumunu kontrol et - sadece initial request
       requestInitialTournamentData();
       
