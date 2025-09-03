@@ -28,43 +28,50 @@ export class ProfileHeader {
     const losses = this.profile.losses || 0;
     const winRate = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
 
-    this.element.className = 'p-6 bg-white/10 backdrop-blur-sm text-center relative';
+    this.element.className = 'bg-terminal-bg rounded';
     this.element.innerHTML = `
-      <!-- Action Buttons -->
-      <div class="absolute top-4 right-4 flex flex-col space-y-2">
-        <button id="settings-btn" class="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors" title="Edit Profile">
-          <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path fill-rule="evenodd" d="M11.828 2.25c-.916 0-1.699.663-1.85 1.567l-.091.549a.798.798 0 0 1-.517.608 7.45 7.45 0 0 0-.478.198.798.798 0 0 1-.796-.064l-.453-.324a1.875 1.875 0 0 0-2.416.2l-.243.243a1.875 1.875 0 0 0-.2 2.416l.324.453a.798.798 0 0 1 .064.796 7.448 7.448 0 0 0-.198.478.798.798 0 0 1-.608.517l-.55.092a1.875 1.875 0 0 0-1.566 1.849v.344c0 .916.663 1.699 1.567 1.85l.549.091c.281.047.508.25.608.517.06.162.127.321.198.478a.798.798 0 0 1-.064.796l-.324.453a1.875 1.875 0 0 0 .2 2.416l.243.243c.648.648 1.67.733 2.416.2l.453-.324a.798.798 0 0 1 .796-.064c.157.071.316.137.478.198.267.1.47.327.517.608l.092.55c.15.903.932 1.566 1.849 1.566h.344c.916 0 1.699-.663 1.85-1.567l.091-.549a.798.798 0 0 1 .517-.608 7.52 7.52 0 0 0 .478-.198.798.798 0 0 1 .796.064l.453.324a1.875 1.875 0 0 0 2.416-.2l.243-.243c.648-.648.733-1.67.2-2.416l-.324-.453a.798.798 0 0 1-.064-.796c.071-.157.137-.316.198-.478.1-.267.327-.47.608-.517l.55-.091a1.875 1.875 0 0 0 1.566-1.85v-.344c0-.916-.663-1.699-1.567-1.85l-.549-.091a.798.798 0 0 1-.608-.517 7.507 7.507 0 0 0-.198-.478.798.798 0 0 1 .064-.796l.324-.453a1.875 1.875 0 0 0-.2-2.416l-.243-.243a1.875 1.875 0 0 0-2.416-.2l-.453.324a.798.798 0 0 1-.796.064 7.462 7.462 0 0 0-.478-.198.798.798 0 0 1-.517-.608l-.091-.55a1.875 1.875 0 0 0-1.85-1.566h-.344ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd"/>
-          </svg>
-        </button>
-        <button id="logout-btn" class="p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors" title="Logout">
-          <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V15a.75.75 0 0 1 1.5 0v3.75a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V5.25a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9A.75.75 0 0 1 15 9V5.25a1.5 1.5 0 0 0-1.5-1.5h-6Zm10.72 4.72a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H9a.75.75 0 0 1 0-1.5h10.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
-          </svg>
-        </button>
+      <!-- Terminal Header -->
+      <div class="bg-header-gradient rounded-t px-3 py-2 border-b border-neon-green flex items-center justify-center">
+        <div class="text-neon-green text-xs font-bold tracking-wide" style="text-shadow: 0 0 5px #39FF14;">
+          PLAYER.exe
+        </div>
       </div>
 
-      <!-- Profile Photo -->
-      <div class="mb-4">
-        <img src="${avatar}" alt="Avatar" class="w-20 h-20 rounded-full mx-auto border-3 border-white/50 shadow-lg">
+      <!-- System Status -->
+      <div class="bg-console-bg px-3 py-2 border-b border-neon-green border-opacity-30 text-[10px] leading-relaxed">
+        <div class="flex items-center gap-1 mb-1">
+          <div class="w-1 h-1 bg-neon-green rounded-full animate-pulse"></div>
+          <span>PLAYER STATUS: ONLINE</span>
+        </div>
+        <div class="text-neon-blue font-bold">
+          > START YOUR GAME...</span>
+        </div>
       </div>
 
-      <!-- Username -->
-      <h2 class="text-white font-bold text-xl mb-4">${username}</h2>
+      <!-- Profile Data -->
+      <div class="bg-console-bg p-3 border-b border-neon-green border-opacity-30">
+        <!-- Profile Photo and Info -->
+        <div class="flex items-center gap-3 mb-3">
+          <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full border-2 border-neon-blue shadow-[0_0_8px_#62a6fa]">
+          <div>
+            <div class="text-neon-white text-md font-bold uppercase">${username}</div>
+          </div>
+        </div>
 
-      <!-- Stats -->
-      <div class="grid grid-cols-3 gap-4">
-        <div class="text-center">
-          <div class="text-white font-bold text-2xl">${wins}</div>
-          <div class="text-white/80 text-sm">Wins</div>
-        </div>
-        <div class="text-center">
-          <div class="text-white font-bold text-2xl">${losses}</div>
-          <div class="text-white/80 text-sm">Losses</div>
-        </div>
-        <div class="text-center">
-          <div class="text-white font-bold text-2xl">${winRate}%</div>
-          <div class="text-white/80 text-sm">Win Rate</div>
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-3 gap-1 text-[10px]">
+          <div class="text-center p-2 bg-black bg-opacity-60 border border-neon-green border-opacity-50 rounded-sm">
+            <div class="text-neon-green text-xs font-bold">${wins}</div>
+            <div class="text-neon-white text-[9px] opacity-70">WINS</div>
+          </div>
+          <div class="text-center p-2 bg-black bg-opacity-60 border border-neon-red border-opacity-50 rounded-sm">
+            <div class="text-neon-red text-xs font-bold">${losses}</div>
+            <div class="text-neon-white text-[9px] opacity-70">LOSS</div>
+          </div>
+          <div class="text-center p-2 bg-black bg-opacity-60 border border-neon-blue border-opacity-50 rounded-sm">
+            <div class="text-neon-blue text-xs font-bold">${winRate}%</div>
+            <div class="text-neon-white text-[9px] opacity-70">RATE</div>
+          </div>
         </div>
       </div>
     `;

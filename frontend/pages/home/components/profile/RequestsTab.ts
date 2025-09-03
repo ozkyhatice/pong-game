@@ -23,23 +23,24 @@ export class RequestsTab {
 
     this.element.innerHTML = `
       <div class="space-y-2">
-        <div class="flex justify-between items-center mb-3">
-          <span class="text-sm font-medium text-gray-700">Requests (${this.requests.length})</span>
+        <div class="mb-3">
+          <h1 class="text-[10px] font-medium text-neon-yellow/50 mb-1">> REQUESTS [${this.requests.length}]</h1>
+		  <h1 class="text-[10px] font-medium text-neon-green/50">> ACCEPT OR DECLINE, IT'S YOUR CHOICE...</h1>
         </div>
         ${this.requests.map(request => `
-          <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+          <div class="flex items-center justify-between p-3 bg-radial-bg rounded-lg border border-neon-yellow">
             <div class="flex items-center">
               <img src="${request.senderInfo.avatar || `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(request.senderInfo.username)}`}" alt="Avatar" class="w-8 h-8 rounded-full mr-3">
-              <span class="text-sm font-medium">${request.senderInfo.username}</span>
+              <span class="text-sm text-neon-white font-medium">${request.senderInfo.username}</span>
             </div>
             <div class="flex space-x-2">
-              <button class="accept-btn px-3 py-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200" 
+              <button class="accept-btn px-2 py-0.5 text-[10px] font-medium bg-neon-green text-terminal-border rounded hover:bg-neon-green/80 transition-colors border border-neon-green" 
                       data-id="${request.senderInfo.id}">
-                Accept
+                ACCEPT
               </button>
-              <button class="decline-btn px-3 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200" 
+              <button class="decline-btn px-2 py-0.5 text-[10px] font-medium bg-neon-red text-terminal-border rounded hover:bg-neon-red/80 transition-colors border border-neon-red" 
                       data-id="${request.senderInfo.id}">
-                Decline
+                DECLINE
               </button>
             </div>
           </div>
