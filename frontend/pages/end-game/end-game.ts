@@ -1,4 +1,3 @@
-
 import { Router } from "../../core/router.js";
 import { UserService } from "../../services/UserService.js";
 
@@ -47,10 +46,10 @@ export function init() {
 			if (gameResultStatus) {
 				if (isCurrentUserWinner) {
 					gameResultStatus.textContent = '> RESULT: VICTORY!';
-					gameResultStatus.className = 'text-neon-green font-bold';
+					gameResultStatus.className = 'text-neon-green flex items-center gap-1 mb-1';
 				} else {
 					gameResultStatus.textContent = '> RESULT: DEFEAT...';
-					gameResultStatus.className = 'text-neon-red font-bold';
+					gameResultStatus.className = 'text-neon-red flex items-center gap-1 mb-1';
 				}
 			}
 
