@@ -137,7 +137,7 @@ function displayBlockedUsers(blockedUsers: any[]): void {
         <div class="flex items-center justify-between p-2 bg-black bg-opacity-40 border border-neon-red border-opacity-30 rounded-sm">
             <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-full bg-neon-red bg-opacity-20 flex items-center justify-center">
-                    <span class="text-neon-red text-[8px] font-bold">⛔</span>
+                    <span class="text-neon-red text-[8px] font-bold"></span>
                 </div>
                 <div>
                     <p class="text-neon-red text-[10px] font-medium">${user.username}</p>
@@ -161,7 +161,6 @@ async function unblockUser(userId: number): Promise<void> {
             method: 'POST',
             headers: { 
                 'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
             }
         });
 
