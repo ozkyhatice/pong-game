@@ -282,19 +282,25 @@ export function init() {
     const ui = document.getElementById('landing-ui');
     if (ui) ui.classList.add('fade-out');
   }
+  function fadeInLandingUIOnce() {
+    if (!uiFaded) return;
+    uiFaded = false;
+    const ui = document.getElementById('landing-ui');
+    if (ui) ui.classList.remove('fade-out');
+  }
 
   window.addEventListener('keydown', (event) => {
     switch(event.code) {
       case 'ArrowUp':
         keys.up = true;
         userControlling = true;
-  fadeOutLandingUIOnce();
+        fadeOutLandingUIOnce();
         event.preventDefault();
         break;
       case 'ArrowDown':
         keys.down = true;
         userControlling = true;
-  fadeOutLandingUIOnce();
+        fadeOutLandingUIOnce();
         event.preventDefault();
         break;
     }
@@ -309,6 +315,10 @@ export function init() {
       case 'ArrowDown':
         keys.down = false;
         event.preventDefault();
+        break;
+      case 'Escape':
+        userControlling = false;
+        fadeInLandingUIOnce();
         break;
     }
   });
