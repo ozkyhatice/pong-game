@@ -122,11 +122,11 @@ class Router {
 
   private showError(pageName: string, error: any) {
     this.container.innerHTML = `
-      <div class="flex bg-radial-bgitems-center justify-center h-screen">
-        <div class="text-center p-6 bg-white rounded-lg shadow">
-          <h1 class="text-xl font-bold text-neon-red mb-2">PAGE LOAD ERROR</h1>
-          <p class="text-neon-blue mb-4">FAILED TO LOAD: ${pageName}</p>
-          <button onclick="router.navigate('landing')" class="bg-neon-purple text-terminal-border px-4 py-2 rounded hover:bg-terminal-border hover:text-neon-purple">
+      <div class="flex bg-radial-bg items-center justify-center h-screen">
+        <div class="text-center p-6 bg-console-bg rounded-lg shadow border-2 border-neon-green">
+          <h1 class="text-3xl font-bold text-neon-red mb-2">PAGE LOAD ERROR</h1>
+          <p class="text-neon-white mb-4">FAILED TO LOAD: ${pageName}</p>
+          <button onclick="router.navigate('landing')" class="nav-btn flex-1 bg-console-bg bg-opacity-60 border border-neon-blue border-opacity-40 text-neon-blue text-opacity-80 px-2 sm:px-3 py-2 text-[10px] sm:text-xs tracking-wide cursor-pointer rounded-sm">
             GO TO LANDING
           </button>
         </div>
