@@ -1,5 +1,3 @@
-// CRT shader removed for cleaner look
-// import './crtShader.js';
 import { AppState, RoomInfo } from "../../core/AppState.js";
 import { GameService } from "../../services/GameService.js";
 import { UserService } from "../../services/UserService.js";
@@ -33,10 +31,10 @@ const PONG_3D_CONFIG = {
   },
   COLORS: {
     // Enhanced neon color scheme
-    TABLE: { r: 0.05, g: 0.05, b: 0.1 },
-    BORDER: { r: 0, g: 0.8, b: 1 }, // Cyan borders
-    LEFT_PADDLE: { r: 1, g: 0.2, b: 0.3 }, // Neon red
-    RIGHT_PADDLE: { r: 0.2, g: 0.4, b: 1 }, // Neon blue
+    TABLE: { r: 0.1, g: 0.2, b: 0.1 },
+    BORDER: { r: 0.2, g: 1, b: 0.2 },
+    LEFT_PADDLE: { r: 0, g: 0.8, b: 1 },
+    RIGHT_PADDLE: { r: 1, g: 0.2, b: 0.3 },
     BALL: { r: 1, g: 1, b: 1 }, // Bright white
     BORDER_FLASH: { r: 1, g: 0, b: 1 }, // Magenta flash
     PADDLE_FLASH: { r: 1, g: 1, b: 0 }, // Yellow flash
@@ -102,7 +100,15 @@ let lastPointerPosition = { x: 0, y: 0 };
 let isPointerDown = false;
 
 // Game state
-let gameState: GameState | null = null;
+let gameState: GameState | null = {
+  ball: { x: 400, y: 200, dx: 3, dy: 2 },
+  paddles: {
+    1: { x: -10, y: 150, width: 20, height: 100 },
+    2: { x: 790, y: 150, width: 20, height: 100 }
+  },
+  score: { 1: 0, 2: 0 },
+  gameOver: false
+};
 let players: Player[] = [];
 let myPlayerId: number | null = null;
 let keysPressed: { [key: string]: boolean } = {};
@@ -410,9 +416,6 @@ export async function init() {
     console.log('✅ Enhanced 3D Pong Arena initialized successfully');
   }
 
-  // CRT post-processing removed for cleaner look
-  // function setupPostProcessing(targetCanvas: HTMLCanvasElement) { ... }
-
   function createEnhancedTable() {
     table = BABYLON.MeshBuilder.CreateBox('table', {
       width: PONG_3D_CONFIG.TABLE.width,
@@ -449,8 +452,8 @@ export async function init() {
     const tableDepth = PONG_3D_CONFIG.TABLE.depth;
 
     const borderConfigs = [
-      { name: 'left', size: { width: borderThickness, height: 0.3, depth: tableDepth + borderThickness }, pos: { x: -tableWidth/2 - borderThickness/2, y: 0.1, z: 0 } },
-      { name: 'right', size: { width: borderThickness, height: 0.3, depth: tableDepth + borderThickness }, pos: { x: tableWidth/2 + borderThickness/2, y: 0.1, z: 0 } },
+      { name: 'left', size: { width: borderThickness, height: 0.3, depth: tableDepth + borderThickness * 2 }, pos: { x: -tableWidth/2 - borderThickness/2, y: 0.1, z: 0 } },
+      { name: 'right', size: { width: borderThickness, height: 0.3, depth: tableDepth + borderThickness * 2 }, pos: { x: tableWidth/2 + borderThickness/2, y: 0.1, z: 0 } },
       { name: 'top', size: { width: tableWidth, height: 0.3, depth: borderThickness }, pos: { x: 0, y: 0.1, z: tableDepth/2 + borderThickness/2 } },
       { name: 'bottom', size: { width: tableWidth, height: 0.3, depth: borderThickness }, pos: { x: 0, y: 0.1, z: -tableDepth/2 - borderThickness/2 } }
     ];
@@ -493,9 +496,9 @@ export async function init() {
     paddle1Mat.alpha = 0.9;
     paddle1.material = paddle1Mat;
 
-    paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5;
+    paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5; // Left side
     paddle1.position.y = paddleConfig.height/2; // On table surface
-    paddle1.position.z = paddleConfig.depth/2; // Half paddle depth toward user
+    paddle1.position.z = 0; // Center position initially
     glowLayer.addIncludedOnlyMesh(paddle1);
 
     // Right paddle (Player 2) - Enhanced design
@@ -513,9 +516,9 @@ export async function init() {
     paddle2Mat.alpha = 0.9;
     paddle2.material = paddle2Mat;
 
-    paddle2.position.x = PONG_3D_CONFIG.TABLE.width/2 - 0.5;
+    paddle2.position.x = PONG_3D_CONFIG.TABLE.width/2 - 0.5; // Right side
     paddle2.position.y = paddleConfig.height/2; // On table surface
-    paddle2.position.z = paddleConfig.depth/2; // Half paddle depth toward user
+    paddle2.position.z = 0; // Center position initially
     glowLayer.addIncludedOnlyMesh(paddle2);
   }
 
@@ -723,30 +726,20 @@ export async function init() {
       // Left paddle (Player 1)
       const paddle1Data = gameState.paddles[playerIds[0]];
       if (paddle1Data) {
-        // Map game Y (0-400) to 3D Z (-2.1 to 2.1)
-        const paddleZ = ((paddle1Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.7;
-        const maxZ = PONG_3D_CONFIG.TABLE.depth * 0.35; // Keep paddle within borders
-
-        // Move paddle toward user (bottom of canvas) by half paddle depth
+        const paddleZ = ((paddle1Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9;
         const paddleOffset = PONG_3D_CONFIG.PADDLE.depth / 2;
-        paddle1.position.z = Math.max(-maxZ, Math.min(maxZ, paddleZ)) + paddleOffset;
+        paddle1.position.z = paddleZ + paddleOffset;
         paddle1.position.y = PONG_3D_CONFIG.PADDLE.height/2;
-        // Left side of table
         paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5;
       }
 
       // Right paddle (Player 2)
       const paddle2Data = gameState.paddles[playerIds[1]];
       if (paddle2Data) {
-        // Map game Y (0-400) to 3D Z (-2.1 to 2.1)
-        const paddleZ = ((paddle2Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.7;
-        const maxZ = PONG_3D_CONFIG.TABLE.depth * 0.35; // Keep paddle within borders
-
-        // Move paddle toward user (bottom of canvas) by half paddle depth
+        const paddleZ = ((paddle2Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9;
         const paddleOffset = PONG_3D_CONFIG.PADDLE.depth / 2;
-        paddle2.position.z = Math.max(-maxZ, Math.min(maxZ, paddleZ)) + paddleOffset;
+        paddle2.position.z = paddleZ + paddleOffset;
         paddle2.position.y = PONG_3D_CONFIG.PADDLE.height/2;
-        // Right side of table
         paddle2.position.x = PONG_3D_CONFIG.TABLE.width/2 - 0.5;
       }
     }
@@ -756,14 +749,45 @@ export async function init() {
   }
 
   function checkCollisionEffects() {
-    if (!ball || !gameState) return;
+    if (!gameState) return;
 
-    const ballSpeed = Math.sqrt(gameState.ball.dx * gameState.ball.dx + gameState.ball.dy * gameState.ball.dy);
+    if (gameState.ball.y <= 30 || gameState.ball.y >= 770) {
+      gameState.ball.dy = -gameState.ball.dy;
+      borderFlashTimes[gameState.ball.y <= 0 ? 3 : 2] = 1.5;
+    }
 
-    // Trigger paddle flash on collision (approximate detection)
-    if (Math.abs(gameState.ball.x - 50) < 30 && ballSpeed > 0.1) { // Left paddle area
+    const ball = gameState.ball;
+    const paddle1 = gameState.paddles[1];
+    const paddle2 = gameState.paddles[2];
+
+    const paddleMargin = 8;
+    const paddleLengthMargin = 5;
+
+    if (ball.x < paddle1.x + paddle1.width + paddleMargin &&
+        ball.x > paddle1.x - paddleMargin &&
+        ball.y + paddleLengthMargin > paddle1.y &&
+        ball.y - paddleLengthMargin < paddle1.y + paddle1.height &&
+        ball.dx < 0) {
+
+      ball.x = paddle1.x + paddle1.width + paddleMargin;
+
+      ball.dx = -ball.dx * 1.10;
+      ball.dy = ball.dy * 1.10;
+
       paddleFlashTimes[0] = 1.0;
-    } else if (Math.abs(gameState.ball.x - 750) < 30 && ballSpeed > 0.1) { // Right paddle area
+    }
+
+    if (ball.x > paddle2.x - paddleMargin &&
+        ball.x < paddle2.x + paddle2.width + paddleMargin &&
+        ball.y + paddleLengthMargin > paddle2.y &&
+        ball.y - paddleLengthMargin < paddle2.y + paddle2.height &&
+        ball.dx > 0) {
+
+      ball.x = paddle2.x - paddleMargin;
+
+      ball.dx = -ball.dx * 1.10;
+      ball.dy = ball.dy * 1.10;
+
       paddleFlashTimes[1] = 1.0;
     }
 
@@ -1109,7 +1133,7 @@ export async function init() {
         console.log('✅ Keyboard control interval cleared');
       }
 
-      // Clear mobile control interval  
+      // Clear mobile control interval
       if (mobileControlInterval) {
         clearInterval(mobileControlInterval);
         mobileControlInterval = null;
