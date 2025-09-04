@@ -11,11 +11,9 @@ export const rooms = new Map();
 export const userRoom = new Map(); // userId -> roomId
 
 export async function handleGameMessage(msgObj, userId, connection) {
-    console.log(`🎮 GAME: Message received -> User: ${userId}, Event: ${msgObj.event}`);
     
     // Validate userId to prevent injection
     if (!isValidUserId(userId)) {
-        console.error(`🛡️ SECURITY: Invalid user ID format -> ${userId}`);
         await sendMessage(connection, 'game', 'error', {
             message: 'Invalid user ID format'
         });
@@ -30,7 +28,6 @@ export async function handleGameMessage(msgObj, userId, connection) {
     // Validate input data to prevent SQL injection
     const validation = validateGameInput(sanitizedData);
     if (!validation.isValid) {
-        console.error(`🛡️ SECURITY: Input validation failed -> ${validation.message}`);
         await sendMessage(connection, 'game', 'error', {
             message: validation.message
         });
@@ -39,7 +36,6 @@ export async function handleGameMessage(msgObj, userId, connection) {
     
     const handler = eventHandlers[event];
     if (!handler) {
-        console.error(`❌ GAME: No handler for event: ${event}`);
         throw new Error(`No handler for event: ${event}`);
     }
     return await handler(sanitizedData, userId, connection);
@@ -114,7 +110,6 @@ export async function joinGame(data, userId, connection) {
         message: `User ${userId} joined the game`
     });
     if (room.players.size === 2 && !room.started) {
-        console.log(`🎮 GAME READY: 2 players joined -> Room: ${room.id}`);
     }
     // Display the current state of the room for debugging
     await displayRoomState(room);
@@ -135,13 +130,11 @@ export async function startGame(data, userId, connection) {
         await sendMessage(connection, 'game', 'error', {
             message: `Cannot start game: room not found`
         });
-        console.warn(`🔍 START ERROR: Room not found -> User: ${userId}, Room: ${data.roomId}`);
         return;
     }
     
     // Check if already started (race condition protection)
     if (room.started) {
-        console.log(`⚠️ START WARNING: Game already started -> User: ${userId}, Room: ${room.id}`);
         // Don't send error to user, just broadcast current state
         await sendMessage(connection, 'game', 'game-started', {
             roomId: room.id,
@@ -156,7 +149,6 @@ export async function startGame(data, userId, connection) {
         await sendMessage(connection, 'game', 'error', {
             message: `Cannot start game: not enough players`
         });
-        console.warn(`👥 START ERROR: Not enough players -> Room: ${room.id}, Players: ${room.players.size}`);
         return;
     }
     
@@ -165,13 +157,11 @@ export async function startGame(data, userId, connection) {
         await sendMessage(connection, 'game', 'error', {
             message: `Cannot start game: you are not in this room`
         });
-        console.warn(`🚫 START ERROR: User not in room -> User: ${userId}, Room: ${room.id}`);
         return;
     }
     
     // Set started flag and start game
     room.started = true;
-    console.log(`🎮 GAME START: Game started -> User: ${userId}, Room: ${room.id}, Players: ${Array.from(room.players).join(', ')}`);
     
     startGameLoop(room, connection);
     
@@ -216,8 +206,6 @@ export async function handlePlayerMove(data, userId) {
         
         // Always update for smoother real-time movement
         await stateGame(data, userId);
-    } else {
-        console.log(`❌ MOVE ERROR: Paddle not found for user ${userId}`);
     }
 }
 export async function stateGame(data, userId) {
@@ -272,7 +260,6 @@ export async function handlePlayerReady(data, userId, connection) {
 
     // Mark player as ready
     room.readyPlayers.add(userId);
-    console.log(`✅ GAME READY: Player ready -> User: ${userId}, Room: ${roomId}`);
 
     // Broadcast ready status to all players
     for (const [playerId, socket] of room.sockets) {
@@ -286,7 +273,6 @@ export async function handlePlayerReady(data, userId, connection) {
 
     // Check if all players are ready (and we have 2 players)
     if (room.readyPlayers.size === 2 && room.players.size === 2) {
-        console.log(`🎮 GAME START: All players ready -> Room: ${roomId}`);
         
         // Broadcast that game can start
         for (const [playerId, socket] of room.sockets) {
@@ -302,7 +288,6 @@ export async function handlePlayerReady(data, userId, connection) {
 export async function handleReconnection(connection, userId) {
     // Validate userId to prevent SQL injection
     if (!isValidUserId(userId)) {
-        console.error(`🛡️ SECURITY: Invalid user ID format for reconnection -> ${userId}`);
         await sendMessage(connection, 'game', 'error', {
             message: 'Invalid user ID format'
         });
@@ -322,21 +307,18 @@ export async function handleReconnection(connection, userId) {
     if (roomId) {
         const room = rooms.get(roomId);
         if (room && room.started) {
-            console.log(`🎮 RECONNECT: User ${userId} has active game in room ${roomId}, redirecting to remote-game`);
             
             // Reconnect the user to the room
             room.sockets.set(userId, connection);
             
             // Cancel disconnection timeout if it exists
             if (room.disconnectionTimeout) {
-                console.log(`🔄 GAME RECONNECT: Player reconnected -> User: ${userId}, Room: ${roomId}`);
                 clearTimeout(room.disconnectionTimeout);
                 room.disconnectionTimeout = null;
             }
             
             // Resume game if paused
             if (room.state.paused) {
-                console.log(`▶️ GAME RESUME: Game resuming after reconnect -> User: ${userId}, Room: ${roomId}`);
                 resumeGame(room);
                 
                 // Game loop'u yeniden başlat
@@ -370,7 +352,6 @@ export async function handleReconnection(connection, userId) {
     
     // If user is in tournament but no active game, redirect to tournament page
     if (user && user.currentTournamentId) {
-        console.log(`🏆 RECONNECT: User ${userId} is in tournament ${user.currentTournamentId}, redirecting to tournament page`);
         
         sendMessage(connection, 'navigation', 'redirect', {
             page: 'tournament',
@@ -382,7 +363,6 @@ export async function handleReconnection(connection, userId) {
     
     // If no room found, just return (normal case for users not in game)
     if (!roomId) {
-        console.warn(`🔍 RECONNECT: User ${userId} not in any room or tournament`);
         return;
     }
 
@@ -393,7 +373,6 @@ export async function handleReconnection(connection, userId) {
 export async function handleGameInvite(data, userId, connection) {
     // Validate userId and receiverId to prevent SQL injection
     if (!isValidUserId(userId) || !isValidUserId(data.receiverId)) {
-        console.error(`🛡️ SECURITY: Invalid user ID format for game invite -> ${userId} or ${data.receiverId}`);
         await sendMessage(connection, 'game', 'error', {
             message: 'Invalid user ID format'
         });
@@ -402,7 +381,6 @@ export async function handleGameInvite(data, userId, connection) {
     
     const { receiverId, senderUsername } = sanitizeGameInput(data);
     
-    console.log(`Game invite from user ${userId} to user ${receiverId}`);
     
     // Check if either user has blocked the other
     const isBlocked = await isUserBlocked(userId, receiverId);
@@ -436,13 +414,11 @@ export async function handleGameInvite(data, userId, connection) {
     };
     
     recipientClient.send(JSON.stringify(inviteMessage));
-    console.log(`📨 GAME INVITE: Invitation sent -> From: ${userId}, To: ${receiverId}`);
 }
 
 export async function handleInviteAccepted(data, userId, connection) {
     // Validate userId and senderId to prevent SQL injection
     if (!isValidUserId(userId) || !isValidUserId(data.senderId)) {
-        console.error(`🛡️ SECURITY: Invalid user ID format for invite acceptance -> ${userId} or ${data.senderId}`);
         await sendMessage(connection, 'game', 'error', {
             message: 'Invalid user ID format'
         });
@@ -451,7 +427,6 @@ export async function handleInviteAccepted(data, userId, connection) {
     
     const { senderId } = sanitizeGameInput(data);
     
-    console.log(`✅ GAME INVITE: Invitation accepted -> From: ${senderId}, By: ${userId}`);
     
     // Check if both users are still online
     const senderClient = getClientById(senderId);
@@ -508,7 +483,6 @@ export async function handleInviteAccepted(data, userId, connection) {
         message: 'Your game invitation was accepted! Room created.'
     });
     
-    console.log(`🏠 ROOM CREATED: Invite room created -> Users: ${userId}, ${senderId}, Room: ${roomId}`);
 }
 
 // HTTP endpoint for getting match history
@@ -517,7 +491,6 @@ export async function getMatchHistory(request, reply) {
 
     // Validate userId to prevent injection
     if (!isValidUserId(userId)) {
-        console.error(`🛡️ SECURITY: Invalid user ID format in getMatchHistory -> ${userId}`);
         return reply.code(400).send({ error: 'Invalid user ID format' });
     }
 
@@ -543,7 +516,6 @@ export async function getMatchHistory(request, reply) {
             totalMatches: formattedMatches.length
         });
     } catch (error) {
-        console.error('Error fetching match history:', error);
         reply.code(500).send({ error: 'Internal Server Error' });
     }
 }

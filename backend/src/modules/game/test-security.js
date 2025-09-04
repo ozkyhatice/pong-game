@@ -1,6 +1,3 @@
-/**
- * Test file for SQL injection and XSS security in the game module
- */
 import { validateGameInput, sanitizeGameInput, isValidUserId } from './utils/security.utils.js';
 
 // Examples of malicious inputs and how they are handled

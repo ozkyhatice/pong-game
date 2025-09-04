@@ -7,12 +7,8 @@ import { initDB } from "../../../config/db.js";
 import { sanitizeInput } from "../../../utils/security.js";
 import { containsSqlInjection, sanitizeGeneralInput } from '../../../utils/validation.js';
 
-/**
- * Controller for 2FA setup process
- * Generates a QR code and secret for the user to setup their authenticator app
- * @param {Object} request - Fastify request object containing user session data
- * @param {Object} reply - Fastify reply object
- */
+// Controller to initiate 2FA setup for a user
+// Generates a new 2FA secret and QR code
 export async function handle2FASetup(request, reply) {
   try {
     const userId = request.user.id;
@@ -23,12 +19,8 @@ export async function handle2FASetup(request, reply) {
   }
 }
 
-/**
- * Controller to disable 2FA for a user
- * Removes 2FA settings from user's account
- * @param {Object} request - Fastify request object containing user session data
- * @param {Object} reply - Fastify reply object
- */
+
+// Controller to disable 2FA for a user
 export async function handle2FADisable(request, reply) {
   try {
     const userId = request.user.id;
@@ -39,13 +31,10 @@ export async function handle2FADisable(request, reply) {
   }
 }
 
-/**
- * Controller to verify 2FA token during setup process
- * Validates the token provided by the user's authenticator app
- * Includes input validation and sanitization for security
- * @param {Object} request - Fastify request object with user session and token data
- * @param {Object} reply - Fastify reply object
- */
+// Controller to handle 2FA verification during sensitive operations
+// Verifies the 2FA token provided by the user
+// Implements security measures against common web vulnerabilities
+
 export async function handle2FAVerify(request, reply) {
   try {
     const userId = request.user.id;
@@ -56,7 +45,7 @@ export async function handle2FAVerify(request, reply) {
       return reply.status(400).send({ error: "2FA token is required" });
     }
 
-    // Format validation - TOTP tokens are typically 6-digit numbers
+    // Format validation - 6-digit numbers
     if (!/^\d{6}$/.test(token)) {
       return reply.status(400).send({ error: "2FA token must be 6 digits" });
     }
@@ -82,15 +71,10 @@ export async function handle2FAVerify(request, reply) {
   }
 }
 
-/**
- * Controller to handle 2FA verification during login
- * Verifies the 2FA token and returns a JWT if valid
- * Implements security measures against common web vulnerabilities
- * 
- * @param {Object} request - Fastify request object containing userId and token
- * @param {Object} reply - Fastify reply object
- * @returns {Object} Response containing JWT token and user data if successful
- */
+
+// Controller to handle 2FA verification during login
+// Verifies the 2FA token and issues a JWT upon successful verification
+// Implements security measures against common web vulnerabilities
 export async function handle2FALoginVerify(request, reply) {
   try {
     const { userId, token } = request.body;
@@ -103,7 +87,6 @@ export async function handle2FALoginVerify(request, reply) {
       return reply.status(400).send({ error: "Invalid 2FA token." });
     }
 
-    // Retrieve user information using parameterized query to prevent SQL injection
     const db = await initDB();
     const user = await db.get('SELECT id, email, username FROM users WHERE id = ?', [userId]);
     
@@ -111,7 +94,7 @@ export async function handle2FALoginVerify(request, reply) {
       return reply.status(404).send({ error: "User not found." });
     }
 
-    // Generate JWT with appropriate claims and expiration
+    // Generate JWT token valid for 7 days
     const jwtToken = await reply.jwtSign({
       id: user.id,
       email: user.email,

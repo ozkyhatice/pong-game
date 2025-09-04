@@ -17,25 +17,16 @@ import {
 import {
   isUserBlocked
 } from '../../friend/service/friend.service.js';
-import { sanitizeInput } from '../../../utils/security.js';
 import { validateChatMessage, containsSqlInjection, sanitizeGeneralInput } from '../../../utils/validation.js';
 
-/**
- * Controller for sending undelivered messages to a user when they connect
- * @param {number} userId - The ID of the user
- * @param {object} connection - WebSocket connection object
- */
+// Controller for sending undelivered messages when user comes online
+// Also sends unread messages when requested via REST API
 export async function undeliveredMessageController(userId, connection) {
-  // Tek seferde hem undelivered hem unread mesajları gönder
   await sendMissedMessages(connection, userId);
 }
 
-/**
- * Controller for sending online clients list
- * @param {object} connection - WebSocket connection object
- */
+// Controller for sending the list of online users to a connected client
 export async function onlineClientsController(connection) {
-  // Online tum kullanıcıları gönder
   const onlineClients = await getOnlineClients();
   connection.send(JSON.stringify({
     type: 'onlineClients',
@@ -43,12 +34,8 @@ export async function onlineClientsController(connection) {
   }));
 }
 
-/**
- * Process incoming chat messages from WebSocket
- * Includes validation, sanitization and SQL injection protection
- * @param {string|Buffer} message - Raw message from WebSocket
- * @param {number} userId - The ID of the sender
- */
+// WebSocket message processing controller
+// params: message (string), userId (number)
 export async function processChatMessage(message, userId) {
   try {
     // Parse message with security measures
@@ -58,9 +45,9 @@ export async function processChatMessage(message, userId) {
     const type = msgObj.type || 'message';
 
     if (type === 'read') {
-      // Eğer senderId belirtilmişse sadece o kullanıcıdan gelen mesajları okundu yap
+      // if senderId is provided, mark messages from that sender as read
       if (senderId) {
-        // Güvenlik: senderId'yi doğrula ve sanitize et
+        // security: sanitize senderId
         const sanitizedSenderId = parseInt(senderId);
         if (isNaN(sanitizedSenderId)) {
           throw new Error('Invalid sender ID format');
@@ -68,7 +55,7 @@ export async function processChatMessage(message, userId) {
         
         await markSpecificMessagesAsRead(userId, sanitizedSenderId);
       } else {
-        // Yoksa tüm mesajları okundu yap (eski davranış)
+        // mark all messages as read
         await markMessagesAsRead(userId);
       }
     } else if (type === 'message') {
@@ -76,24 +63,20 @@ export async function processChatMessage(message, userId) {
         throw new Error('Receiver ID and content are required');
       }
       
-      // Güvenlik: receiverId'yi doğrula ve sanitize et
       const sanitizedReceiverId = parseInt(receiverId);
       if (isNaN(sanitizedReceiverId)) {
         throw new Error('Invalid receiver ID format');
       }
       
-      // Chat mesajı validation
       const messageValidation = validateChatMessage(content);
       if (!messageValidation.isValid) {
         throw new Error(messageValidation.message);
       }
 
-      // SQL injection kontrolü
       if (containsSqlInjection(content)) {
         throw new Error('Invalid characters detected in message');
       }
       
-      // Validation sonucunda sanitize edilmiş mesajı kullan
       const sanitizedContent = messageValidation.sanitizedMessage;
       
       if (userId === sanitizedReceiverId) {
@@ -106,7 +89,7 @@ export async function processChatMessage(message, userId) {
         throw new Error('You cannot send a message to this user as they have blocked you');
       }
 
-      // Mesajı her zaman DB'ye kaydet (online/offline fark etmez)
+      // save always to DB, if user is online it will be sent in real-time
       const newMessage = await addMessageToDb(userId, sanitizedReceiverId, sanitizedContent);
       
       if (newMessage) {
@@ -120,34 +103,28 @@ export async function processChatMessage(message, userId) {
           createdAt: new Date().toISOString()
         };
         
-        // Sadece her iki user da online ise mesajı gönder
+        // if both users are online, send in real-time
         if (await isConnected(sanitizedReceiverId) && await isConnected(userId)) {
           try {
             await handleRealtimeMessage(userId, sanitizedReceiverId, sanitizedContent, messageObj);
           } catch (err) {
-            console.error('Error sending message:', err);
+            console.log('Error sending message:', err);
           }
-        } else {
-          console.log(`User ${sanitizedReceiverId} is offline, message saved to DB and will be delivered when online`);
         }
       }
     }
   } catch (error) {
-    console.error('Error processing chat message:', error);
     throw error;
   }
 }
 
-/**
- * REST API Controller for getting chat history between two users
- * Includes security checks and input validation
- */
+// REST API Controller for fetching chat history between two users
 export async function getChatHistoryController(request, reply) {
   try {
     const otherUserIdParam = request.params.userId;
     const currentUserId = request.user.id;
     
-    // Güvenlik: otherUserId'yi doğrula ve sanitize et
+
     const otherUserId = parseInt(otherUserIdParam);
     if (isNaN(otherUserId)) {
       return reply.status(400).send({
@@ -169,10 +146,8 @@ export async function getChatHistoryController(request, reply) {
     let before = null;
     let after = null;
     
-    // Tarih parametrelerini güvenli şekilde işle
     if (request.query.before) {
       before = sanitizeGeneralInput(request.query.before);
-      // Geçerli bir tarih mi kontrol et
       if (isNaN(Date.parse(before))) {
         return reply.status(400).send({
           success: false,
@@ -183,7 +158,6 @@ export async function getChatHistoryController(request, reply) {
     
     if (request.query.after) {
       after = sanitizeGeneralInput(request.query.after);
-      // Geçerli bir tarih mı kontrol et
       if (isNaN(Date.parse(after))) {
         return reply.status(400).send({
           success: false,
@@ -213,7 +187,6 @@ export async function getChatHistoryController(request, reply) {
       data: result
     });
   } catch (error) {
-    console.error('Error getting chat history:', error);
     return reply.status(500).send({
       success: false,
       error: 'Internal server error'
@@ -221,10 +194,7 @@ export async function getChatHistoryController(request, reply) {
   }
 }
 
-/**
- * REST API Controller for marking messages as read
- * Includes input validation and sanitization
- */
+// REST API Controller for marking messages as read from a specific sender
 export async function markMessagesAsReadController(request, reply) {
   try {
     const senderIdParam = request.params.userId;
@@ -248,7 +218,6 @@ export async function markMessagesAsReadController(request, reply) {
       }
     });
   } catch (error) {
-    console.error('Error marking messages as read:', error);
     return reply.status(500).send({
       success: false,
       error: 'Internal server error'

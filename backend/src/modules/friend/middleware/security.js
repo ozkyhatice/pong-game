@@ -1,13 +1,4 @@
-/**
- * Security headers middleware for friend module
- * Sets various HTTP security headers to mitigate common web vulnerabilities
- */
 
-/**
- * Add security headers to all friend module responses
- * @param {object} request - Fastify request object
- * @param {object} reply - Fastify reply object
- */
 export async function addSecurityHeaders(request, reply) {
   // Prevent XSS attacks
   reply.header('X-XSS-Protection', '1; mode=block');

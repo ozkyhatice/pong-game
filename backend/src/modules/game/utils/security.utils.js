@@ -1,15 +1,7 @@
-/**
- * Security utilities for the game module
- * Provides XSS and SQL injection protection
- */
-import { escapeHTML, sanitizeInput } from '../../../utils/security.js';
+import { sanitizeInput } from '../../../utils/security.js';
 import { containsSqlInjection } from '../../../utils/validation.js';
 
-/**
- * Sanitizes game input data to prevent XSS attacks
- * @param {Object} data - The input data object
- * @returns {Object} - Sanitized data object
- */
+// Sanitizes game-related input data to prevent XSS attacks
 export function sanitizeGameInput(data) {
   if (!data || typeof data !== 'object') {
     return data;
@@ -47,11 +39,7 @@ export function sanitizeGameInput(data) {
   return sanitized;
 }
 
-/**
- * Validates game input data to prevent SQL injection
- * @param {Object} data - The input data object
- * @returns {Object} - Validation result {isValid: boolean, message: string}
- */
+// Validates game-related input data to prevent injection attacks
 export function validateGameInput(data) {
   if (!data) {
     return { isValid: false, message: 'No data provided' };
@@ -96,21 +84,13 @@ export function validateGameInput(data) {
   return { isValid: true, message: 'Input is valid' };
 }
 
-/**
- * Checks if a userId is valid to prevent injection attacks
- * @param {string} userId - The userId to validate
- * @returns {boolean} - Whether the userId is valid
- */
+// Checks if a user ID is valid (numeric and positive)
 export function isValidUserId(userId) {
   // User IDs should be integers in this application
   return !isNaN(parseInt(userId)) && parseInt(userId).toString() === userId.toString();
 }
 
-/**
- * Prepares parameters for SQL queries to prevent SQL injection
- * @param {Array} params - Array of parameters to prepare
- * @returns {Array} - Array of sanitized parameters
- */
+// Prepares SQL parameters by sanitizing inputs to prevent SQL injection
 export function prepareSqlParams(params) {
   if (!Array.isArray(params)) {
     return [];

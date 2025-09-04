@@ -6,12 +6,10 @@ import { clearAll } from '../../modules/game/utils/end.utils.js';
 import { getCurrentTournamentId } from '../services/client.service.js';
 
 export async function handleConnection(connection, request) {
-  console.log('\nWebSocket connection request received');
 
   // Prometheus active connections metric degerini arttir
   try {
     metrics.activeConnections.inc();
-    console.log('Active connections metric incremented');
   } catch (err) {
     console.log('ERROR incrementing metrics:', err.message);
   }
@@ -19,14 +17,12 @@ export async function handleConnection(connection, request) {
   const token = request.headers['sec-websocket-protocol'];
   
   if (!token) {
-    console.log('No token provided, closing connection');
     return connection.close();
   }
   
   try {
     const user = request.server.jwt.verify(token);
     const userId = user.id;
-    console.log(`User ID from token: ${userId}`);
     
     // Add client to global map
     await addClient(userId, connection);
@@ -42,7 +38,6 @@ export async function handleConnection(connection, request) {
 
     return userId;
   } catch (err) {
-    console.error('WebSocket authentication failed:', err);
     throw err;
   }
 }
@@ -52,7 +47,6 @@ export async function handleDisconnect(userId) {
     // Check if user is in a tournament before disconnecting
     const user = getCurrentTournamentId(userId);
     if (user && user.currentTournamentId) {
-      console.log(`User ${userId} is in tournament ${user.currentTournamentId}, removing from tournament`);
       // Remove user from tournament
       await removeUserFromTournament(userId);
       // Broadcast tournament update to other participants
@@ -70,14 +64,12 @@ export async function handleDisconnect(userId) {
     
     await removeClient(userId);
     await broadcastUserStatus(userId, 'offline');
-    console.log(`Client ${userId} disconnected`);
   }
   clearAll(userId, 'disconnect'); // Clear user-room mapping and broadcast game over if necessary
 
   // Update active connections metric regardless of userId
   try {
     metrics.activeConnections.dec();
-    console.log('Active connections metric decremented');
   } catch (err) {
     console.log('ERROR decrementing metrics:', err.message);
   }

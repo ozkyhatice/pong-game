@@ -90,13 +90,11 @@ export async function updateBall(room, connection) {
     if (ball.x < -BALL_RADIUS) {
         // Ball went off left side - Player 2 (right) scores
         room.state.score[player2Id] += 1;
-        console.log(`⚽ GAME SCORE: Goal scored -> Player: ${player2Id}, Score: ${room.state.score[player1Id]}-${room.state.score[player2Id]}`);
         await resetBallAndCheck(room, ball, player2Id);
     } 
     else if (ball.x > CANVAS_WIDTH + BALL_RADIUS) {
         // Ball went off right side - Player 1 (left) scores  
         room.state.score[player1Id] += 1;
-        console.log(`⚽ GAME SCORE: Goal scored -> Player: ${player1Id}, Score: ${room.state.score[player1Id]}-${room.state.score[player2Id]}`);
         await resetBallAndCheck(room, ball, player1Id);
     }
 }
@@ -134,7 +132,6 @@ async function endGame(room, winnerId) {
     
     const players = Array.from(room.players).sort((a, b) => a - b); // Consistent sorting
     const loserScore = room.state.score[players.find(p => p !== winnerId)] || 0;
-    console.log(`🏆 GAME END: Match completed -> Winner: ${winnerId}, Score: ${room.state.score[winnerId]}-${loserScore}, Room: ${room.id}`);
     
     // Stop game loop
     if (room.loop) {
@@ -148,7 +145,6 @@ async function endGame(room, winnerId) {
         
         // Eğer bu bir turnuva maçıysa, turnuva ilerlemesini kontrol et
         if (room.tournamentId && room.winnerId) {
-            console.log(`🏆 TOURNAMENT RESULT: Processing match result -> Match: ${room.matchId}, Winner: ${room.winnerId}, Tournament: ${room.tournamentId}`);
             await processTournamentMatchResult(room.matchId, room.winnerId);
         }
         
@@ -160,9 +156,8 @@ async function endGame(room, winnerId) {
         }));
         await updateMultipleUserStats(playerStats);
         
-        console.log(`💾 GAME DB: Match saved to database -> Room: ${room.id}, Players: ${players.join(', ')}`);
     } catch (error) {
-        console.error(`🔴 GAME DB ERROR: Failed to save match -> Room: ${room.id}, Error: ${error.message}`);
+        console.log(`GAME DB ERROR: Failed to save match -> Room: ${room.id}, Error: ${error.message}`);
     }
     
     // Broadcast game over to all players
@@ -194,7 +189,7 @@ export async function broadcastGameState(room) {
         gameOver: room.state.gameOver
     };
 
-    for (const [userId, socket] of room.sockets.entries()) {
+    for (const [socket] of room.sockets.entries()) {
         await sendMessage(socket, 'game', 'state-update', {
             roomId: room.id,
             state: stateData

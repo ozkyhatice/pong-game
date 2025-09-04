@@ -4,7 +4,6 @@ import { prepareSqlParams, isValidUserId, sanitizeUserProfile } from '../utils/s
 export async function getUserById(id) {
   // Validate user ID
   if (!isValidUserId(id)) {
-    console.error(`🛡️ SECURITY: Invalid user ID format in getUserById -> ${id}`);
     return null;
   }
   
@@ -22,7 +21,6 @@ export async function getUserById(id) {
 
 export async function getUserByUsername(username) {
   if (!username || typeof username !== 'string') {
-    console.error(`🛡️ SECURITY: Invalid username format in getUserByUsername`);
     return null;
   }
   
@@ -41,7 +39,6 @@ export async function getUserByUsername(username) {
 export async function findUserById(id) {
   // Validate user ID
   if (!isValidUserId(id)) {
-    console.error(`🛡️ SECURITY: Invalid user ID format in findUserById -> ${id}`);
     return null;
   }
   
@@ -55,7 +52,6 @@ export async function findUserById(id) {
 export async function updateProfile(userId, { username, email }) {
   // Validate user ID
   if (!isValidUserId(userId)) {
-    console.error(`🛡️ SECURITY: Invalid user ID format in updateProfile -> ${userId}`);
     throw new Error('Invalid user ID format');
   }
   
@@ -128,7 +124,6 @@ export async function updateProfile(userId, { username, email }) {
 export async function updateAvatar(userId, avatarPath) {
   // Validate user ID
   if (!isValidUserId(userId)) {
-    console.error(`🛡️ SECURITY: Invalid user ID format in updateAvatar -> ${userId}`);
     throw new Error('Invalid user ID format');
   }
   
@@ -156,7 +151,6 @@ export async function updateAvatar(userId, avatarPath) {
 export async function getUserPublicInfo(id) {
   // Validate user ID
   if (!isValidUserId(id)) {
-    console.error(`🛡️ SECURITY: Invalid user ID format in getUserPublicInfo -> ${id}`);
     return null;
   }
   
@@ -178,7 +172,6 @@ export async function getUsersPublicInfo(ids) {
   // Validate all user IDs
   const validIds = ids.filter(id => isValidUserId(id));
   if (validIds.length !== ids.length) {
-    console.error(`🛡️ SECURITY: Some invalid user IDs detected in getUsersPublicInfo`);
   }
   
   if (validIds.length === 0) return [];
@@ -199,7 +192,6 @@ export async function getUsersPublicInfo(ids) {
 export async function updateUserStats(userId, isWinner) {
   // Validate user ID
   if (!isValidUserId(userId)) {
-    console.error(`🛡️ SECURITY: Invalid user ID format in updateUserStats -> ${userId}`);
     throw new Error('Invalid user ID format');
   }
   
@@ -210,11 +202,9 @@ export async function updateUserStats(userId, isWinner) {
   if (isWinner) {
     // Kazanan kullanıcının wins değerini artır
     await db.run('UPDATE users SET wins = COALESCE(wins, 0) + 1 WHERE id = ?', params);
-    console.log(`User ${userId} wins updated (+1)`);
   } else {
     // Kaybeden kullanıcının losses değerini artır
     await db.run('UPDATE users SET losses = COALESCE(losses, 0) + 1 WHERE id = ?', params);
-    console.log(`User ${userId} losses updated (+1)`);
   }
 }
 
@@ -230,7 +220,6 @@ export async function updateMultipleUserStats(players) {
       
       // Validate user ID
       if (!isValidUserId(userId)) {
-        console.error(`🛡️ SECURITY: Invalid user ID format in updateMultipleUserStats -> ${userId}`);
         continue; // Skip this user but continue with others
       }
       
@@ -239,18 +228,14 @@ export async function updateMultipleUserStats(players) {
       
       if (isWinner) {
         await db.run('UPDATE users SET wins = COALESCE(wins, 0) + 1 WHERE id = ?', params);
-        console.log(`User ${userId} wins updated (+1)`);
       } else {
         await db.run('UPDATE users SET losses = COALESCE(losses, 0) + 1 WHERE id = ?', params);
-        console.log(`User ${userId} losses updated (+1)`);
       }
     }
     
     await db.run('COMMIT');
-    console.log('User stats updated successfully');
   } catch (error) {
     await db.run('ROLLBACK');
-    console.error('Error updating user stats:', error);
     throw error;
   }
 }

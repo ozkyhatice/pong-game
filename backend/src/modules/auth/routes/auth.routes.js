@@ -5,10 +5,12 @@ import fastifyOauth2 from '@fastify/oauth2';
 
 export default async function authRoutes(app, options) {
   
+  // user registration route
   app.post('/register', {
     schema: registerSchema
   }, register);
 
+  // user login route
   app.post('/login', {
     schema: loginSchema
   }, login);
@@ -18,12 +20,11 @@ export default async function authRoutes(app, options) {
     schema: meSchema
   }, me);
 
-  // Google OAuth2 entegrasyonu - sadece gerekli env var'lar varsa
+  // Google OAuth2 entegration - if enabled via env vars
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
   if (googleClientId && googleClientSecret) {
-    console.log('🔐 Google OAuth enabled');
     
     try {
       await app.register(fastifyOauth2, {
@@ -44,9 +45,7 @@ export default async function authRoutes(app, options) {
       app.get('/google/callback', googleCallbackHandler);
       
     } catch (error) {
-      console.warn('⚠️ Google OAuth setup failed:', error.message);
+      console.log('Google OAuth setup failed:', error.message);
     }
-  } else {
-    console.log('ℹ️ Google OAuth disabled - missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET');
   }
 }

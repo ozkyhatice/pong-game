@@ -6,12 +6,10 @@ export const matchmakingQueue = new Map(); // userId -> queueEntry
 export const matchmakingStatus = new Map(); // userId -> status info
 
 export async function joinMatchmakingQueue(data, userId, connection) {
-    console.log(`🔍 MATCHMAKING: Join request received -> User: ${userId}`);
     
     // Check if user is already in a room
     const existingRoomId = userRoom.get(userId);
     if (existingRoomId) {
-        console.log(`❌ MATCHMAKING: User ${userId} already in room ${existingRoomId}`);
         await sendMessage(connection, 'game', 'error', {
             message: `You are already in room ${existingRoomId}. Leave first.`
         });
@@ -20,7 +18,6 @@ export async function joinMatchmakingQueue(data, userId, connection) {
 
     // Check if already in queue
     if (matchmakingStatus.has(userId)) {
-        console.log(`❌ MATCHMAKING: User ${userId} already in queue`);
         await sendMessage(connection, 'game', 'error', {
             message: 'You are already in matchmaking queue'
         });
@@ -43,7 +40,6 @@ export async function joinMatchmakingQueue(data, userId, connection) {
         joinTime: Date.now()
     });
 
-    console.log(`✅ MATCHMAKING: User ${userId} added to queue (position: ${matchmakingQueue.size})`);
 
     await sendMessage(connection, 'game', 'matchmaking-joined', {
         position: matchmakingQueue.size,
@@ -65,7 +61,6 @@ export async function leaveMatchmakingQueue(data, userId, connection) {
     matchmakingQueue.delete(userId);
     matchmakingStatus.delete(userId);
 
-    console.log(`✅ MATCHMAKING: User ${userId} left queue`);
 
     await sendMessage(connection, 'game', 'matchmaking-left', {
         message: `Left matchmaking queue`
@@ -140,14 +135,12 @@ async function attemptMatchmaking() {
         setTimeout(async () => {
             try {
                 await startGame({ roomId }, player1.userId, player1.connection);
-                console.log(`🎮 MATCHMAKING: Game auto-started -> Room: ${roomId}`);
             } catch (error) {
-                console.error('Error auto-starting matchmaking game:', error);
+                console.log('Error auto-starting matchmaking game:', error);
             }
         }, 5000); // 2 second delay for players to prepare
 
     } catch (error) {
-        console.error('Error creating match from queue:', error);
         
         // Re-add players to queue on error
         matchmakingQueue.set(player1.userId, player1);

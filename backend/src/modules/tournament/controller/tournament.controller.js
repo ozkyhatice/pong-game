@@ -2,15 +2,13 @@ import { createTournamentService, joinTournamentService, startTournamentService,
 import { broadcastToAll } from '../../../websocket/services/client.service.js';
 import { countTournamentPlayers, getActiveTournamentId, broadcastToTournamentPlayers, broadcastTournamentUpdateToAll } from '../utils/tournament.utils.js';
 import { getStatusOfTournament, isUserInTournament, getTournamentParticipants } from '../utils/tournament.utils.js';
-import { initDB } from '../../../config/db.js';
 import { sanitizeInput } from '../../../utils/security.js';
 import { validateTournamentName, containsSqlInjection } from '../../../utils/validation.js';
 import { sanitizeTournamentInput, validateTournamentInput, isValidUserId, sanitizeTournamentMessage } from '../utils/security.utils.js';
 
+// Main controller to handle incoming tournament-related WebSocket messages
 export async function handleTournamentMessage(msgObj, userId, connection) {
-  // Validate userId to prevent injection
   if (!isValidUserId(userId)) {
-    console.error(`🛡️ SECURITY: Invalid user ID format -> ${userId}`);
     connection.send(JSON.stringify({
       type: 'tournament',
       event: 'error',
@@ -27,7 +25,6 @@ export async function handleTournamentMessage(msgObj, userId, connection) {
   // Validate input data to prevent SQL injection
   const validation = validateTournamentInput(sanitizedData);
   if (!validation.isValid) {
-    console.error(`🛡️ SECURITY: Input validation failed -> ${validation.message}`);
     connection.send(JSON.stringify({
       type: 'tournament',
       event: 'error',
@@ -65,7 +62,6 @@ export async function createTournament(data, userId, connection) {
             throw new Error('An active tournament already exists. Cannot create a new one.');
         }
     } catch (error) {
-        console.error('Error checking active tournament:', error);
         return;
     }
     
@@ -79,16 +75,13 @@ export async function createTournament(data, userId, connection) {
         throw new Error(nameValidation.message);
     }
 
-    // SQL injection kontrolü
     if (containsSqlInjection(data.name)) {
-        console.error(`🛡️ SECURITY: SQL injection attempt detected in tournament name -> ${data.name}`);
         throw new Error('Invalid characters detected in tournament name');
     }
     
-    // Validation sonucunda sanitize edilmiş tournament adını kullan
     const sanitizedData = {
         ...data,
-        name: sanitizeInput(nameValidation.sanitizedName) // Additional XSS protection
+        name: sanitizeInput(nameValidation.sanitizedName)
     };
     
     await createTournamentService(sanitizedData, userId);
@@ -109,14 +102,12 @@ export async function joinTournament(data, userId, connection) {
         throw new Error('Invalid user ID format');
     }
     
-    // Aktif turnuva ID'sini al (data.tournamentId yoksa)
     const tournamentId = data.tournamentId || await getActiveTournamentId();
     
     if (!tournamentId) {
         throw new Error('No active tournament to join');
     }
     
-    // Validasyonlar
     if (await isUserInTournament(userId, tournamentId)) {
         throw new Error('User is already in the tournament');
     }
@@ -130,14 +121,11 @@ export async function joinTournament(data, userId, connection) {
         throw new Error('Tournament is full');
     }
     
-    // Kullanıcıyı turnuvaya katıl
     await joinTournamentService({ tournamentId }, userId);
     
     
-    // Turnuva bilgilerini güncelle
     const newPlayerCount = currentPlayers + 1;
     
-    // Tüm online kullanıcılara tournament güncellemesi gönder (sadece katılımcılara değil)
     const updateMessage = sanitizeTournamentMessage({
         type: 'tournament',
         event: 'playerJoined',
@@ -151,13 +139,11 @@ export async function joinTournament(data, userId, connection) {
     
     await broadcastTournamentUpdateToAll(updateMessage);
     
-    // Eğer 4 kişi doldu ise turnuvayı başlat
     if (newPlayerCount === 4) {
         await startTournamentService(tournamentId);
     }
 }
 
-// Turnuvadan ayrılma
 export async function leaveTournament(data, userId, connection) {
     // Validate userId
     if (!isValidUserId(userId)) {
@@ -171,7 +157,7 @@ export async function leaveTournament(data, userId, connection) {
     }
     
     if (!(await isUserInTournament(userId, tournamentId))) {
-        return; // Silently ignore instead of throwing error
+        return;
     }
     
     if (await getStatusOfTournament(tournamentId) !== 'pending') {
@@ -183,7 +169,7 @@ export async function leaveTournament(data, userId, connection) {
     // Get current player count after leaving
     const currentPlayers = await countTournamentPlayers(tournamentId);
     
-    // Tüm online kullanıcılara tournament güncellemesi gönder
+    // send update to all clients
     const updateMessage = sanitizeTournamentMessage({
         type: 'tournament',
         event: 'playerLeft',
@@ -197,7 +183,7 @@ export async function leaveTournament(data, userId, connection) {
     await broadcastTournamentUpdateToAll(updateMessage);
 }
 
-// Turnuva detaylarını getirme (herkes görebilir)
+// get tournament details - for lobby display
 export async function getTournamentDetails(data, userId, connection) {
     try {
         // Validate userId
@@ -218,7 +204,6 @@ export async function getTournamentDetails(data, userId, connection) {
         
         const tournamentDetails = await getTournamentDetailsService(tournamentId);
         
-        // Kullanıcının turnuva durumunu servis fonksiyonu ile al
         const { isParticipant, userStatus } = await getUserTournamentStatus(tournamentId, userId);
         
         const response = sanitizeTournamentMessage({
@@ -233,7 +218,6 @@ export async function getTournamentDetails(data, userId, connection) {
         connection.send(JSON.stringify(response));
         
     } catch (error) {
-        console.error(`Error in getTournamentDetails: ${error.message}`);
         const errorResponse = {
             type: 'tournament',
             event: 'details',
@@ -243,7 +227,7 @@ export async function getTournamentDetails(data, userId, connection) {
     }
 }
 
-// Turnuva bracket'ini getirme
+
 export async function getTournamentBracket(data, userId, connection) {
     try {
         // Validate userId
@@ -274,7 +258,6 @@ export async function getTournamentBracket(data, userId, connection) {
         connection.send(JSON.stringify(response));
         
     } catch (error) {
-        console.error(`Error in getTournamentBracket: ${error.message}`);
         const errorResponse = {
             type: 'tournament',
             event: 'bracket',

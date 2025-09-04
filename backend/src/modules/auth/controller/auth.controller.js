@@ -1,9 +1,7 @@
 import { registerUser, loginUser, handleGoogleUser } from '../service/auth.service.js';
-import { escapeFields } from '../../../utils/security.js';
 import { 
   isValidEmail, 
   isValidUsername, 
-  validatePassword, 
   containsSqlInjection,
   sanitizeGeneralInput 
 } from '../../../utils/validation.js';
@@ -11,7 +9,6 @@ import {
 export async function register(request, reply) {
   const { username, email, password } = request.body;
   
-  // Temel validation kontrolü
   if (!username || !email || !password) {
     return reply.code(400).send({
       success: false,
@@ -19,7 +16,6 @@ export async function register(request, reply) {
     });
   }
 
-  // Email validation
   if (!isValidEmail(email)) {
     return reply.code(400).send({
       success: false,
@@ -27,7 +23,6 @@ export async function register(request, reply) {
     });
   }
 
-  // Username validation
   if (!isValidUsername(username)) {
     return reply.code(400).send({
       success: false,
@@ -53,7 +48,7 @@ export async function register(request, reply) {
     });
   }
 
-  // XSS koruması için input'ları sanitize et
+  // XSS protection - sanitize inputs
   const sanitizedUsername = sanitizeGeneralInput(username, { maxLength: 20 });
   const sanitizedEmail = sanitizeGeneralInput(email, { maxLength: 255 });
 
@@ -86,7 +81,6 @@ export async function register(request, reply) {
 export async function login(request, reply) {
   const { email, password } = request.body;
   
-  // Temel validation kontrolü
   if (!email || !password) {
     return reply.code(400).send({
       success: false,
@@ -94,7 +88,6 @@ export async function login(request, reply) {
     });
   }
 
-  // Email validation
   if (!isValidEmail(email)) {
     return reply.code(400).send({
       success: false,
@@ -102,7 +95,6 @@ export async function login(request, reply) {
     });
   }
 
-  // SQL injection kontrolü
   if (containsSqlInjection(email)) {
     return reply.code(400).send({
       success: false,
@@ -110,16 +102,13 @@ export async function login(request, reply) {
     });
   }
 
-  // XSS koruması için email'i sanitize et
   const sanitizedEmail = sanitizeGeneralInput(email, { maxLength: 255 });
 
   try {
     const user = await loginUser({ email: sanitizedEmail, password });
-    console.log('2FA is enabled for user:', user.isTwoFAEnabled);
 
-    // Eğer kullanıcı 2FA etkinleştirmişse, 2FA doğrulaması yapılacak
+    // if 2FA is enabled, inform the client to proceed with 2FA verification
     if (user.isTwoFAEnabled) {
-      console.log('2FA is enabled for user:', user.id);
       return reply.send({ 
         success: true,
         message: '2FA_REQUIRED', 
@@ -148,10 +137,10 @@ export async function login(request, reply) {
 
 export async function googleCallbackHandler(request, reply) {
   try {
-    // Google'dan access token al
+    // access token - google
     const { token } = await request.server.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request);
 
-    // Google API'den kullanıcı bilgilerini al
+    // user info - google
     const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: {
         Authorization: `Bearer ${token.access_token}`
@@ -160,7 +149,7 @@ export async function googleCallbackHandler(request, reply) {
 
     const googleUser = await userInfoResponse.json();
 
-    // Kullanıcıyı veritabanında kaydet/güncelle
+    // save or update user in our DB
     const user = await handleGoogleUser({
       email: googleUser.email,
       name: googleUser.name,
@@ -168,24 +157,23 @@ export async function googleCallbackHandler(request, reply) {
     });
 
     if (user.isTwoFAEnabled) {
-      console.log('2FA is enabled for Google user:', user.id);
       return reply.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8080'}?oauth=2fa_required&userId=${user.id}`);
     }
 
-    // JWT token oluştur
+    // generate JWT token
     const jwtToken = await reply.jwtSign({
       id: user.id,
       email: user.email,
       username: user.username
     });
 
-    // Frontend'e başarılı redirect
+    // redirect to frontend with token
     reply.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8080'}?token=${jwtToken}&oauth=success`);
   } catch (error) {
-    console.error('Google OAuth error:', error);
     reply.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8080'}?error=oauth_failed`);
   }
 }
+
 
 export async function me(request, reply) {
   reply.send({ 

@@ -3,14 +3,12 @@ import argon2 from 'argon2';
 import { 
   isValidEmail, 
   isValidUsername, 
-  validatePassword, 
   containsSqlInjection 
 } from '../../../utils/validation.js';
 
 export async function registerUser({ username, email, password }) {
   const db = await initDB();
   
-  // Server-side validation for security
   if (!isValidEmail(email)) {
     throw new Error('Invalid email format');
   }
@@ -25,19 +23,17 @@ export async function registerUser({ username, email, password }) {
   //   throw new Error(passwordValidation.message);
   // }
 
-  // SQL injection kontrolü
   if (containsSqlInjection(username) || containsSqlInjection(email)) {
     throw new Error('Invalid characters detected in input');
   }
 
-  // Username'i temizle (boşluk ve özel karakterleri kaldır)
+  // Sanitize username to allow only letters, numbers, and underscores
   const cleanUsername = username.replace(/[^a-zA-Z0-9_]/g, '');
   
   if (!cleanUsername || cleanUsername.length < 3) {
     throw new Error('Username must be at least 3 characters and contain only letters, numbers, and underscores');
   }
 
-  // Mevcut kullanıcı kontrolü
   const existingUser = await db.get(
     'SELECT * FROM users WHERE email = ? OR username = ?',
     [email, cleanUsername]
@@ -47,13 +43,12 @@ export async function registerUser({ username, email, password }) {
     throw new Error('Email or username already taken');
   }
 
-  // Şifreyi hashle
+  // Hash the password before storing
   const hashedPassword = await argon2.hash(password);
 
-  // Varsayılan avatar oluştur (Dicebear bottts, username'e göre seed)
+  // default avatar using Dicebear
   const avatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${cleanUsername}`;
 
-  // Yeni kullanıcıyı ekle
   const result = await db.run(
     'INSERT INTO users (username, email, password, avatar) VALUES (?, ?, ?, ?)',
     [cleanUsername, email, hashedPassword, avatar]
@@ -70,14 +65,12 @@ export async function registerUser({ username, email, password }) {
 export async function loginUser({ email, password }) {
   const db = await initDB();
 
-  // Server-side validation for security
   if (!isValidEmail(email)) {
     throw new Error('Invalid email format');
   }
 
-  // SQL injection kontrolü
   if (containsSqlInjection(email)) {
-    throw new Error('Invalid characters detected in email');
+    throw new Error('Invalid characters detected in input');
   }
 
   const user = await db.get(
@@ -89,12 +82,11 @@ export async function loginUser({ email, password }) {
     throw new Error('User not found');
   }
 
-  // Google OAuth kullanıcıları için şifre kontrolü
+  // control if user registered via google oauth
   if (!user.password) {
     throw new Error('This account uses Google OAuth. Please login with Google.');
   }
 
-  // Şifre doğrulama
   const isPasswordValid = await argon2.verify(user.password, password);
   if (!isPasswordValid) {
     throw new Error('Invalid credentials');
@@ -113,11 +105,9 @@ export async function loginUser({ email, password }) {
 export async function handleGoogleUser({ email, name, picture }) {
   const db = await initDB();
 
-  // Mevcut kullanıcıyı kontrol et
   let user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
 
   if (!user) {
-    // Yeni Google kullanıcısı oluştur
     const uniqueUsername = generateUniqueUsername(name);
     
     const result = await db.run(
@@ -132,7 +122,7 @@ export async function handleGoogleUser({ email, name, picture }) {
       avatar: picture 
     };
   } else {
-    // Kullanıcının önceden avatar upload etmediyse googledan avatari guncelle
+    // if user exists but has no avatar or uses default avatar, update it with Google picture
     const hasUploadedAvatar = user.avatar && (user.avatar.includes('/api/uploads/avatars/'));
     if (!hasUploadedAvatar) {
       await db.run(
@@ -153,7 +143,7 @@ export async function handleGoogleUser({ email, name, picture }) {
   };
 }
 
-// google kullanıcıları için benzersiz kullanıcı adı oluştur
+// generates a unique username based on the provided name and current timestamp
 function generateUniqueUsername(name) {
   const timestamp = Date.now();
   const cleanName = name.replace(/[^a-zA-Z0-9]/g, '');

@@ -7,7 +7,6 @@ export async function saveGametoDbServices(room) {
     // Validate all user IDs to prevent SQL injection
     const winnerUserId = room.winnerId || null;
     if (winnerUserId && !isValidUserId(winnerUserId)) {
-        console.error(`🛡️ SECURITY: Invalid winner ID format -> ${winnerUserId}`);
         return;
     }
     
@@ -16,7 +15,6 @@ export async function saveGametoDbServices(room) {
     const player2Id = players[1];
     
     if (!isValidUserId(player1Id) || !isValidUserId(player2Id)) {
-        console.error(`🛡️ SECURITY: Invalid player ID format -> Player1: ${player1Id}, Player2: ${player2Id}`);
         return;
     }
     
@@ -25,9 +23,9 @@ export async function saveGametoDbServices(room) {
     const startedAt = new Date(room.createdAt).toISOString();
     const endedAt = room.endDate ? new Date(room.endDate).toISOString() : new Date().toISOString();
     
-    // Turnuva maçıysa mevcut match'i güncelle, değilse yeni match oluştur
+    // if tournament match, update existing record instead of inserting new one
     if (room.tournamentId && room.matchId) {
-        // Mevcut turnuva maçını güncelle
+        // update existing match record
         const updateSql = `
             UPDATE matches 
             SET player1Score = ?, player2Score = ?, winnerId = ?, endedAt = ?
@@ -45,12 +43,11 @@ export async function saveGametoDbServices(room) {
             ]);
             
             await db.run(updateSql, params);
-            console.log(`🏆 Tournament match ${room.matchId} updated with winner: ${winnerUserId}`);
         } catch (error) {
-            console.error('Error updating tournament match:', error);
+            console.log('Error updating tournament match:', error);
         }
     } else {
-        // Normal maç için yeni kayıt oluştur
+        // create new match record
         const insertSql = `
             INSERT INTO matches (
             player1Id, player2Id, player1Score, player2Score, winnerId, tournamentId, round, startedAt, endedAt
@@ -74,10 +71,8 @@ export async function saveGametoDbServices(room) {
             const result = await db.run(insertSql, params);
             
             room.matchId = result.lastID;
-            console.log('Regular match result saved to DB');
-            console.log(`Winner: ${winnerUserId}, Started: ${startedAt}, Ended: ${endedAt}`);
         } catch (error) {
-            console.error('Error saving match result:', error);
+            console.log('Error saving match result:', error);
         }
     }
 }
@@ -85,7 +80,6 @@ export async function saveGametoDbServices(room) {
 export async function getMatchHistoryByUserId(userId) {
     // Validate userId to prevent SQL injection
     if (!isValidUserId(userId)) {
-        console.error(`🛡️ SECURITY: Invalid user ID format for match history -> ${userId}`);
         throw new Error('Invalid user ID format');
     }
     
@@ -102,7 +96,6 @@ export async function getMatchHistoryByUserId(userId) {
         const matches = await db.all(sql, params);
         return matches;
     } catch (error) {
-        console.error('Error fetching match history:', error);
         throw error;
     }
 }
