@@ -1,0 +1,306 @@
+import { getApiUrl, API_CONFIG } from '../../config.js';
+import { notify } from '../../core/notify.js';
+
+interface User {
+    id: number;
+    username: string;
+    email: string;
+    avatar: string | null;
+    wins: number;
+    losses: number;
+}
+
+interface Match {
+    id: number;
+    player1Id: number;
+    player2Id: number;
+    player1Score: number;
+    player2Score: number;
+    winnerId: number | null;
+    startedAt: string;
+    endedAt: string | null;
+    tournamentId: number | null;
+    round: number | null;
+}
+
+let currentUser: User | null = null;
+let matchHistory: Match[] = [];
+let currentFilter = 'all';
+
+export function init() {
+    console.log('Own Profile page initialized');
+    setupEventListeners();
+    loadProfile();
+}
+
+function getToken(): string {
+    return localStorage.getItem('authToken') || '';
+}
+
+function setupEventListeners(): void {
+    const backHomeBtn = document.getElementById('backHomeBtn');
+    backHomeBtn?.addEventListener('click', () => {
+        router.navigate('home');
+    });
+
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            const filter = target.dataset.filter;
+            if (filter) {
+                setActiveFilter(filter);
+                filterMatches(filter);
+            }
+        });
+    });
+}
+
+async function loadProfile(): Promise<void> {
+    const token = getToken();
+    if (!token) {
+        notify('No authentication token found', 'red');
+        return;
+    }
+
+    try {
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
+            headers:
+			{ 
+				'Authorization': `Bearer ${token}` 
+			}
+        });
+        
+        const data = await response.json();
+
+        if (response.ok && data.user) {
+            currentUser = data.user;
+            displayProfile(data.user);
+            displayAvatar(data.user.avatar);
+            await loadUserStats(data.user.id);
+            await loadMatchHistory(data.user.id);
+        } else {
+            console.error('Failed to load profile:', data.error || 'Unknown error');
+            notify('Failed to load profile', 'red');
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        notify('Error loading profile', 'red');
+    }
+}
+
+function displayProfile(user: User): void {
+    const usernameEl = document.getElementById('username');
+    const userEmailEl = document.getElementById('user-email');
+
+    if (usernameEl) usernameEl.textContent = user.username.toUpperCase();
+    if (userEmailEl) userEmailEl.textContent = user.email || 'No email provided';
+}
+
+function displayAvatar(avatarUrl: string | null): void {
+    const avatarImg = document.getElementById('user-avatar-img') as HTMLImageElement;
+    if (avatarImg && avatarUrl) {
+        avatarImg.src = avatarUrl;
+        avatarImg.style.display = 'block';
+    }
+}
+
+async function loadUserStats(userId: number): Promise<void> {
+    try {
+        const token = getToken();
+        if (!token) return;
+
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.BY_ID(userId.toString())), {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            console.error('Failed to fetch user stats:', response.status, response.statusText);
+            return;
+        }
+
+        const data = await response.json();
+        
+        if (data.user) {
+            updateStatsDisplay(data.user);
+        } else {
+            console.error('No user data in response:', data);
+        }
+    } catch (error) {
+        console.error('Error loading user stats:', error);
+    }
+}
+
+function updateStatsDisplay(user: User): void {
+    // Main stats
+    const winsEl = document.getElementById('wins-count');
+    const lossesEl = document.getElementById('losses-count');
+    const winRateEl = document.getElementById('win-rate');
+    const totalGamesEl = document.getElementById('total-games');
+
+    const wins = user.wins || 0;
+    const losses = user.losses || 0;
+    const totalGames = wins + losses;
+    const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
+
+    if (winsEl) winsEl.textContent = wins.toString();
+    if (lossesEl) lossesEl.textContent = losses.toString();
+    if (totalGamesEl) totalGamesEl.textContent = totalGames.toString();
+    if (winRateEl) winRateEl.textContent = `${winRate}%`;
+}
+
+async function loadMatchHistory(userId: number): Promise<void> {
+    try {
+        const token = getToken();
+        if (!token) {
+            console.error('No auth token available');
+            return;
+        }
+
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.GAME.MATCH_HISTORY(userId.toString())), {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to load match history: ${response.status}`);
+        }
+
+        const data = await response.json();
+        matchHistory = data.matches || [];
+        displayMatchHistory(matchHistory);
+    } catch (error) {
+        console.error('Error loading match history:', error);
+        displayEmptyMatchHistory();
+    }
+}
+
+function displayMatchHistory(matches: Match[]): void {
+    const matchHistoryContainer = document.getElementById('match-history');
+    if (!matchHistoryContainer) return;
+
+    // Remove loading state
+    const loadingEl = document.getElementById('loading-matches');
+    if (loadingEl) loadingEl.remove();
+
+    if (matches.length === 0) {
+        displayEmptyMatchHistory();
+        return;
+    }
+
+    const matchesHTML = matches.map(match => {
+        if (!currentUser) return '';
+        
+        const isWin = match.winnerId === currentUser.id;
+        const resultClass = isWin ? 'wins' : 'losses';
+        const borderColor = isWin ? 'border-neon-green' : 'border-neon-red';
+        const bgColor = isWin ? 'bg-neon-green' : 'bg-neon-red';
+        const textColor = isWin ? 'text-neon-green' : 'text-neon-red';
+        const resultLetter = isWin ? 'W' : 'L';
+
+        const opponentId = match.player1Id === currentUser.id ? match.player2Id : match.player1Id;
+        const playerScore = match.player1Id === currentUser.id ? match.player1Score : match.player2Score;
+        const opponentScore = match.player1Id === currentUser.id ? match.player2Score : match.player1Score;
+
+        return `
+            <div class="match-item all ${resultClass}">
+                <div class="flex items-center justify-between p-3 bg-terminal-border border ${borderColor} border-opacity-50 rounded-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 ${bgColor} rounded-sm flex items-center justify-center text-terminal-border text-xs font-bold">${resultLetter}</div>
+                        <div>
+                            <div class="font-medium text-neon-white text-sm">vs. Player ${opponentId}</div>
+                            <div class="text-xs text-neon-white/70">${formatTimeAgo(new Date(match.startedAt))}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold ${textColor} text-sm">${playerScore} - ${opponentScore}</div>
+                        <div class="text-xs text-neon-white/70">${match.tournamentId ? 'TOURNAMENT' : 'CASUAL'}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    matchHistoryContainer.innerHTML = matchesHTML;
+}
+
+function displayEmptyMatchHistory(): void {
+    const matchHistoryContainer = document.getElementById('match-history');
+    if (!matchHistoryContainer) return;
+
+    // Remove loading state
+    const loadingEl = document.getElementById('loading-matches');
+    if (loadingEl) loadingEl.remove();
+
+    matchHistoryContainer.innerHTML = `
+        <div class="text-center py-8">
+            <div class="text-neon-white/50 text-sm">NO MATCH HISTORY AVAILABLE</div>
+            <div class="text-neon-white/30 text-xs mt-1">START PLAYING TO SEE YOUR MATCHES HERE!</div>
+        </div>
+    `;
+}
+
+function setActiveFilter(filter: string): void {
+    currentFilter = filter;
+    
+    // Update filter button styles
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        const btnElement = btn as HTMLElement;
+        const btnFilter = btnElement.dataset.filter;
+        
+        // Remove all active classes first
+        btn.classList.remove('active', 'bg-neon-purple', 'bg-neon-green', 'bg-neon-red', 'bg-opacity-20');
+        btn.classList.add('bg-transparent');
+        
+        if (btnFilter === filter) {
+            btn.classList.add('active');
+            btn.classList.remove('bg-transparent');
+            
+            // Set specific background color based on filter type
+            if (filter === 'all') {
+                btn.classList.add('bg-neon-purple', 'bg-opacity-20');
+            } else if (filter === 'wins') {
+                btn.classList.add('bg-neon-green', 'bg-opacity-20');
+            } else if (filter === 'losses') {
+                btn.classList.add('bg-neon-red', 'bg-opacity-20');
+            }
+        }
+    });
+}
+
+function filterMatches(filter: string): void {
+    const matchItems = document.querySelectorAll('.match-item');
+    matchItems.forEach(item => {
+        const itemElement = item as HTMLElement;
+        if (filter === 'all' || itemElement.classList.contains(filter)) {
+            itemElement.style.display = 'block';
+        } else {
+            itemElement.style.display = 'none';
+        }
+    });
+}
+
+function formatTimeAgo(date: Date): string {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+        return 'Just now';
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    } else if (diffInSeconds < 604800) {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `${days} day${days !== 1 ? 's' : ''} ago`;
+    } else {
+        return date.toLocaleDateString();
+    }
+}

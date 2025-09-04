@@ -1,0 +1,103 @@
+<div class="h-screen bg-radial-bg flex items-center justify-center p-2 sm:p-4 font-orbitron text-neon-green overflow-hidden">
+    <div class="bg-console-bg border-2 border-neon-green shadow-terminal rounded-lg w-full max-w-6xl mx-auto h-full max-h-[95vh] flex flex-col">
+        
+        <!-- Profile Header -->
+        <div class="bg-header-gradient rounded-t border-b border-neon-green p-3 flex-shrink-0">
+            <div class="flex items-center justify-center">
+                <div class="text-center">
+                    <div class="text-neon-white text-xl font-bold tracking-wide mb-1" style="text-shadow: 0 0 10px #62A6FA;">
+                        MY PROFILE
+                    </div>
+                    <div class="flex items-center justify-center gap-1 text-neon-white text-xs">
+                        <div class="w-1 h-1 bg-neon-green rounded-full animate-pulse"></div>
+                        <span class="text-[10px] text-neon-green">PROFILE STATUS: LOADED</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mx-4 flex-1 min-h-0 py-4">
+            
+            <!-- Left Column: Profile Card + Game Statistics -->
+            <div class="lg:col-span-1 flex flex-col gap-4">
+                
+                <!-- Profile Card -->
+                <div class="bg-black bg-opacity-60 border border-neon-blue border-opacity-40 rounded-sm p-3 h-fit">
+                    <div class="text-center">
+                        <div class="relative inline-block mb-2">
+                            <div id="user-avatar" class="w-20 h-20 rounded-full bg-terminal-border border-2 border-neon-blue flex items-center justify-center text-neon-white text-sm font-bold shadow-[0_0_10px_#62a6fa] mx-auto">
+                                <img id="user-avatar-img" src="https://placehold.co/400x400?text=Player" alt="User Avatar" class="w-full h-full object-cover rounded-full">
+                            </div>
+                        </div>
+                        
+                        <h2 id="username" class="text-lg font-bold text-neon-white mb-1 tracking-wide">LOADING...</h2>
+                        
+                        <div class="text-neon-blue text-xs" id="user-email">loading@email.com</div>
+                    </div>
+                </div>
+
+                <!-- Game Statistics -->
+                <div class="bg-black bg-opacity-60 border border-neon-purple border-opacity-40 rounded-sm p-4 flex-1">
+                    <h3 class="text-neon-purple text-lg font-bold mb-4 tracking-wide uppercase">GAME STATISTICS</h3>
+                    
+                    <!-- Main Stats Grid - 2x2 Layout -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="text-center p-3 bg-terminal-border border border-neon-purple border-opacity-50 rounded-sm">
+                            <div id="total-games" class="text-xl font-bold text-neon-purple mb-1">0</div>
+                            <div class="text-xs text-neon-white uppercase tracking-wide">GAMES</div>
+                        </div>
+                        <div class="text-center p-3 bg-terminal-border border border-neon-blue border-opacity-50 rounded-sm">
+                            <div id="win-rate" class="text-xl font-bold text-neon-blue mb-1">-%</div>
+                            <div class="text-xs text-neon-white uppercase tracking-wide">WIN RATE</div>
+                        </div>
+                        <div class="text-center p-3 bg-terminal-border border border-neon-green border-opacity-50 rounded-sm">
+                            <div id="wins-count" class="text-xl font-bold text-neon-green mb-1">0</div>
+                            <div class="text-xs text-neon-white uppercase tracking-wide">WINS</div>
+                        </div>
+                        <div class="text-center p-3 bg-terminal-border border border-neon-red border-opacity-50 rounded-sm">
+                            <div id="losses-count" class="text-xl font-bold text-neon-red mb-1">0</div>
+                            <div class="text-xs text-neon-white uppercase tracking-wide">LOSSES</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Match History -->
+            <div class="lg:col-span-2">
+                <div class="bg-black bg-opacity-60 border border-neon-yellow border-opacity-40 rounded-sm p-4 h-full flex flex-col">
+                    <h3 class="text-neon-yellow text-lg font-bold mb-4 tracking-wide uppercase">MATCH HISTORY</h3>
+                    
+                    <!-- Match Filter Terminal -->
+                    <div class="bg-black bg-opacity-80 border border-neon-yellow border-opacity-30 rounded-sm p-2 mb-3 flex-shrink-0">
+                        <div class="text-neon-yellow text-xs font-bold mb-2 uppercase tracking-wide">FILTER OPTIONS</div>
+                        <div class="flex gap-2 flex-wrap">
+                            <button class="filter-btn active bg-neon-purple bg-opacity-20 border border-neon-purple text-neon-purple px-2 py-1 rounded-sm text-xs font-medium transition-all" data-filter="all">ALL</button>
+                            <button class="filter-btn bg-transparent border border-neon-green text-neon-green hover:bg-neon-green hover:bg-opacity-20 px-2 py-1 rounded-sm text-xs font-medium transition-all" data-filter="wins">WINS</button>
+                            <button class="filter-btn bg-transparent border border-neon-red text-neon-red hover:bg-neon-red hover:bg-opacity-20 px-2 py-1 rounded-sm text-xs font-medium transition-all" data-filter="losses">LOSSES</button>
+                        </div>
+                    </div>
+
+                    <!-- Match List -->
+                    <div class="space-y-2 overflow-y-auto flex-1" id="match-history">
+                        
+                        <!-- Loading State -->
+                        <div class="text-center py-6" id="loading-matches">
+                            <div class="animate-spin w-6 h-6 border-2 border-neon-yellow border-t-transparent rounded-full mx-auto mb-2"></div>
+                            <p class="text-neon-white text-sm">LOADING MATCH HISTORY...</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex gap-2 mx-4 mb-3 flex-shrink-0">
+            <button id="backHomeBtn"
+                    class="nav-btn flex-1 bg-black bg-opacity-60 border border-neon-green border-opacity-40 text-neon-green text-opacity-80 px-2 sm:px-3 py-2 text-[10px] sm:text-xs font-orbitron uppercase tracking-wide cursor-pointer rounded-sm">
+                BACK HOME
+            </button>
+        </div>
+    </div>
+</div>
