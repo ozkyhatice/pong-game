@@ -95,9 +95,19 @@ export async function updateProfile(userId, { username, email }) {
     }
   }
 
-  // Validate username format
-  if (username && !/^[a-zA-Z0-9_]+$/.test(username)) {
-    throw new Error('Username can only contain letters, numbers, and underscores');
+    // Validate username format and length
+  if (username) {
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      throw new Error('Username can only contain letters, numbers, and underscores');
+    }
+    
+    if (username.length > 10) {
+      throw new Error('Username cannot be longer than 10 characters');
+    }
+    
+    if (username.length < 3) {
+      throw new Error('Username must be at least 3 characters long');
+    }
   }
 
   // Update user
