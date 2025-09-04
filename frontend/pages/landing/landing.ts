@@ -100,7 +100,12 @@ export function init() {
       realCanvas.parentNode.removeChild(realCanvas);
   };
 
-  const engine = new BABYLON.Engine(realCanvas, true);
+  const engine = new BABYLON.Engine(realCanvas, true, {
+    antialias: true,
+    adaptToDeviceRatio: true,
+    powerPreference: "high-performance",
+    stencil: true
+  });
   const scene = new BABYLON.Scene(engine);
   scene.clearColor = new BABYLON.Color4(0.5, 0.5, 0.5, 0.5);
 
