@@ -28,7 +28,7 @@ export class ProfileHeader {
     const losses = this.profile.losses || 0;
     const winRate = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
 
-    this.element.className = 'bg-terminal-bg rounded';
+    this.element.className = 'bg-terminal-bg rounded flex-shrink-0';
     this.element.innerHTML = `
       <!-- Terminal Header -->
       <div class="bg-header-gradient rounded-t px-3 py-2 border-b border-neon-green flex items-center justify-center">

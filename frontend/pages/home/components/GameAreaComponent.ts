@@ -28,9 +28,9 @@ export class GameAreaComponent extends Component {
   private render(): void {
     this.setHTML(`
       <!-- Game Content -->
-      <div class="h-full flex flex-col rounded bg-console-bg border-2 border-neon-green shadow-terminal">
+      <div class="w-full h-auto md:h-full flex flex-col rounded bg-console-bg border-2 border-neon-green shadow-terminal">
         <!-- Terminal Header -->
-        <div class="bg-terminal-border border-b border-neon-green/30">
+        <div class="bg-terminal-border border-b border-neon-green/30 flex-shrink-0">
           <div class="flex items-center justify-center p-3 bg-header-gradient">
             <!-- Center: Title -->
             <div class="flex items-center space-x-2">
@@ -40,10 +40,10 @@ export class GameAreaComponent extends Component {
         </div>
 
         <!-- Content Area - Flex-1 to fill space -->
-        <div class="flex-1 overflow-y-auto">
-          <div class="bg-radial-bg rounded border border-green-400/30 h-full">
+        <div class="flex-1">
+          <div class="bg-radial-bg rounded border border-green-400/30">
             <!-- Player Status Section -->
-            <div class="bg-console-bg text-left border-b border-neon-green border-opacity-30">
+            <div class="bg-console-bg text-left border-b border-neon-green border-opacity-30 flex-shrink-0">
               <div class="text-[10px] leading-relaxed text-neon-green space-y-1 px-3 py-2">
                 <div class="flex items-center gap-1">
                   <div class="w-1 h-1 bg-neon-green rounded-full animate-pulse"></div>

@@ -12,7 +12,7 @@ export class SocialTabs {
 
   constructor() {
     this.element = document.createElement('div');
-    this.element.className = 'flex-1 bg-terminal-border flex flex-col min-h-0';
+    this.element.className = 'flex-1 bg-terminal-border flex flex-col';
 
     this.friendsTab = new FriendsTab();
     this.requestsTab = new RequestsTab();

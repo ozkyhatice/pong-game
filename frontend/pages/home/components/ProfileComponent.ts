@@ -8,7 +8,7 @@ export class ProfileComponent {
 
   constructor(profile: UserProfile) {
   this.element = document.createElement('div');
-  this.element.className = 'h-auto md:h-full bg-console-bg border-2 border-neon-green rounded shadow-terminal overflow-hidden flex flex-col text-neon-green';
+  this.element.className = 'w-full h-auto md:h-full bg-console-bg border-2 border-neon-green rounded shadow-terminal overflow-hidden flex flex-col text-neon-green';
 
     this.profileHeader = new ProfileHeader(profile);
     this.socialTabs = new SocialTabs();
