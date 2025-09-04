@@ -28,7 +28,7 @@ export class GameAreaComponent extends Component {
   private render(): void {
     this.setHTML(`
       <!-- Game Content -->
-      <div class="flex-1 overflow-y-auto rounded bg-console-bg border-2 border-neon-green shadow-terminal min-h-screen">
+      <div class="h-full flex flex-col rounded bg-console-bg border-2 border-neon-green shadow-terminal">
         <!-- Terminal Header -->
         <div class="bg-terminal-border border-b border-neon-green/30">
           <div class="flex items-center justify-center p-3 bg-header-gradient">
@@ -39,22 +39,24 @@ export class GameAreaComponent extends Component {
           </div>
         </div>
 
-                <div class="bg-radial-bg rounded border border-green-400/30">
-          <!-- Player Status Section -->
-          <div class="bg-console-bg text-left border-b border-neon-green border-opacity-30">
-            <div class="text-[10px] leading-relaxed text-neon-green space-y-1 px-3 py-2">
-              <div class="flex items-center gap-1">
-                <div class="w-1 h-1 bg-neon-green rounded-full animate-pulse"></div>
-                <span>PLAYER STATUS: ONLINE</span>
-              </div>
-              <div class="text-neon-green">
-                > START YOUR GAME...
+        <!-- Content Area - Flex-1 to fill space -->
+        <div class="flex-1 overflow-y-auto">
+          <div class="bg-radial-bg rounded border border-green-400/30 h-full">
+            <!-- Player Status Section -->
+            <div class="bg-console-bg text-left border-b border-neon-green border-opacity-30">
+              <div class="text-[10px] leading-relaxed text-neon-green space-y-1 px-3 py-2">
+                <div class="flex items-center gap-1">
+                  <div class="w-1 h-1 bg-neon-green rounded-full animate-pulse"></div>
+                  <span>PLAYER STATUS: ONLINE</span>
+                </div>
+                <div class="text-neon-green">
+                  > START YOUR GAME...
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Game Modes Section -->
-          <div class="bg-radial-bg p-6">
+            <!-- Game Modes Section -->
+            <div class="bg-radial-bg p-6">
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- LEFT COLUMN: Quick Match + Invites -->
@@ -177,17 +179,17 @@ export class GameAreaComponent extends Component {
               </div>
             </div>
           </div>
-
-          <!-- System Information Section -->
-          <div class="bg-console-bg text-left border-t border-neon-green border-opacity-30">
-            <div class="text-[10px] leading-relaxed text-neon-green space-y-1">
-              <div>> SYSTEM: PONG.exe v4.1.0</div>
-              <div>> SERVER: pong.42.tr.gaming.net | PING: 21ms</div>
-              <div>> MEMORY: 384MB / 1.2GB | CPU: 26% | STATUS: OPTIMAL</div>
-            </div>
-          </div>
-
         </div>
+
+        <!-- System Information Section - Fixed at bottom -->
+        <div class="bg-console-bg text-left border-t border-neon-green border-opacity-30 p-3">
+          <div class="text-[10px] leading-relaxed text-neon-green space-y-1">
+            <div>> SYSTEM: PONG.exe v4.1.0</div>
+            <div>> SERVER: pong.42.tr.gaming.net | PING: 21ms</div>
+            <div>> MEMORY: 384MB / 1.2GB | CPU: 26% | STATUS: OPTIMAL</div>
+          </div>
+        </div>
+
       </div>
     `);
   }

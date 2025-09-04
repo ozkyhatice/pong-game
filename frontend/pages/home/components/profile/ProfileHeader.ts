@@ -38,7 +38,7 @@ export class ProfileHeader {
       </div>
 
       <!-- System Status -->
-      <div class="bg-console-bg px-3 py-2 border-b border-neon-green border-opacity-30 text-[10px] leading-relaxed">
+      <div class="bg-console-bg px-3 py-1 md:py-2 border-b border-neon-green border-opacity-30 text-[10px] leading-relaxed">
         <div class="flex items-center gap-1 mb-1">
           <div class="w-1 h-1 bg-neon-green rounded-full animate-pulse"></div>
           <span>PLAYER STATUS: ONLINE</span>
@@ -49,26 +49,26 @@ export class ProfileHeader {
       </div>
 
       <!-- Profile Data -->
-      <div class="bg-console-bg p-3 border-b border-neon-green border-opacity-30">
+      <div class="bg-console-bg p-2 md:p-3 border-b border-neon-green border-opacity-30">
         <!-- Profile Photo and Info -->
-        <div class="flex items-center gap-3 mb-3">
-          <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full border-2 border-neon-blue shadow-[0_0_8px_#62a6fa]">
+        <div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+          <img src="${avatar}" alt="Avatar" class="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-neon-blue shadow-[0_0_8px_#62a6fa]">
           <div>
-            <div class="text-neon-white text-md font-bold uppercase">${username}</div>
+            <div class="text-neon-white text-sm md:text-md font-bold uppercase">${username}</div>
           </div>
         </div>
 
         <!-- Stats Grid -->
         <div class="grid grid-cols-3 gap-1 text-[10px]">
-          <div class="text-center p-2 bg-black bg-opacity-60 border border-neon-green border-opacity-50 rounded-sm">
+          <div class="text-center p-1 md:p-2 bg-black bg-opacity-60 border border-neon-green border-opacity-50 rounded-sm">
             <div class="text-neon-green text-xs font-bold">${wins}</div>
             <div class="text-neon-white text-[9px] opacity-70">WINS</div>
           </div>
-          <div class="text-center p-2 bg-black bg-opacity-60 border border-neon-red border-opacity-50 rounded-sm">
+          <div class="text-center p-1 md:p-2 bg-black bg-opacity-60 border border-neon-red border-opacity-50 rounded-sm">
             <div class="text-neon-red text-xs font-bold">${losses}</div>
             <div class="text-neon-white text-[9px] opacity-70">LOSS</div>
           </div>
-          <div class="text-center p-2 bg-black bg-opacity-60 border border-neon-blue border-opacity-50 rounded-sm">
+          <div class="text-center p-1 md:p-2 bg-black bg-opacity-60 border border-neon-blue border-opacity-50 rounded-sm">
             <div class="text-neon-blue text-xs font-bold">${winRate}%</div>
             <div class="text-neon-white text-[9px] opacity-70">RATE</div>
           </div>
