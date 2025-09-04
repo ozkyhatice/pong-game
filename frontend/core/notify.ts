@@ -29,7 +29,7 @@ export function notify(message: string, color?: string) {
   toast.style.bottom = '3.5rem';
   toast.style.transform = 'translateX(-50%)';
 
-  let displayMsg = message;
+  let displayMsg = message.toUpperCase();
 
   toast.style.background = 'rgba(0, 0, 0, 0.95)';
   toast.style.color = colorValue;
@@ -40,7 +40,6 @@ export function notify(message: string, color?: string) {
   toast.style.fontSize = '0.875rem';
   toast.style.fontWeight = '700';
   toast.style.letterSpacing = '0.05em';
-  toast.style.textTransform = 'uppercase';
   toast.style.fontFamily = 'Orbitron, monospace';
   toast.style.zIndex = '9999';
   toast.style.display = 'flex';
