@@ -5,43 +5,38 @@ import { updateMultipleUserStats } from '../../user/service/user.service.js';
 import { processTournamentMatchResult } from '../../tournament/service/tournament.service.js';
 export async function broadcastGameOver(room, userId) {
     if (!room || !room.started) {
-        console.error(`🔍 GAME ERROR: Room not found or not started -> User: ${userId}`);
         return;
     }
     if (room.started && !room.state.gameOver) {
         clearInterval(room.loop);
         room.started = false;
         room.loop = null;
-        room.state.gameOver = true; // Oyun bitti
+        room.state.gameOver = true;
         room.endDate = new Date();
 
 
     }
     try {
-        // Tüm oyunculara game-over mesajı gönder
-        for (const [playerId, socket] of room.sockets) {
+        // send game over to all players
+        for (const [socket] of room.sockets) {
             await sendMessage(socket, 'game', 'game-over', {
                 roomId: room.id,
-                winner: null, // Disconnect nedeniyle kazanan yok
+                winner: null, 
                 finalScore: room.state.score
             });
         }
-        await saveGametoDbServices(room, userId); //db kaydet
+        await saveGametoDbServices(room, userId);
         
-        // Eğer bu bir turnuva maçıysa, turnuva ilerlemesini kontrol et
+        // if tournament match, process the result
         if (room.tournamentId && room.winnerId) {
             await processTournamentMatchResult(room.matchId, room.winnerId);
         }
-        
-        console.log(`🏆 GAME BROADCAST: Game over sent -> Room: ${room.id}`);   
-    }catch (error) {
-        console.error(`🔴 GAME BROADCAST ERROR: Failed to broadcast game over -> Error: ${error.message}`);
+        }catch (error) {
     }
 }
 
 export async function broadcastLeft(room, userId) {
     if (!room) {
-        console.error(`🔍 GAME ERROR: Room not found for leave -> User: ${userId}`);
         return;
     }
     const userId2 = room.players.size === 2 ? Array.from(room.players).filter(id => id !== userId) : [];
@@ -72,9 +67,7 @@ export async function broadcastLeft(room, userId) {
                 });
             }
         }
-        console.log(`🚫 GAME BROADCAST: Player left sent -> Room: ${room.id}`);   
     } catch (error) {
-        console.error(`🔴 GAME BROADCAST ERROR: Failed to broadcast leave -> Error: ${error.message}`);
     }
 }
 export async function broadcast(room, type, event, data = {}) {
@@ -82,10 +75,8 @@ export async function broadcast(room, type, event, data = {}) {
     try {
       await sendMessage(socket, type, event, data);
     } catch (error) {
-      console.error(`🔴 GAME BROADCAST ERROR: Failed to send -> User: ${userId}, Room: ${room.id}, Error: ${error.message}`);
     }
   }
-  console.log(`📡 GAME BROADCAST: Event sent -> Event: ${event}, Room: ${room.id}`);
 }
 
 
@@ -105,9 +96,7 @@ export async function clearAll(userId, message) {
             }
             room.sockets.delete(userId);
             
-            // Start 30-second reconnection timer
-            console.log(`🔌 GAME DISCONNECT: Player disconnected, starting timer -> User: ${userId}, Room: ${roomId}`);
-            
+            // Start 30-second reconnection timer            
             await broadcast(room, "game", "paused", {
                 reason: "player-disconnected",
                 userId: userId,
@@ -117,7 +106,6 @@ export async function clearAll(userId, message) {
             
             // Set timeout to declare opponent winner after 30 seconds
             room.disconnectionTimeout = setTimeout(async () => {
-                console.log(`⏰ GAME TIMEOUT: Reconnection timeout reached -> User: ${userId}, Room: ${roomId}`);
                 
                 // Check if room still exists and is still paused
                 const currentRoom = rooms.get(roomId);
@@ -128,7 +116,6 @@ export async function clearAll(userId, message) {
                     currentRoom.endDate = new Date();
                     currentRoom.state.gameOver = true;
                     
-                    console.log(`🏆 GAME WIN: Victory by disconnection -> Winner: ${opponentId}, Room: ${roomId}`);
                     
                     // Save game and process tournament if applicable
                     await saveGametoDbServices(currentRoom);
@@ -144,7 +131,7 @@ export async function clearAll(userId, message) {
                         ];
                         await updateMultipleUserStats(playerStats);
                     } catch (error) {
-                        console.error(`🔴 GAME STATS ERROR: Failed to update stats after timeout -> Error: ${error.message}`);
+                        console.log(` GAME STATS ERROR: Failed to update stats after timeout -> Error: ${error.message}`);
                     }
                     
                     // Broadcast game over with disconnect reason
@@ -170,13 +157,12 @@ export async function clearAll(userId, message) {
             }, 30000); // 30 seconds
           } else if (message === 'leave') {
             if (room.started && !room.state.gameOver) {
-                console.log(`🚫 GAME LEAVE: Player left match -> User: ${userId}, Room: ${room.id}`);
                 const players = Array.from(room.players);
                 if (players.length === 2) {
                     room.winnerId = user2;
                     await saveGametoDbServices(room);
                     
-                    // Eğer bu bir turnuva maçıysa, turnuva ilerlemesini kontrol et
+                    // if it is tournament match, process the result
                     if (room.tournamentId && room.winnerId) {
                         await processTournamentMatchResult(room.matchId, room.winnerId);
                     }
@@ -189,9 +175,8 @@ export async function clearAll(userId, message) {
                         ];
                         
                         await updateMultipleUserStats(playerStats);
-                        console.log(`📊 GAME STATS: Stats updated after leave -> Room: ${room.id}`);
                     } catch (error) {
-                        console.error(`🔴 GAME STATS ERROR: Failed to update stats after leave -> Error: ${error.message}`);
+                        console.log(` GAME STATS ERROR: Failed to update stats after leave -> Error: ${error.message}`);
                     }
                 }
             }
@@ -207,7 +192,6 @@ export async function clearAll(userId, message) {
                 userRoom.delete(user2);
                 room.players.delete(user2);
                 room.sockets.delete(user2);
-                console.log(`🗑️ ROOM CLEANUP: Removed other player -> User: ${user2}, Room: ${room.id}`);
             }
           }
         }

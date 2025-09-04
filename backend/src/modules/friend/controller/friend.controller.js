@@ -15,7 +15,7 @@ import {
   getBlockedUsers,
   isUserBlocked
 } from '../service/friend.service.js';
-import { validateUserId, sanitizeFriendData } from '../utils/validation.js';
+import { validateUserId} from '../utils/validation.js';
 import { containsSqlInjection } from '../../../utils/validation.js';
 import { escapeHTML } from '../../../utils/security.js';
 
@@ -66,7 +66,6 @@ export async function createFriendRequest(request, reply) {
       return reply.code(500).send({ error: 'Failed to send friend request' });
     }
   } catch (error) {
-    console.error('Error sending friend request:', error);
     return reply.code(500).send({ error: 'Internal server error' });
   }
 }
@@ -102,7 +101,6 @@ export async function getIncomingRequests(request, reply) {
     
     return reply.code(200).send({ requests: sanitizedRequests });
   } catch (error) {
-    console.error('Error retrieving incoming requests:', error);
     return reply.code(500).send({ error: 'Internal server error' });
   }
 }
@@ -211,7 +209,6 @@ export async function getFriendsListController(request, reply) {
     
     return reply.code(200).send({ friends: sanitizedFriends });
   } catch (error) {
-    console.error('Error retrieving friends list:', error);
     return reply.code(500).send({ error: 'Internal server error' });
   }
 }
@@ -247,7 +244,6 @@ export async function getSentRequestsController(request, reply) {
     
     return reply.code(200).send({ requests: sanitizedRequests });
   } catch (error) {
-    console.error('Error retrieving sent requests:', error);
     return reply.code(500).send({ error: 'Internal server error' });
   }
 }
@@ -288,7 +284,6 @@ export async function blockFriendController(request, reply) {
       return reply.code(500).send({ error: 'Failed to block user' });
     }
   } catch (error) {
-    console.error('Error blocking user:', error);
     return reply.code(500).send({ error: 'Internal server error' });    
   }
 }
@@ -329,7 +324,6 @@ export async function unblockFriendController(request, reply) {
       return reply.code(500).send({ error: 'Failed to unblock user' });
     }
   } catch (error) {
-    console.error('Error unblocking user:', error);
     return reply.code(500).send({ error: 'Internal server error' });    
   }
 }
@@ -368,7 +362,6 @@ export async function deleteFriendController(request, reply) {
       return reply.code(500).send({ error: 'Failed to remove friend' });
     }
   } catch (error) {
-    console.error('Error removing friend:', error);
     return reply.code(500).send({ error: 'Internal server error' });
   }
 }
@@ -394,7 +387,6 @@ export async function getBlockedUsersController(request, reply) {
     
     return reply.code(200).send({ blockedUsers: sanitizedBlockedUsers });
   } catch (error) {
-    console.error('Error retrieving blocked users:', error);
     return reply.code(500).send({ error: 'Internal server error' });
   }
 }

@@ -1,17 +1,10 @@
-/**
- * Wrapper for database queries with additional security measures
- * Provides protection against SQL injection attacks
- */
 
 import { initDB } from '../../../config/db.js';
 import { containsSqlInjection } from '../../../utils/validation.js';
 
-/**
- * Secure database query execution
- * @param {string} query - SQL query to execute
- * @param {Array} params - Parameters for the query
- * @returns {Promise} - Query result
- */
+// params: query - SQL query string with placeholders (?)
+// params: params - Array of parameters to bind to the query placeholders
+// returns: result of the query (array of rows for SELECT, run result for INSERT/UPDATE/DELETE)
 export async function executeSecureQuery(query, params = []) {
   // Check for SQL injection in the query itself (extra precaution)
   if (containsSqlInjection(query)) {
@@ -38,12 +31,12 @@ export async function executeSecureQuery(query, params = []) {
     // For SELECT queries or any query with a WHERE clause
     if (query.includes('*')) {
       // Consider refining broad select statements to specific columns when possible
-      console.warn('Warning: Using SELECT * might expose sensitive data');
+      console.log('Warning: Using SELECT * might expose sensitive data');
     }
     
     if (query.toLowerCase().includes('limit') && !params.some(p => typeof p === 'number')) {
       // Make sure LIMIT parameters are numbers
-      console.warn('Warning: LIMIT clause should use numeric parameters');
+      console.log('Warning: LIMIT clause should use numeric parameters');
     }
     
     return db.all(query, params);

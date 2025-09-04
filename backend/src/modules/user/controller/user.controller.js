@@ -4,7 +4,6 @@ import {
   updateProfile,
   updateAvatar
 } from '../service/user.service.js';
-import { escapeFields, sanitizeInput } from '../../../utils/security.js';
 import { 
   isValidEmail, 
   isValidUsername, 
@@ -27,7 +26,6 @@ export async function getMyProfile(request, reply) {
   
   // Validate userId to prevent injection
   if (!isValidUserId(userId)) {
-    console.error(`🛡️ SECURITY: Invalid user ID format -> ${userId}`);
     return reply.code(400).send({ error: 'Invalid user ID format' });
   }
 
@@ -41,7 +39,6 @@ export async function getMyProfile(request, reply) {
     const sanitizedUser = sanitizeUserProfile(user);
     reply.send({ user: sanitizedUser });
   } catch (error) {
-    console.error('Error getting user profile:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
   }
 }
@@ -58,7 +55,6 @@ export async function getUserByUsername(request, reply) {
 
   // SQL injection kontrolü
   if (containsSqlInjection(username)) {
-    console.error(`🛡️ SECURITY: SQL injection attempt detected in username -> ${username}`);
     return reply.code(400).send({ 
       error: 'Invalid characters detected in username' 
     });
@@ -77,7 +73,6 @@ export async function getUserByUsername(request, reply) {
     const sanitizedUser = sanitizeUserProfile(user);
     reply.send({ user: sanitizedUser });
   } catch (error) {
-    console.error('Error getting user by username:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
   }
 }
@@ -87,7 +82,6 @@ export async function updateMyProfile(request, reply) {
   
   // Validate userId to prevent injection
   if (!isValidUserId(userId)) {
-    console.error(`🛡️ SECURITY: Invalid user ID format -> ${userId}`);
     return reply.code(400).send({ error: 'Invalid user ID format' });
   }
   
@@ -108,7 +102,6 @@ export async function updateMyProfile(request, reply) {
 
   // SQL injection kontrolü
   if ((username && containsSqlInjection(username)) || (email && containsSqlInjection(email))) {
-    console.error(`🛡️ SECURITY: SQL injection attempt detected in profile update`);
     return reply.code(400).send({
       error: 'Invalid characters detected in input'
     });
@@ -124,7 +117,6 @@ export async function updateMyProfile(request, reply) {
     const sanitizedUpdatedUser = sanitizeUserProfile(updatedUser);
     reply.send({ user: sanitizedUpdatedUser });
   } catch (error) {
-    console.error('Error updating user profile:', error);
     reply.code(400).send({ error: error.message });
   }
 }
@@ -133,18 +125,18 @@ export async function updateMyAvatar(request, reply) {
   const userId = request.user.id;
 
   try {
-    // Dosya geldi mi kontrol et
+
     const data = await request.file();
     if (!data) {
       return reply.code(400).send({ error: 'No file uploaded' });
     }
 
-    // Dosya türü kontrol et (sadece resim kabul et)
     if (!data.mimetype.startsWith('image/')) {
       return reply.code(400).send({ error: 'Only image files are allowed' });
     }
 
-    // Dosya boyutu kontrol et (5MB max)
+    //control file size (max 5MB)
+
     let buffer;
     try {
       buffer = await data.toBuffer();
@@ -152,21 +144,17 @@ export async function updateMyAvatar(request, reply) {
       return reply.code(400).send({ error: 'File too large. Maximum 5MB allowed' });
     }
 
-    // Dosya adı oluştur (userId + timestamp + uzantı)
     const fileExtension = path.extname(data.filename);
     const fileName = `${userId}_${Date.now()}${fileExtension}`;
     
-    // uploads/avatars klasörü var mı kontrol et, yoksa oluştur
     const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    // Dosyayı kaydet
     const filePath = path.join(uploadDir, fileName);
     fs.writeFileSync(filePath, buffer);
 
-    // Veritabanında avatar yolunu güncelle
     const avatarUrl = `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/uploads/avatars/${fileName}`;
     const updatedUser = await updateAvatar(userId, avatarUrl);
 
@@ -175,7 +163,6 @@ export async function updateMyAvatar(request, reply) {
       user: updatedUser 
     });
   } catch (error) {
-    console.error('Error updating user avatar:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
   }
 }
@@ -201,7 +188,6 @@ export async function deleteMyAvatar(request, reply) {
       // Delete physical file if exists
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-        console.log('Deleted avatar file:', filePath);
       }
     }
 
@@ -214,7 +200,6 @@ export async function deleteMyAvatar(request, reply) {
       user: updatedUser 
     });
   } catch (error) {
-    console.error('Error deleting user avatar:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
   }
 }
@@ -224,7 +209,6 @@ export async function getUserById(request, reply) {
   
   // Validate userId to prevent injection
   if (!isValidUserId(id)) {
-    console.error(`🛡️ SECURITY: Invalid user ID format -> ${id}`);
     return reply.code(400).send({ error: 'Invalid user ID format' });
   }
 
@@ -238,7 +222,6 @@ export async function getUserById(request, reply) {
     const sanitizedUser = sanitizeUserProfile(user);
     reply.send({ user: sanitizedUser });
   } catch (error) {
-    console.error('Error getting user by id:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
   }
 }
@@ -249,7 +232,6 @@ export async function getUserTournamentStatus(request, reply) {
   
   // Validate userId to prevent injection
   if (!isValidUserId(id)) {
-    console.error(`🛡️ SECURITY: Invalid user ID format -> ${id}`);
     return reply.code(400).send({ error: 'Invalid user ID format' });
   }
   
@@ -292,7 +274,6 @@ export async function getUserTournamentStatus(request, reply) {
     });
     
   } catch (error) {
-    console.error('Error checking tournament status:', error);
     reply.code(500).send({ error: 'Internal Server Error' });
   }
 }

@@ -2,7 +2,7 @@ import { initDB } from '../../../config/db.js';
 
 export async function isExistingFriendRequest(requesterId, targetId) {
   const db = await initDB();
-  // İki yönlü kontrol: iki kullanıcı arasında herhangi bir istek veya arkadaşlık var mı?
+  // two way check for existing requests
   const existingRequest = await db.get(
     'SELECT * FROM friends WHERE ((requesterID = ? AND recipientID = ?) OR (requesterID = ? AND recipientID = ?))',
     [requesterId, targetId, targetId, requesterId]
@@ -130,7 +130,6 @@ export async function deleteFriend(userId, targetId) {
   return result;
 }
 
-// Zenginleştirilmiş friend servisleri
 export async function getFriendsListWithUserInfo(userId) {
   const db = await initDB();
   
@@ -241,7 +240,7 @@ export async function getSentRequestsWithUserInfo(userId) {
 }
 
 
-//engellenen kullanıcıları listelerken bilgilerini göstermek users tablosundan alındı
+// blocked users list
 export async function getBlockedUsers(userId) {
   const db = await initDB();
   

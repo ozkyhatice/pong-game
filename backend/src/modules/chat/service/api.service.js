@@ -1,14 +1,6 @@
 import { initDB } from '../../../config/db.js';
 
-/**
- * Get chat history between two users with pagination and filtering options
- * Uses parameterized queries for SQL injection protection
- * 
- * @param {number} userId - Current user ID
- * @param {number} otherUserId - Other user ID
- * @param {Object} options - Pagination and filtering options
- * @returns {Object} Chat history with pagination info
- */
+// params: userId (number), otherUserId (number), options (object with limit, offset, before, after)
 export async function getChatHistory(userId, otherUserId, options = {}) {
   const db = await initDB();
   
@@ -75,17 +67,7 @@ export async function getChatHistory(userId, otherUserId, options = {}) {
   };
 }
 
-/**
- * Get paginated messages for a conversation
- * Delegates to getChatHistory with page-based parameters
- * Supports loading all messages with limit=-1
- * 
- * @param {number} userId - Current user ID
- * @param {number} otherUserId - Other user ID
- * @param {number} page - Page number
- * @param {number} limit - Items per page, -1 for all messages
- * @returns {Object} Paginated messages
- */
+// params: userId (number), otherUserId (number), page (number), limit (number)
 export async function getPaginatedMessages(userId, otherUserId, page = 1, limit = 50) {
   // Handle special case for getting all messages
   if (limit === -1 || limit === '-1') {
@@ -100,14 +82,7 @@ export async function getPaginatedMessages(userId, otherUserId, page = 1, limit 
   return await getChatHistory(userId, otherUserId, { limit: sanitizedLimit, offset });
 }
 
-/**
- * Get recent conversations for a user
- * Uses parameterized queries for SQL injection protection
- * 
- * @param {number} userId - User ID
- * @param {number} limit - Maximum number of conversations to return
- * @returns {Array} Recent conversations
- */
+// params: userId (number), limit (number)
 export async function getRecentConversations(userId, limit = 10) {
   const db = await initDB();
   

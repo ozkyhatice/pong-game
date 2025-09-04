@@ -20,7 +20,7 @@ export async function routeMessage(message, userId, connection) {
         try {
           await handleGameMessage(msgObj, userId, connection);
         } catch (err) {
-          console.error('Error handling game message:', err);
+          console.log('Error handling game message:', err);
         }
         break;
       case 'tournament':
@@ -28,14 +28,13 @@ export async function routeMessage(message, userId, connection) {
         try {
           await handleTournamentMessage(msgObj, userId, connection);
         } catch (err) {
-          console.error('Error handling tournament message:', err);
+          console.log('Error handling tournament message:', err);
         }
         break;
       default:
         throw new Error(`Unknown message type: ${type}`);
     }
   } catch (error) {
-    console.error('Error processing WebSocket message:', error);
     connection.send(JSON.stringify({ 
       type: 'error', 
       message: error.message === 'Potential SQL injection detected' 

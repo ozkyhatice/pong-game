@@ -13,11 +13,9 @@ export async function sendMessage(connection, type, event, data = {}) {
     
     if (connection && connection.readyState === connection.OPEN) {
       connection.send(JSON.stringify({ type, event, data: sanitizedData }));
-    } else {
-      console.warn(`🔴 WS SEND FAILED: Connection closed -> Type: ${type}, Event: ${event}`);
     }
   } catch (error) {
-    console.error(`🔴 WS SEND ERROR: ${error.message} -> Type: ${type}, Event: ${event}`);
+    console.log('Error sending message:', error);
   }
 }
 
@@ -39,24 +37,24 @@ export async function createRoom(userId, connection, rooms, tournamentId = null,
                 [userId]: { y: 150 }    // Paddle center (400/2 - 100/2 = 150)
             },               // userId -> { y: konum }
             score: {
-                [userId]: 0             // İlk oyuncunun skoru
-            },                 // userId -> sayı
-            gameOver: false,           // Oyun durumu
+                [userId]: 0             // location of first player's paddle
+            },                 // userId -> number
+            gameOver: false,           // game state
             paused: false,
         },
-        loop: null,                  // setInterval ID'si, oyun döngüsünü durdurmak için
-        createdAt: Date.now(),       // Oda oluşturulma zamanı
+        loop: null,                  // game loop interval
+        createdAt: Date.now(),       // room creation timestamp
         started: false,
-        endDate: null,               // Oyun bitiş tarihi
-        winnerId: null,              // Oyun kazananı
-        tournamentId: tournamentId,  // Turnuva ID'si (turnuva maçıysa)
-        round: round,                // Round bilgisi (turnuva maçıysa)
-        matchId: null,               // Match ID (DB'ye kayıt sonrası set edilir)
-        ballDirectionCounter: 0,     // Top yönü sayacı (adil alternatif için)
-        isMatchmaking: false // Matchmaking room mu?
+        endDate: null,               
+        winnerId: null,              
+        tournamentId: tournamentId,  // tournament ID (if it is a tournament match)
+        round: round,                // round info (if it is a tournament match)
+        matchId: null,               // Match ID
+        ballDirectionCounter: 0,     // ball direction change counter
+        isMatchmaking: false // is it created via matchmaking
     };
-    rooms.set(roomId, room);
-    userRoom.set(userId, roomId); // Kullanıcı ve oda ilişkisi->connection close için
+    rooms.set(roomId, room); // add to global rooms map
+    userRoom.set(userId, roomId); // user - room mapping
     return roomId;
 }
 
@@ -90,32 +88,26 @@ export async function checkJoinable(data, room, userId, connection) {
         await sendMessage(connection, 'game', 'room-not-found', {
             roomId: data.roomId
         });
-        console.warn(`🔍 ROOM ERROR: Room not found -> User: ${userId}`);
         return false;
     }
     if (room.players.has(userId)) {
         await sendMessage(connection, 'game', 'already-joined', {
             roomId: room.id
         });
-        console.warn(`🔄 JOIN ERROR: User already in room -> User: ${userId}, Room: ${room.id}`);
         return false
     }
     if (room.players.size >= 2) {
         await sendMessage(connection, 'game', 'room-full', {
             roomId: room.id
         });
-        console.warn(`🚫 JOIN ERROR: Room full -> User: ${userId}, Room: ${room.id}`);
         return false;
     }
     if (room.started) {
         await sendMessage(connection, 'game', 'game-already-started', {
             roomId: room.id
         });
-        console.warn(`⏰ JOIN ERROR: Game already started -> User: ${userId}, Room: ${room.id}`);
         return false;
     }
-    
-    // Tüm kontroller geçildi, katılım uygun
     return true;
 }
 

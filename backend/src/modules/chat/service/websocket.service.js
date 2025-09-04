@@ -14,20 +14,20 @@ import { isUserBlocked } from '../../friend/service/friend.service.js';
 // WebSocket Specific Operations
 export async function sendMissedMessages(connection, userId) {
   if (connection && connection.readyState === WebSocket.OPEN) {
-    // Hem undelivered hem unread mesajları al
+    // get undelivered and unread messages
     const undeliveredMessages = await getUndeliveredMessages(userId);
     const unreadMessages = await getUnreadMessages(userId);
 
-    // Engellenen kullanıcıların mesajlarını filtrele (Promise.all kullanmadan, sıralı olarak)
+    // Filter out messages from blocked users
     const allowedUndelivered = [];
     for (const msg of undeliveredMessages) {
-      const blockedByRecipient = await isUserBlocked(msg.senderId, userId); // alıcı göndereni engelledi mi?
-      const blockedRecipient = await isUserBlocked(userId, msg.senderId);  // gönderen alıcıyı engelledi mi?
+      const blockedByRecipient = await isUserBlocked(msg.senderId, userId); // is receiver blocked sender?
+      const blockedRecipient = await isUserBlocked(userId, msg.senderId);  // is sender blocked receiver?
       if (!blockedByRecipient && !blockedRecipient) {
         allowedUndelivered.push(msg);
       }
     }
-
+    
     const allowedUnread = [];
     for (const msg of unreadMessages) {
       const blockedByRecipient = await isUserBlocked(msg.senderId, userId);
@@ -63,15 +63,16 @@ export async function sendMissedMessages(connection, userId) {
     try {
       connection.send(JSON.stringify(messagePayload));
       
-      // Undelivered mesajları delivered olarak işaretle
+      // Mark undelivered messages as delivered
       for (const msg of allowedUndelivered) {
         await updateMessageStatus(msg.senderId, msg.receiverId, msg);
       }
     } catch (err) {
-      console.error('Error sending missed messages:', err);
+      console.log('Error sending missed messages:', err);
     }
   }
 }
+
 
 export async function sendMessage(senderId, receiverId, content, message) {
   try {
@@ -97,20 +98,18 @@ export async function sendMessage(senderId, receiverId, content, message) {
     
     await updateMessageStatus(senderId, receiverId, message);
   } catch (err) {
-    console.error('Error sending message:', err);
+    console.log('Error in sendMessage:', err);
   }
 }
 
 export async function handleRealtimeMessage(senderId, receiverId, content, messageObj) {
-  // Real-time mesaj işleme logics
+  // Real-time message handling with block checks
   try {
-    // alıcının göndereni engellediğini kontrol et
     const isBlocked = await isUserBlocked(senderId, receiverId);
     if (isBlocked) {
       return { success: false, error: 'Message cannot be delivered because you are blocked by this user' };
     }
     
-    // gönderenin alıcıyı engellediğini kontrol et  
     const isReceiverBlocked = await isUserBlocked(receiverId, senderId);
     if (isReceiverBlocked) {
       return { success: false, error: 'Message cannot be delivered because you blocked this user' };
@@ -119,7 +118,6 @@ export async function handleRealtimeMessage(senderId, receiverId, content, messa
     await sendMessage(senderId, receiverId, content, messageObj);
     return { success: true };
   } catch (error) {
-    console.error('Error handling realtime message:', error);
     return { success: false, error: error.message };
   }
 }
@@ -157,7 +155,6 @@ export async function getOnlineClients(requesterId = null) {
     
     return onlineClients;
   } catch (error) {
-    console.error('Error getting online clients:', error);
     return [];
   }
 }

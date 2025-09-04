@@ -1,15 +1,7 @@
-/**
- * Friend module validation and sanitization functions
- */
 
 import { sanitizeGeneralInput, containsSqlInjection } from '../../../utils/validation.js';
-import { escapeHTML } from '../../../utils/security.js';
 
-/**
- * Validates and sanitizes user IDs for friend-related operations
- * @param {string|number} userId - The ID to validate
- * @returns {object} - Validation result with sanitized value if valid
- */
+
 export function validateUserId(userId) {
   // If not a string or number, it's invalid
   if (typeof userId !== 'string' && typeof userId !== 'number') {
@@ -40,11 +32,7 @@ export function validateUserId(userId) {
   return { isValid: true, sanitizedValue: cleanId };
 }
 
-/**
- * Sanitizes friend request data
- * @param {object} data - The friend request data
- * @returns {object} - Sanitized data
- */
+// Sanitizes and validates friend-related data
 export function sanitizeFriendData(data) {
   const sanitizedData = { ...data };
   

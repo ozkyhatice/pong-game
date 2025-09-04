@@ -2,14 +2,7 @@ import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import { initDB } from '../../../config/db.js';
 
-/**
- * Validates user input to prevent injection attacks
- * Checks for null/undefined values and dangerous SQL characters
- * 
- * @param {any} input - The input to validate
- * @returns {any} - The validated input if no issues found
- * @throws {Error} - If input is invalid or contains potentially malicious content
- */
+// Basic input validation to prevent SQL injection and other attacks
 function validateInput(input) {
   if (input === undefined || input === null) {
     throw new Error('Invalid input: Input cannot be null or undefined');
@@ -24,14 +17,7 @@ function validateInput(input) {
   return input;
 }
 
-/**
- * Generates a new 2FA secret for a user and creates QR code
- * This is the first step in enabling 2FA for a user account
- * 
- * @param {number|string} userId - The ID of the user
- * @returns {Object} - Object containing QR code data URL and secret key
- * @throws {Error} - If user not found or 2FA already enabled
- */
+// Generates a new 2FA secret and corresponding QR code for the user
 export async function generate2FASecret(userId) {
   userId = validateInput(userId);
   
@@ -46,7 +32,7 @@ export async function generate2FASecret(userId) {
     throw new Error('2FA is already enabled for this user.');
   }
 
-  // Sanitize username to prevent XSS in QR code
+  // Sanitize username to prevent XSS in QR code generation
   const sanitizedUsername = encodeURIComponent(user.username);
   
   const secret = speakeasy.generateSecret({ 
@@ -62,14 +48,8 @@ export async function generate2FASecret(userId) {
   return { qr: qrCode, secret: secret.base32 };
 }
 
-/**
- * Disables 2FA for a user account
- * Removes the 2FA secret and disables the 2FA flag
- * 
- * @param {number|string} userId - The ID of the user
- * @returns {Object} - Success message
- * @throws {Error} - If user not found
- */
+
+// Disables 2FA for the user by clearing the secret and updating the flag
 export async function disable2FA(userId) {
   userId = validateInput(userId);
   
@@ -86,15 +66,8 @@ export async function disable2FA(userId) {
   return { success: true, message: '2FA has been successfully disabled.' };
 }
 
-/**
- * Verifies a 2FA token against the user's stored secret
- * Uses the TOTP algorithm with a small window to account for time drift
- * 
- * @param {number|string} userId - The ID of the user
- * @param {string} token - The 2FA token to verify
- * @returns {boolean} - True if verification successful
- * @throws {Error} - If token invalid, user not found, or 2FA not enabled
- */
+
+// Verifies the provided 2FA token against the stored secret for the user
 export async function verify2FACode(userId, token) {
   userId = validateInput(userId);
   token = validateInput(token);
