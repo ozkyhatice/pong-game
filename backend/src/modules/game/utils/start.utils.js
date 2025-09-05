@@ -146,7 +146,6 @@ async function endGame(room, winnerId) {
     try {
         // Save to database
         await saveGametoDbServices(room);
-        
         metrics.totalGamesPlayed.inc();
         
         // Eğer bu bir turnuva maçıysa, turnuva ilerlemesini kontrol et

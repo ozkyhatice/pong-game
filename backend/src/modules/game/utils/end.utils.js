@@ -122,6 +122,8 @@ export async function clearAll(userId, message) {
                     
                     // Save game and process tournament if applicable
                     await saveGametoDbServices(currentRoom);
+                    metrics.totalGamesPlayed.inc();
+
                     if (currentRoom.tournamentId && currentRoom.winnerId) {
                         await processTournamentMatchResult(currentRoom.matchId, currentRoom.winnerId);
                     }
@@ -164,6 +166,8 @@ export async function clearAll(userId, message) {
                 if (players.length === 2) {
                     room.winnerId = user2;
                     await saveGametoDbServices(room);
+                    metrics.totalGamesPlayed.inc();
+
                     
                     // if it is tournament match, process the result
                     if (room.tournamentId && room.winnerId) {
