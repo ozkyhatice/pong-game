@@ -17,7 +17,7 @@ export function sanitizeTournamentInput(data) {
   
   const sanitized = { ...data };
   
-  // Sanitize common fields
+  
   if (sanitized.name && typeof sanitized.name === 'string') {
     sanitized.name = sanitizeInput(sanitized.name);
   }
@@ -30,7 +30,7 @@ export function sanitizeTournamentInput(data) {
     sanitized.message = sanitizeInput(sanitized.message);
   }
   
-  // Convert numeric inputs to actual numbers
+  
   if (sanitized.maxPlayers !== undefined) {
     sanitized.maxPlayers = Number(sanitized.maxPlayers);
   }
@@ -48,7 +48,7 @@ export function validateTournamentInput(data) {
     return { isValid: false, message: 'No data provided' };
   }
   
-  // Check for SQL injection in string fields
+  
   for (const [key, value] of Object.entries(data)) {
     if (typeof value === 'string' && containsSqlInjection(value)) {
       return { 
@@ -58,9 +58,9 @@ export function validateTournamentInput(data) {
     }
   }
   
-  // Validate tournamentId if present
+  
   if (data.tournamentId && typeof data.tournamentId === 'string') {
-    // Tournament IDs should be integers
+    
     if (!/^\d+$/.test(data.tournamentId)) {
       return { 
         isValid: false, 
@@ -69,7 +69,7 @@ export function validateTournamentInput(data) {
     }
   }
   
-  // Validate maxPlayers if present
+  
   if (data.maxPlayers !== undefined) {
     const maxPlayers = Number(data.maxPlayers);
     if (isNaN(maxPlayers) || maxPlayers < 2 || maxPlayers > 4) {
@@ -80,7 +80,7 @@ export function validateTournamentInput(data) {
     }
   }
   
-  // Validate name if present
+  
   if (data.name !== undefined && typeof data.name === 'string') {
     if (data.name.trim().length < 3 || data.name.trim().length > 30) {
       return { 
@@ -99,7 +99,7 @@ export function validateTournamentInput(data) {
  * @returns {boolean} - Whether the userId is valid
  */
 export function isValidUserId(userId) {
-  // User IDs should be integers in this application
+  
   return !isNaN(parseInt(userId)) && parseInt(userId).toString() === userId.toString();
 }
 
@@ -115,7 +115,7 @@ export function prepareSqlParams(params) {
   
   return params.map(param => {
     if (typeof param === 'string') {
-      // Remove any potential SQL injection patterns
+      
       return param.replace(/['";]/g, '');
     }
     return param;

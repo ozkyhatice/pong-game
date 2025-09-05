@@ -1,9 +1,11 @@
 import { processChatMessage } from '../../modules/chat/controller/chat.controller.js';
 import { parseWebSocketMessage } from '../utils/security.js';
 
+
+// route websocket message to correct handler
 export async function routeMessage(message, userId, connection) {
   try {
-    // Sanitize and parse message securely
+    
     const msgObj = parseWebSocketMessage(message);
     const { type } = msgObj;
 
@@ -11,7 +13,7 @@ export async function routeMessage(message, userId, connection) {
       case 'chat':
       case 'message':
       case 'read':
-        // Chat modülüne yönlendir
+        
         await processChatMessage(message, userId);
         break;
       
@@ -20,7 +22,7 @@ export async function routeMessage(message, userId, connection) {
         try {
           await handleGameMessage(msgObj, userId, connection);
         } catch (err) {
-          console.log('Error handling game message:', err);
+          console.log('Unknown game message:', err);
         }
         break;
       case 'tournament':
@@ -28,7 +30,7 @@ export async function routeMessage(message, userId, connection) {
         try {
           await handleTournamentMessage(msgObj, userId, connection);
         } catch (err) {
-          console.log('Error handling tournament message:', err);
+          console.log('Unknown tournament message:', err);
         }
         break;
       default:

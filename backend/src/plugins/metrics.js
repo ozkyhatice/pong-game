@@ -11,7 +11,7 @@ const activeConnections = new promClient.Gauge({
   help: 'Number of active WebSocket connections'
 });
 
-// HTTP Request Duration
+
 const httpRequestDuration = new promClient.Histogram({
   name: 'pong_game_http_request_duration_seconds',
   help: 'Duration of HTTP requests in seconds',
@@ -19,20 +19,20 @@ const httpRequestDuration = new promClient.Histogram({
   buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
 });
 
-// HTTP Request Counter
+
 const httpRequestTotal = new promClient.Counter({
   name: 'pong_game_http_requests_total',
   help: 'Total number of HTTP requests',
   labelNames: ['method', 'route', 'status_code']
 });
 
-// Game metrics
+
 const totalGamesPlayed = new promClient.Gauge({
   name: 'pong_game_total_games_played',
   help: 'Total number of games played'
 });
 
-// User metrics
+
 const userRegistrations = new promClient.Gauge({
   name: 'pong_game_user_registrations_total',
   help: 'Total number of registered users'

@@ -5,12 +5,12 @@ import fastifyOauth2 from '@fastify/oauth2';
 
 export default async function authRoutes(app, options) {
   
-  // user registration route
+  
   app.post('/register', {
     schema: registerSchema
   }, register);
 
-  // user login route
+  
   app.post('/login', {
     schema: loginSchema
   }, login);
@@ -20,7 +20,7 @@ export default async function authRoutes(app, options) {
     schema: meSchema
   }, me);
 
-  // Google OAuth2 entegration - if enabled via env vars
+  
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
@@ -41,7 +41,6 @@ export default async function authRoutes(app, options) {
         callbackUri: `${process.env.BASE_URL || 'http://localhost:3000'}/api/auth/google/callback`
       });
 
-      // Google OAuth callback route
       app.get('/google/callback', googleCallbackHandler);
       
     } catch (error) {

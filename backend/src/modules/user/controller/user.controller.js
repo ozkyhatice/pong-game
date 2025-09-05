@@ -24,7 +24,7 @@ import {
 export async function getMyProfile(request, reply) {
   const userId = request.user.id;
   
-  // Validate userId to prevent injection
+  
   if (!isValidUserId(userId)) {
     return reply.code(400).send({ error: 'Invalid user ID format' });
   }
@@ -35,7 +35,7 @@ export async function getMyProfile(request, reply) {
       return reply.code(404).send({ error: 'User not found' });
     }
     
-    // Sanitize user data before sending to client
+    
     const sanitizedUser = sanitizeUserProfile(user);
     reply.send({ user: sanitizedUser });
   } catch (error) {
@@ -46,21 +46,21 @@ export async function getMyProfile(request, reply) {
 export async function getUserByUsername(request, reply) {
   const { username } = request.params;
   
-  // Username validation
+  
   if (!isValidUsername(username)) {
     return reply.code(400).send({ 
       error: 'Invalid username format' 
     });
   }
 
-  // SQL injection kontrolü
+  
   if (containsSqlInjection(username)) {
     return reply.code(400).send({ 
       error: 'Invalid characters detected in username' 
     });
   }
   
-  // XSS koruması için username'i sanitize et
+  
   const sanitizedUsername = sanitizeGeneralInput(username, { maxLength: 20 });
   
   try {
@@ -69,7 +69,7 @@ export async function getUserByUsername(request, reply) {
       return reply.code(404).send({ error: 'User not found' });
     }
     
-    // Sanitize user data before sending to client
+    
     const sanitizedUser = sanitizeUserProfile(user);
     reply.send({ user: sanitizedUser });
   } catch (error) {
@@ -80,40 +80,40 @@ export async function getUserByUsername(request, reply) {
 export async function updateMyProfile(request, reply) {
   const userId = request.user.id;
   
-  // Validate userId to prevent injection
+  
   if (!isValidUserId(userId)) {
     return reply.code(400).send({ error: 'Invalid user ID format' });
   }
   
   const { username, email } = request.body;
 
-  // Validate input using our validation utility
+  
   const validation = validateUserInput({ username, email });
   if (!validation.isValid) {
     return reply.code(400).send({ error: validation.message });
   }
 
-  // Temel validation kontrolü
+  
   if (!username && !email) {
     return reply.code(400).send({
       error: 'At least one field (username or email) is required'
     });
   }
 
-  // SQL injection kontrolü
+  
   if ((username && containsSqlInjection(username)) || (email && containsSqlInjection(email))) {
     return reply.code(400).send({
       error: 'Invalid characters detected in input'
     });
   }
 
-  // XSS koruması için input'ları sanitize et
+  
   const sanitizedData = sanitizeUserInput({ username, email });
 
   try {
     const updatedUser = await updateProfile(userId, sanitizedData);
     
-    // Sanitize user data before sending to client
+    
     const sanitizedUpdatedUser = sanitizeUserProfile(updatedUser);
     reply.send({ user: sanitizedUpdatedUser });
   } catch (error) {
@@ -135,7 +135,7 @@ export async function updateMyAvatar(request, reply) {
       return reply.code(400).send({ error: 'Only image files are allowed' });
     }
 
-    //control file size (max 5MB)
+    
 
     let buffer;
     try {
@@ -171,21 +171,21 @@ export async function deleteMyAvatar(request, reply) {
   const userId = request.user.id;
 
   try {
-    // Get current user to check avatar
+    
     const currentUser = await getUserByIdService(userId);
     if (!currentUser) {
       return reply.code(404).send({ error: 'User not found' });
     }
 
-    // Check if user has uploaded avatar (not default or Google avatar)
+    
     const hasUploadedAvatar = currentUser.avatar && currentUser.avatar.includes('/api/uploads/avatars/');
     
     if (hasUploadedAvatar) {
-      // Extract filename from URL and delete physical file
+      
       const filename = currentUser.avatar.split('/').pop();
       const filePath = path.join(process.cwd(), 'uploads', 'avatars', filename);
       
-      // Delete physical file if exists
+      
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
@@ -207,7 +207,7 @@ export async function deleteMyAvatar(request, reply) {
 export async function getUserById(request, reply) {
   const { id } = request.params;
   
-  // Validate userId to prevent injection
+  
   if (!isValidUserId(id)) {
     return reply.code(400).send({ error: 'Invalid user ID format' });
   }
@@ -218,7 +218,7 @@ export async function getUserById(request, reply) {
       return reply.code(404).send({ error: 'User not found' });
     }
     
-    // Sanitize user data before sending to client
+    
     const sanitizedUser = sanitizeUserProfile(user);
     reply.send({ user: sanitizedUser });
   } catch (error) {
@@ -226,11 +226,11 @@ export async function getUserById(request, reply) {
   }
 }
 
-// Check user's tournament status
+
 export async function getUserTournamentStatus(request, reply) {
   const { id } = request.params;
   
-  // Validate userId to prevent injection
+  
   if (!isValidUserId(id)) {
     return reply.code(400).send({ error: 'Invalid user ID format' });
   }
@@ -238,7 +238,7 @@ export async function getUserTournamentStatus(request, reply) {
   try {
     const db = await initDB();
     
-    // Use prepareSqlParams to prevent SQL injection
+    
     const params = prepareSqlParams([id]);
     
     const user = await db.get(
@@ -259,7 +259,7 @@ export async function getUserTournamentStatus(request, reply) {
       });
     }
     
-    // Get tournament info - use prepareSqlParams for the tournamentId
+    
     const tournamentParams = prepareSqlParams([user.currentTournamentId]);
     const tournament = await db.get(
       'SELECT status FROM tournaments WHERE id = ?',

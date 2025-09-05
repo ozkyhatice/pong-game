@@ -8,6 +8,7 @@ import {
 } from '../../../utils/validation.js';
 import { metrics } from '../../../plugins/metrics.js';
 
+// register new user
 export async function register(request, reply) {
   const { username, email, password } = request.body;
   
@@ -40,7 +41,7 @@ export async function register(request, reply) {
     });
   }
 
-  // SQL injection protection
+  
   if (containsSqlInjection(username) || containsSqlInjection(email)) {
     return reply.code(400).send({
       success: false,
@@ -48,7 +49,7 @@ export async function register(request, reply) {
     });
   }
 
-  // XSS protection - sanitize inputs
+  
   const sanitizedUsername = sanitizeGeneralInput(username, { maxLength: 20 });
   const sanitizedEmail = sanitizeGeneralInput(email, { maxLength: 255 });
 
@@ -80,6 +81,7 @@ export async function register(request, reply) {
   }
 }
 
+// login user
 export async function login(request, reply) {
   const { email, password } = request.body;
   
@@ -109,7 +111,7 @@ export async function login(request, reply) {
   try {
     const user = await loginUser({ email: sanitizedEmail, password });
 
-    // if 2FA is enabled, inform the client to proceed with 2FA verification
+    
     if (user.isTwoFAEnabled) {
       return reply.send({ 
         success: true,
@@ -137,12 +139,13 @@ export async function login(request, reply) {
   }
 }
 
+// handle google oauth callback
 export async function googleCallbackHandler(request, reply) {
   try {
-    // access token - google
+    
     const { token } = await request.server.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request);
 
-    // user info - google
+
     const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: {
         Authorization: `Bearer ${token.access_token}`
@@ -151,7 +154,7 @@ export async function googleCallbackHandler(request, reply) {
 
     const googleUser = await userInfoResponse.json();
 
-    // save or update user in our DB
+    
     const user = await handleGoogleUser({
       email: googleUser.email,
       name: googleUser.name,
@@ -162,21 +165,22 @@ export async function googleCallbackHandler(request, reply) {
       return reply.redirect(`${process.env.BASE_URL || 'http://localhost:8080'}?oauth=2fa_required&userId=${user.id}`);
     }
 
-    // generate JWT token
+    
     const jwtToken = await reply.jwtSign({
       id: user.id,
       email: user.email,
       username: user.username
     });
 
-    // redirect to frontend with token
-    reply.redirect(`${process.env.BASE_URL || 'http://localhost:8080'}?token=${jwtToken}&oauth=success`);
+    
+    reply.redirect(`${process.env.BASE_URL || 'http://localhost:8080'}?oauth=success&token=${jwtToken}`);
   } catch (error) {
-    reply.redirect(`${process.env.BASE_URL || 'http://localhost:8080'}?error=oauth_failed`);
+    reply.redirect(`${process.env.BASE_URL || 'http://localhost:8080'}?oauth=error`);
   }
 }
 
 
+// get current user info
 export async function me(request, reply) {
   reply.send({ 
     success: true,

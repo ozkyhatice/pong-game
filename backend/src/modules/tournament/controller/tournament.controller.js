@@ -6,7 +6,7 @@ import { sanitizeInput } from '../../../utils/security.js';
 import { validateTournamentName, containsSqlInjection } from '../../../utils/validation.js';
 import { sanitizeTournamentInput, validateTournamentInput, isValidUserId, sanitizeTournamentMessage } from '../utils/security.utils.js';
 
-// Main controller to handle incoming tournament-related WebSocket messages
+
 export async function handleTournamentMessage(msgObj, userId, connection) {
   if (!isValidUserId(userId)) {
     connection.send(JSON.stringify({
@@ -19,10 +19,10 @@ export async function handleTournamentMessage(msgObj, userId, connection) {
   
   const { event, data } = msgObj;
   
-  // Sanitize input data to prevent XSS attacks
+  
   const sanitizedData = sanitizeTournamentInput(data);
   
-  // Validate input data to prevent SQL injection
+  
   const validation = validateTournamentInput(sanitizedData);
   if (!validation.isValid) {
     connection.send(JSON.stringify({
@@ -52,7 +52,7 @@ const eventHandlers = {
 
 export async function createTournament(data, userId, connection) {
     try {
-        // Validate userId
+        
         if (!isValidUserId(userId)) {
             throw new Error('Invalid user ID format');
         }
@@ -65,7 +65,7 @@ export async function createTournament(data, userId, connection) {
         return;
     }
     
-    // Tournament adı validation
+    
     if (!data.name) {
         throw new Error('Tournament name is required');
     }
@@ -86,7 +86,7 @@ export async function createTournament(data, userId, connection) {
     
     await createTournamentService(sanitizedData, userId);
     
-    // Sanitize message before broadcasting
+    
     const message = sanitizeTournamentMessage({
         type: 'tournament',
         event: 'created',
@@ -97,7 +97,7 @@ export async function createTournament(data, userId, connection) {
 
 }
 export async function joinTournament(data, userId, connection) {
-    // Validate userId
+    
     if (!isValidUserId(userId)) {
         throw new Error('Invalid user ID format');
     }
@@ -145,7 +145,7 @@ export async function joinTournament(data, userId, connection) {
 }
 
 export async function leaveTournament(data, userId, connection) {
-    // Validate userId
+    
     if (!isValidUserId(userId)) {
         throw new Error('Invalid user ID format');
     }
@@ -166,10 +166,10 @@ export async function leaveTournament(data, userId, connection) {
     
     await leaveTournamentService(tournamentId, userId);
     
-    // Get current player count after leaving
+    
     const currentPlayers = await countTournamentPlayers(tournamentId);
     
-    // send update to all clients
+    
     const updateMessage = sanitizeTournamentMessage({
         type: 'tournament',
         event: 'playerLeft',
@@ -183,10 +183,10 @@ export async function leaveTournament(data, userId, connection) {
     await broadcastTournamentUpdateToAll(updateMessage);
 }
 
-// get tournament details - for lobby display
+
 export async function getTournamentDetails(data, userId, connection) {
     try {
-        // Validate userId
+        
         if (!isValidUserId(userId)) {
             throw new Error('Invalid user ID format');
         }
@@ -211,7 +211,7 @@ export async function getTournamentDetails(data, userId, connection) {
             event: 'details',
             data: { 
                 tournament: tournamentDetails,
-                userStatus, // 'spectator', 'active', 'eliminated'
+                userStatus, 
                 isParticipant
             }
         });
@@ -230,7 +230,7 @@ export async function getTournamentDetails(data, userId, connection) {
 
 export async function getTournamentBracket(data, userId, connection) {
     try {
-        // Validate userId
+        
         if (!isValidUserId(userId)) {
             throw new Error('Invalid user ID format');
         }

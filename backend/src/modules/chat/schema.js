@@ -1,6 +1,6 @@
-// Chat API Schemas for Fastify
 
-// GET /api/chat/history/:userId request schema
+
+
 export const getChatHistorySchema = {
   params: {
     type: 'object',
@@ -18,7 +18,7 @@ export const getChatHistorySchema = {
     properties: {
       limit: {
         type: 'integer',
-        minimum: -1,  // -1 değeri tüm mesajları getirmek için kullanılabilir
+        minimum: -1,
         maximum: 100,
         default: 50,
         description: 'Number of messages to retrieve. Use -1 to get all messages.'
@@ -102,7 +102,7 @@ export const getChatHistorySchema = {
   }
 };
 
-// PUT /api/chat/mark-read/:userId request schema
+
 export const markMessagesAsReadSchema = {
   params: {
     type: 'object',

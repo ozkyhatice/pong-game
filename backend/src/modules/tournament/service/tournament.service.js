@@ -3,15 +3,17 @@ import { sendMessage } from '../../chat/service/websocket.service.js';
 import { getActiveTournamentId, broadcastToTournamentPlayers, getTournamentParticipants, broadcastTournamentUpdateToAll} from '../utils/tournament.utils.js';
 import { sanitizeTournamentInput, prepareSqlParams, isValidUserId, sanitizeTournamentMessage } from '../utils/security.utils.js';
 
+
+// create a new tournament
 export async function createTournamentService(data, userId, connection) {
-    // Validate userId
+    
     if (!isValidUserId(userId)) {
         throw new Error('Invalid user ID format');
     }
     
     const db = await initDB();
     
-    // Sanitize input
+    
     const sanitizedData = sanitizeTournamentInput(data);
     const tournamentName = sanitizedData.name;
     const maxPlayers = sanitizedData.maxPlayers || 4;
@@ -28,7 +30,7 @@ export async function createTournamentService(data, userId, connection) {
         VALUES (?, NULL, NULL, ?, 'pending')
     `;
     try {
-        // Prepare parameters to prevent SQL injection
+        
         const params = prepareSqlParams([
             tournamentName,
             maxPlayers
@@ -41,7 +43,7 @@ export async function createTournamentService(data, userId, connection) {
     
     const newTournamentId = await getActiveTournamentId();    
     
-    // Sanitize before broadcasting
+    
     const updateMessage = sanitizeTournamentMessage({
         type: 'tournament',
         event: 'newTournamentCreated',
@@ -54,19 +56,21 @@ export async function createTournamentService(data, userId, connection) {
         }
     });
     
-    // broadcast to all online users
+    
     await broadcastTournamentUpdateToAll(updateMessage);
 }
 
 
 
 
-//event: 'join'
-//data: { tournamentId }
-//userId: userId
-//connection: ws connection
+
+
+
+
+
+// join a tournament
 export async function joinTournamentService(data, userId, connection) {
-    // Validate userId and tournamentId
+    
     if (!isValidUserId(userId)) {
         throw new Error('Invalid user ID format');
     }
@@ -82,7 +86,7 @@ export async function joinTournamentService(data, userId, connection) {
         UPDATE users SET currentTournamentId = ?, isEliminated = 0 WHERE id = ?
     `;
     try {
-        // Prepare parameters to prevent SQL injection
+        
         const params = prepareSqlParams([tournamentId, userId]);
         const result = await db.run(sql, params);
         return result;
@@ -92,10 +96,12 @@ export async function joinTournamentService(data, userId, connection) {
 }
 
 
+
+// start a tournament
 export async function startTournamentService(tournamentId) {
     const db = await initDB();
     
-    // active
+    
     const sql = `UPDATE tournaments SET status = "active", startAt = ? WHERE id = ?`;
     await db.run(sql, [new Date().toISOString(), tournamentId]);
     
@@ -189,7 +195,7 @@ export async function getTournamentBracketService(tournamentId) {
 export async function leaveTournamentService(tournamentId, userId) {
     const db = await initDB();
     
-    // clear user currentTournamentId
+    
     await db.run(
         'UPDATE users SET currentTournamentId = NULL WHERE id = ?', 
         [userId]
@@ -202,16 +208,16 @@ function generateTournamentBracket(participants) {
         throw new Error('Tournament must have exactly 4 participants');
     }
     
-    // shuffle participants
+    
     const shuffled = [...participants].sort(() => Math.random() - 0.5);
     
-    // create bracket  (4->2->1)
+    
     const bracket = [
         [], 
         []  
     ];
     
-    // round 1 matches 
+    
     for (let i = 0; i < 4; i += 2) {
         bracket[0].push({
             player1: shuffled[i],
@@ -220,7 +226,7 @@ function generateTournamentBracket(participants) {
         });
     }
     
-    // round 2 match
+    
     bracket[1].push({
         player1: null,
         player2: null,
@@ -244,27 +250,29 @@ async function createTournamentMatches(tournamentId, roundMatches, round) {
     }
 }
 
-// when a match ends, process the result
+
+
+// process tournament match result
 export async function processTournamentMatchResult(matchId, winnerId) {
     
     
     await updateTournamentPairingWithWinner(matchId, winnerId);
     const db = await initDB();
     
-    // Maç bilgilerini al
+    
     const match = await db.get(
         'SELECT * FROM matches WHERE id = ?', [matchId]
     );
     
     if (!match || !match.tournamentId) {
-        return; // isn't a tournament match
+        return; 
     }
     
     const tournamentId = match.tournamentId;
     const round = match.round;
     
     
-    // control for all matches in this round completed
+    
     const unfinishedMatches = await db.all(
         'SELECT * FROM matches WHERE tournamentId = ? AND round = ? AND winnerId IS NULL',
         [tournamentId, round]
@@ -272,7 +280,7 @@ export async function processTournamentMatchResult(matchId, winnerId) {
     
     
     if (unfinishedMatches.length > 0) {
-        // wait for other matches to complete
+        
         await broadcastToTournamentPlayers(tournamentId, {
             type: 'tournament',
             event: 'matchCompleted',
@@ -282,66 +290,41 @@ export async function processTournamentMatchResult(matchId, winnerId) {
     }
     
     
-    // show round results
+    
     await showRoundResults(tournamentId, round);
     
-    // wait 5 seconds then advance to next round
+    
     setTimeout(async () => {
         try {
             await advanceToNextRound(tournamentId, round);
         } catch (error) {
-            console.log(`❌ Error advancing to next round for tournament ${tournamentId}:`, error);
+            console.error(`Error advancing to next round for tournament ${tournamentId}:`, error);
         }
     }, 5000);
 }
 
-/**
- * Tournament eşleşmelerini (pairings) veritabanına kaydetme fonksiyonu
- * 
- * Bu fonksiyon, turnuva bracket'ındaki tüm eşleşmeleri veritabanına kaydeder.
- * Bracket, iki boyutlu bir dizi olup, ilk boyut turnuva roundlarını,
- * ikinci boyut her bir rounddaki maçları temsil eder.
- * 
- * Örnek bracket yapısı:
- * [
- *   [ // Round 1 (Semifinal)
- *     { player1: {...}, player2: {...}, winner: null }, // Match 1
- *     { player1: {...}, player2: {...}, winner: null }  // Match 2
- *   ],
- *   [ // Round 2 (Final)
- *     { player1: null, player2: null, winner: null }    // Final match
- *   ]
- * ]
- * 
- * @param {number} tournamentId - Turnuva ID'si
- * @param {Array} bracket - Turnuva bracket'ı (eşleşme ağacı)
- */
+
 async function storeTournamentPairings(tournamentId, bracket) {
     const db = await initDB();
     
-    // Mevcut pairings'i temizle - Turnuvaya ait tüm eski eşleşmeleri siler
-    // Bu, bracket'ı yeniden yapılandırırken veya güncellerken önemlidir
+    
     await db.run('DELETE FROM tournament_pairings WHERE tournamentId = ?', [tournamentId]);
     
-    // roundIndex: 0=Semifinal, 1=Final (4 kişilik turnuva için)
+    
     for (let roundIndex = 0; roundIndex < bracket.length; roundIndex++) {
         const round = bracket[roundIndex];
-        // Her rounddaki maçları pozisyonlarıyla birlikte kaydet
+        
         for (let position = 0; position < round.length; position++) {
             const match = round[position];
-            // tournament_pairings tablosuna eşleşmeyi kaydet
-            // roundIndex+1 yapılır çünkü veritabanında roundlar 1'den başlar (kod içinde 0'dan)
-            // position: Aynı round içindeki maçın pozisyonu (0, 1, ...)
-            // player1Id/player2Id: Eşleşmedeki oyuncuların ID'leri (henüz belirlenmemişse null)
             await db.run(
                 `INSERT INTO tournament_pairings (tournamentId, round, position, player1Id, player2Id) 
                  VALUES (?, ?, ?, ?, ?)`,
                 [
                     tournamentId, 
-                    roundIndex + 1,  // Veritabanında round 1'den başlar
-                    position,        // Maçın round içindeki pozisyonu
-                    match.player1?.id || null, // Optional chaining - player1 null ise null döndürür (final maçında, henüz yarı final sonuçlanmadığında null olur)
-                    match.player2?.id || null  // Optional chaining - player2 null ise null döndürür (final maçında, henüz yarı final sonuçlanmadığında null olur)
+                    roundIndex + 1,
+                    position,
+                    match.player1?.id || null,
+                    match.player2?.id || null
                 ]
             );
         }
@@ -383,7 +366,7 @@ async function showMatchPairings(tournamentId, roundMatches, round) {
             roundName,
             pairings,
             message: `${roundName} pairings revealed! Matches start in 5 seconds...`,
-            startsIn: 5 // seconds
+            startsIn: 5 
         }
     });
 }
@@ -421,7 +404,7 @@ async function showRoundResults(tournamentId, completedRound) {
                 defeatedPlayer: w.defeatedPlayer
             })),
             message: `${roundName} completed! ${winners.length} player${winners.length !== 1 ? 's' : ''} advancing to ${nextRoundName}.`,
-            nextRoundStartsIn: 5 // seconds
+            nextRoundStartsIn: 5 
         }
     });
 }
@@ -532,7 +515,6 @@ async function advanceToNextRound(tournamentId, currentRound) {
             });
             
         } catch (error) {
-            console.log(`Error starting round ${nextRound} for tournament ${tournamentId}:`, error);
         }
     }, 5000);
 }
@@ -593,7 +575,6 @@ async function autoCreateNextTournament() {
         });
         
     } catch (error) {
-        console.log('Error auto-creating tournament:', error);
     }
 }
 
@@ -650,7 +631,7 @@ export async function getUserTournamentStatus(tournamentId, userId) {
     
     return {
         isParticipant,
-        userStatus // 'spectator', 'active', 'eliminated'
+        userStatus 
     };
 }
 

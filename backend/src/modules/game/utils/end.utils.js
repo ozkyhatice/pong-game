@@ -18,7 +18,7 @@ export async function broadcastGameOver(room, userId) {
 
     }
     try {
-        // send game over to all players
+        
         for (const [socket] of room.sockets) {
             await sendMessage(socket, 'game', 'game-over', {
                 roomId: room.id,
@@ -30,7 +30,7 @@ export async function broadcastGameOver(room, userId) {
         
         metrics.totalGamesPlayed.inc();
         
-        // if tournament match, process the result
+        
         if (room.tournamentId && room.winnerId) {
             await processTournamentMatchResult(room.matchId, room.winnerId);
         }
@@ -42,11 +42,11 @@ export async function broadcastLeft(room, userId) {
     if (!room) {
         return;
     }
-    const userId2 = room.players.length === 2 ? room.players.filter(id => id !== userId) : []; // Array operations instead of Set
+    const userId2 = room.players.length === 2 ? room.players.filter(id => id !== userId) : []; 
     let winId = null;
     if (userId2) 
         winId = userId2[0];
-    // Stop game if it's running
+    
     if (room.started && !room.state.gameOver) {
         clearInterval(room.loop);
         room.started = false;
@@ -55,10 +55,10 @@ export async function broadcastLeft(room, userId) {
         room.endDate = new Date();
     }
     
-    // Always broadcast player left message
+    
     try {
         for (const [playerId, socket] of room.sockets) {
-            if (playerId !== userId) { // Don't send to the user who left
+            if (playerId !== userId) { 
                 await sendMessage(socket, 'game', 'player left', {
                     roomId: room.id,
                     winner: winId,
@@ -91,7 +91,7 @@ export async function clearAll(userId, message) {
         const room = rooms.get(roomId);
         if (room) {
           if (message === 'disconnect') {
-            // Pause the game and store game state
+            
             room.state.paused = true;
             if (room.loop) {
                 clearInterval(room.loop);
@@ -99,7 +99,7 @@ export async function clearAll(userId, message) {
             }
             room.sockets.delete(userId);
             
-            // Start 30-second reconnection timer            
+            
             await broadcast(room, "game", "paused", {
                 reason: "player-disconnected",
                 userId: userId,
@@ -107,20 +107,20 @@ export async function clearAll(userId, message) {
                 timeoutSeconds: 30
             });
             
-            // Set timeout to declare opponent winner after 30 seconds
+            
             room.disconnectionTimeout = setTimeout(async () => {
                 
-                // Check if room still exists and is still paused
+                
                 const currentRoom = rooms.get(roomId);
                 if (currentRoom && currentRoom.state.paused) {
-                    // Declare opponent as winner
+                    
                     const opponentId = user2;
                     currentRoom.winnerId = opponentId;
                     currentRoom.endDate = new Date();
                     currentRoom.state.gameOver = true;
                     
                     
-                    // Save game and process tournament if applicable
+                    
                     await saveGametoDbServices(currentRoom);
                     metrics.totalGamesPlayed.inc();
 
@@ -128,18 +128,17 @@ export async function clearAll(userId, message) {
                         await processTournamentMatchResult(currentRoom.matchId, currentRoom.winnerId);
                     }
                     
-                    // Update player stats
+                    
                     try {
                         const playerStats = [
-                            { userId: opponentId, isWinner: true },   // Kalan oyuncu kazanır
-                            { userId: userId, isWinner: false }       // Disconnect olan oyuncu kaybeder
+                            { userId: opponentId, isWinner: true },
+                            { userId: userId, isWinner: false }
                         ];
                         await updateMultipleUserStats(playerStats);
                     } catch (error) {
-                        console.log(` GAME STATS ERROR: Failed to update stats after timeout -> Error: ${error.message}`);
                     }
                     
-                    // Broadcast game over with disconnect reason
+                    
                     await broadcast(currentRoom, "game", "game-over", {
                         roomId: roomId,
                         winner: opponentId,
@@ -151,58 +150,57 @@ export async function clearAll(userId, message) {
                         round: currentRoom.round
                     });
                     
-                    // Clean up room
+                    
                     clearTimeout(currentRoom.disconnectionTimeout);
                     for (const playerId of currentRoom.players) {
                         userRoom.delete(playerId);
                     }
-                    currentRoom.players.length = 0; // Clear array instead of Set.clear()
+                    currentRoom.players.length = 0; 
                     currentRoom.sockets.clear();
                 }
-            }, 30000); // 30 seconds
+            }, 30000); 
           } else if (message === 'leave') {
             if (room.started && !room.state.gameOver) {
-                const players = room.players; // Already an array
+                const players = room.players; 
                 if (players.length === 2) {
                     room.winnerId = user2;
                     await saveGametoDbServices(room);
                     metrics.totalGamesPlayed.inc();
 
                     
-                    // if it is tournament match, process the result
+                    
                     if (room.tournamentId && room.winnerId) {
                         await processTournamentMatchResult(room.matchId, room.winnerId);
                     }
                     
-                    // Update user stats - winner gets +1 win, leaver gets +1 loss
+                    
                     try {
                         const playerStats = [
-                            { userId: user2, isWinner: true },    // Kalan oyuncu kazanır
-                            { userId: userId, isWinner: false }   // Çıkan oyuncu kaybeder
+                            { userId: user2, isWinner: true },
+                            { userId: userId, isWinner: false }
                         ];
                         
                         await updateMultipleUserStats(playerStats);
                     } catch (error) {
-                        console.log(` GAME STATS ERROR: Failed to update stats after leave -> Error: ${error.message}`);
                     }
                 }
             }
             await broadcastLeft(room, userId);
             
-            // Remove the user who left
+            
             userRoom.delete(userId);
-            const playerIndex = room.players.indexOf(userId); // Find index in array
+            const playerIndex = room.players.indexOf(userId); 
             if (playerIndex > -1) {
-                room.players.splice(playerIndex, 1); // Remove from array
+                room.players.splice(playerIndex, 1); 
             }
             room.sockets.delete(userId);
             
-            // Also remove the other user from the room since the game is over
+            
             if (user2) {
                 userRoom.delete(user2);
-                const player2Index = room.players.indexOf(user2); // Find index in array
+                const player2Index = room.players.indexOf(user2); 
                 if (player2Index > -1) {
-                    room.players.splice(player2Index, 1); // Remove from array
+                    room.players.splice(player2Index, 1); 
                 }
                 room.sockets.delete(user2);
             }

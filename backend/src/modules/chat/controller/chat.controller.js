@@ -19,13 +19,13 @@ import {
 } from '../../friend/service/friend.service.js';
 import { validateChatMessage, containsSqlInjection, sanitizeGeneralInput } from '../../../utils/validation.js';
 
-// Controller for sending undelivered messages when user comes online
-// Also sends unread messages when requested via REST API
+
+
 export async function undeliveredMessageController(userId, connection) {
   await sendMissedMessages(connection, userId);
 }
 
-// Controller for sending the list of online users to a connected client
+
 export async function onlineClientsController(connection) {
   const onlineClients = await getOnlineClients();
   connection.send(JSON.stringify({
@@ -34,20 +34,22 @@ export async function onlineClientsController(connection) {
   }));
 }
 
-// WebSocket message processing controller
-// params: message (string), userId (number)
+
+
+
+// process chat message from websocket
 export async function processChatMessage(message, userId) {
   try {
-    // Parse message with security measures
+    
     const { parseWebSocketMessage } = await import('../../../websocket/utils/security.js');
     const msgObj = parseWebSocketMessage(message);
     const { receiverId, content, senderId } = msgObj;
     const type = msgObj.type || 'message';
 
     if (type === 'read') {
-      // if senderId is provided, mark messages from that sender as read
+      
       if (senderId) {
-        // security: sanitize senderId
+        
         const sanitizedSenderId = parseInt(senderId);
         if (isNaN(sanitizedSenderId)) {
           throw new Error('Invalid sender ID format');
@@ -55,7 +57,7 @@ export async function processChatMessage(message, userId) {
         
         await markSpecificMessagesAsRead(userId, sanitizedSenderId);
       } else {
-        // mark all messages as read
+        
         await markMessagesAsRead(userId);
       }
     } else if (type === 'message') {
@@ -83,13 +85,13 @@ export async function processChatMessage(message, userId) {
         throw new Error('You cannot send a message to yourself');
       }
       
-      // Check if the sender is blocked by the receiver
+      
       const isBlocked = await isUserBlocked(userId, sanitizedReceiverId);
       if (isBlocked) {
         throw new Error('You cannot send a message to this user as they have blocked you');
       }
 
-      // save always to DB, if user is online it will be sent in real-time
+      
       const newMessage = await addMessageToDb(userId, sanitizedReceiverId, sanitizedContent);
       
       if (newMessage) {
@@ -103,12 +105,11 @@ export async function processChatMessage(message, userId) {
           createdAt: new Date().toISOString()
         };
         
-        // if both users are online, send in real-time
+        
         if (await isConnected(sanitizedReceiverId) && await isConnected(userId)) {
           try {
             await handleRealtimeMessage(userId, sanitizedReceiverId, sanitizedContent, messageObj);
           } catch (err) {
-            console.log('Error sending message:', err);
           }
         }
       }
@@ -118,7 +119,7 @@ export async function processChatMessage(message, userId) {
   }
 }
 
-// REST API Controller for fetching chat history between two users
+
 export async function getChatHistoryController(request, reply) {
   try {
     const otherUserIdParam = request.params.userId;
@@ -140,7 +141,7 @@ export async function getChatHistoryController(request, reply) {
       });
     }
     
-    // Sorgulama parametrelerini güvenli şekilde işle
+    
     const limit = parseInt(request.query.limit) || 50;
     const offset = parseInt(request.query.offset) || 0;
     let before = null;
@@ -166,7 +167,7 @@ export async function getChatHistoryController(request, reply) {
       }
     }
     
-    // Check if the current user is blocked by the other user
+    
     const isBlocked = await isUserBlocked(currentUserId, otherUserId);
     if (isBlocked) {
       return reply.status(403).send({
@@ -194,13 +195,13 @@ export async function getChatHistoryController(request, reply) {
   }
 }
 
-// REST API Controller for marking messages as read from a specific sender
+
 export async function markMessagesAsReadController(request, reply) {
   try {
     const senderIdParam = request.params.userId;
     const currentUserId = request.user.id;
     
-    // Güvenlik: senderId'yi doğrula ve sanitize et
+    
     const senderId = parseInt(senderIdParam);
     if (isNaN(senderId)) {
       return reply.status(400).send({

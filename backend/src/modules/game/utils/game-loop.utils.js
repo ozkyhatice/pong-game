@@ -6,7 +6,7 @@ const FRAME_INTERVAL = 1000 / FPS;
 
 export function startGameLoop(room, connection) {
     if (room.loop) {
-        stopGameLoop(room); // if there is an existing loop, clear it first
+        stopGameLoop(room); 
     }
     
     room.loop = setInterval(async () => {
@@ -43,5 +43,5 @@ function shouldUpdateGame(room) {
 
 async function updateGameState(room, connection) {
     await updateBall(room, connection);
-    await stateGame({ roomId: room.id }, room.players[0]); // Already an array, get first player
+    await stateGame({ roomId: room.id }, room.players[0]); 
 }

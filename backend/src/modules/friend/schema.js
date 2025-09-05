@@ -7,7 +7,7 @@ export const createFriendRequestSchema = {
       targetId: {
         type: 'integer',
         description: "ID of the user to send friend request to",
-        minimum: 1 // Ensure positive integers only
+        minimum: 1 
       }
     },
     required: ['targetId']
@@ -49,7 +49,7 @@ export const acceptRequestSchema = {
       targetId: {
         type: 'integer',
         description: "Sender's user ID",
-        minimum: 1 // Ensure positive integers only
+        minimum: 1 
       }
     },
     required: ['targetId']
@@ -97,7 +97,7 @@ export const rejectRequestSchema = {
       targetId: {
         type: 'integer',
         description: "Sender's user ID",
-        minimum: 1 // Ensure positive integers only
+        minimum: 1 
       }
     },
     required: ['targetId']
@@ -238,7 +238,7 @@ export const deleteFriendSchema = {
       targetId: {
         type: 'integer',
         description: "ID of the friend to remove",
-        minimum: 1 // Ensure positive integers only
+        minimum: 1 
       }
     },
     required: ['targetId']
@@ -280,7 +280,7 @@ export const blockFriendSchema = {
       id: {
         type: 'integer',
         description: "ID of the user to block",
-        minimum: 1 // Ensure positive integers only
+        minimum: 1 
       }
     },
     required: ['id']
@@ -322,7 +322,7 @@ export const unblockFriendSchema = {
       id: {
         type: 'integer',
         description: "ID of the user to unblock",
-        minimum: 1 // Ensure positive integers only
+        minimum: 1 
       }
     },
     required: ['id']
@@ -364,7 +364,7 @@ export const getBlockedUsersSchema = {
       id: {
         type: 'integer',
         description: "ID of the user whose blocked list is to be fetched",
-        minimum: 1 // Ensure positive integers only
+        minimum: 1 
       }
     },
     required: ['id']  

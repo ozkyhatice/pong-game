@@ -1,7 +1,7 @@
 import { sanitizeInput } from '../../../utils/security.js';
 import { containsSqlInjection } from '../../../utils/validation.js';
 
-// Sanitizes game-related input data to prevent XSS attacks
+
 export function sanitizeGameInput(data) {
   if (!data || typeof data !== 'object') {
     return data;
@@ -9,7 +9,7 @@ export function sanitizeGameInput(data) {
   
   const sanitized = { ...data };
   
-  // Sanitize common fields
+  
   if (sanitized.roomId && typeof sanitized.roomId === 'string') {
     sanitized.roomId = sanitizeInput(sanitized.roomId);
   }
@@ -26,8 +26,8 @@ export function sanitizeGameInput(data) {
     sanitized.message = sanitizeInput(sanitized.message);
   }
   
-  // Coordinates don't need sanitization as they're numbers
-  // but we should make sure they are numbers
+  
+  
   if (sanitized.y !== undefined) {
     sanitized.y = Number(sanitized.y);
   }
@@ -39,13 +39,13 @@ export function sanitizeGameInput(data) {
   return sanitized;
 }
 
-// Validates game-related input data to prevent injection attacks
+
 export function validateGameInput(data) {
   if (!data) {
     return { isValid: false, message: 'No data provided' };
   }
   
-  // Check for SQL injection in string fields
+  
   for (const [key, value] of Object.entries(data)) {
     if (typeof value === 'string' && containsSqlInjection(value)) {
       return { 
@@ -55,9 +55,9 @@ export function validateGameInput(data) {
     }
   }
   
-  // Validate roomId if present
+  
   if (data.roomId && typeof data.roomId === 'string') {
-    // Room IDs should be UUIDs or match a specific pattern
+    
     if (!/^[a-zA-Z0-9-]+$/.test(data.roomId)) {
       return { 
         isValid: false, 
@@ -66,7 +66,7 @@ export function validateGameInput(data) {
     }
   }
   
-  // Validate coordinates
+  
   if (data.y !== undefined && (isNaN(Number(data.y)) || !isFinite(data.y))) {
     return { 
       isValid: false, 
@@ -84,13 +84,13 @@ export function validateGameInput(data) {
   return { isValid: true, message: 'Input is valid' };
 }
 
-// Checks if a user ID is valid (numeric and positive)
+
 export function isValidUserId(userId) {
-  // User IDs should be integers in this application
+  
   return !isNaN(parseInt(userId)) && parseInt(userId).toString() === userId.toString();
 }
 
-// Prepares SQL parameters by sanitizing inputs to prevent SQL injection
+
 export function prepareSqlParams(params) {
   if (!Array.isArray(params)) {
     return [];
@@ -98,7 +98,7 @@ export function prepareSqlParams(params) {
   
   return params.map(param => {
     if (typeof param === 'string') {
-      // Remove any potential SQL injection patterns
+      
       return param.replace(/['";]/g, '');
     }
     return param;

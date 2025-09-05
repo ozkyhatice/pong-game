@@ -2,13 +2,13 @@ import { initDB } from '../../../config/db.js';
 import { prepareSqlParams, isValidUserId, sanitizeUserProfile } from '../utils/security.utils.js';
 
 export async function getUserById(id) {
-  // Validate user ID
+  
   if (!isValidUserId(id)) {
     return null;
   }
   
   const db = await initDB();
-  // Use prepareSqlParams to prevent SQL injection
+  
   const params = prepareSqlParams([id]);
   const user = await db.get('SELECT id, username, email, avatar, wins, losses, isTwoFAEnabled, isGoogleAuth FROM users WHERE id = ?', params);
   
@@ -25,7 +25,7 @@ export async function getUserByUsername(username) {
   }
   
   const db = await initDB();
-  // Use prepareSqlParams to prevent SQL injection
+  
   const params = prepareSqlParams([username]);
   const user = await db.get('SELECT id, username, email, avatar, wins, losses, isTwoFAEnabled FROM users WHERE username = ?', params);
   
@@ -37,20 +37,20 @@ export async function getUserByUsername(username) {
 }
 
 export async function findUserById(id) {
-  // Validate user ID
+  
   if (!isValidUserId(id)) {
     return null;
   }
   
   const db = await initDB();
-  // Use prepareSqlParams to prevent SQL injection
+  
   const params = prepareSqlParams([id]);
   const user = await db.get('SELECT * FROM users WHERE id = ?', params);
   return user;
 }
 
 export async function updateProfile(userId, { username, email }) {
-  // Validate user ID
+  
   if (!isValidUserId(userId)) {
     throw new Error('Invalid user ID format');
   }
@@ -67,9 +67,9 @@ export async function updateProfile(userId, { username, email }) {
     throw new Error('Cannot change email for Google Auth users');
   }
 
-  // Check if username is already taken
+  
   if (username) {
-    // Use prepareSqlParams to prevent SQL injection
+    
     const usernameParams = prepareSqlParams([username, userId]);
     const existingUser = await db.get('SELECT id FROM users WHERE username = ? AND id != ?', usernameParams);
     if (existingUser) {
@@ -77,13 +77,13 @@ export async function updateProfile(userId, { username, email }) {
     }
   }
 
-  // Check if email is already taken
+  
   if (email) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new Error('Invalid email format');
     }
 
-    // Use prepareSqlParams to prevent SQL injection
+    
     const emailParams = prepareSqlParams([email, userId]);
     const existingEmail = await db.get('SELECT id FROM users WHERE email = ? AND id != ?', emailParams);
     if (existingEmail) {
@@ -91,7 +91,7 @@ export async function updateProfile(userId, { username, email }) {
     }
   }
 
-    // Validate username format and length
+    
   if (username) {
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       throw new Error('Username can only contain letters, numbers, and underscores');
@@ -106,8 +106,8 @@ export async function updateProfile(userId, { username, email }) {
     }
   }
 
-  // Update user
-  // Use prepareSqlParams to prevent SQL injection
+  
+  
   const updateParams = prepareSqlParams([username, email, userId]);
   const result = await db.run(
     'UPDATE users SET username = COALESCE(?, username), email = COALESCE(?, email) WHERE id = ?',
@@ -122,18 +122,18 @@ export async function updateProfile(userId, { username, email }) {
 }
 
 export async function updateAvatar(userId, avatarPath) {
-  // Validate user ID
+  
   if (!isValidUserId(userId)) {
     throw new Error('Invalid user ID format');
   }
   
-  // Sanitize the avatar path to prevent XSS
+  
   const sanitizedAvatarPath = avatarPath.replace(/[<>"']/g, '');
   
   const db = await initDB();
   
-  // Avatar yolunu veritabanında güncelle
-  // Use prepareSqlParams to prevent SQL injection
+  
+  
   const params = prepareSqlParams([sanitizedAvatarPath, userId]);
   const result = await db.run(
     'UPDATE users SET avatar = ? WHERE id = ?',
@@ -144,18 +144,18 @@ export async function updateAvatar(userId, avatarPath) {
     throw new Error('User not found');
   }
 
-  // Güncellenmiş kullanıcıyı geri döndür
+  
   return await getUserById(userId);
 }
 
 export async function getUserPublicInfo(id) {
-  // Validate user ID
+  
   if (!isValidUserId(id)) {
     return null;
   }
   
   const db = await initDB();
-  // Use prepareSqlParams to prevent SQL injection
+  
   const params = prepareSqlParams([id]);
   const user = await db.get('SELECT id, username, avatar, wins, losses FROM users WHERE id = ?', params);
   
@@ -169,7 +169,7 @@ export async function getUserPublicInfo(id) {
 export async function getUsersPublicInfo(ids) {
   if (!ids || ids.length === 0) return [];
   
-  // Validate all user IDs
+  
   const validIds = ids.filter(id => isValidUserId(id));
   if (validIds.length !== ids.length) {
   }
@@ -178,32 +178,32 @@ export async function getUsersPublicInfo(ids) {
   
   const db = await initDB();
   const placeholders = validIds.map(() => '?').join(',');
-  // Use prepareSqlParams to prevent SQL injection
+  
   const params = prepareSqlParams(validIds);
   const users = await db.all(
     `SELECT id, username, avatar, wins, losses FROM users WHERE id IN (${placeholders})`,
     params
   );
   
-  // Sanitize all user profiles
+  
   return users.map(user => sanitizeUserProfile(user));
 }
 
 export async function updateUserStats(userId, isWinner) {
-  // Validate user ID
+  
   if (!isValidUserId(userId)) {
     throw new Error('Invalid user ID format');
   }
   
   const db = await initDB();
-  // Use prepareSqlParams to prevent SQL injection
+  
   const params = prepareSqlParams([userId]);
   
   if (isWinner) {
-    // Kazanan kullanıcının wins değerini artır
+    
     await db.run('UPDATE users SET wins = COALESCE(wins, 0) + 1 WHERE id = ?', params);
   } else {
-    // Kaybeden kullanıcının losses değerini artır
+    
     await db.run('UPDATE users SET losses = COALESCE(losses, 0) + 1 WHERE id = ?', params);
   }
 }
@@ -212,18 +212,18 @@ export async function updateMultipleUserStats(players) {
   const db = await initDB();
   
   try {
-    // Transaction ile tüm güncellemeleri yap
+    
     await db.run('BEGIN TRANSACTION');
     
     for (const player of players) {
       const { userId, isWinner } = player;
       
-      // Validate user ID
+      
       if (!isValidUserId(userId)) {
-        continue; // Skip this user but continue with others
+        continue; 
       }
       
-      // Use prepareSqlParams to prevent SQL injection
+      
       const params = prepareSqlParams([userId]);
       
       if (isWinner) {

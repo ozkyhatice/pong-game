@@ -1,7 +1,9 @@
 monitoring/data
 data/*
 *.pem
-
+.db
+backend/db/*
+uploads/*
 
 # Dependencies
 node_modules/

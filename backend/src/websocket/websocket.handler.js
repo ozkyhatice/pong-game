@@ -7,7 +7,7 @@ export async function websocketHandler(connection, request) {
   let userId = null;
   
   try {
-    // Handle connection and authentication
+    
     userId = await handleConnection(connection, request);
     
     await handleReconnection(connection, userId);
@@ -15,14 +15,14 @@ export async function websocketHandler(connection, request) {
     const { checkPendingTournamentMatches } = await import('../modules/tournament/services/match.service.js');
     await checkPendingTournamentMatches(userId);
     
-    // Handle incoming messages with security protections
+    
     connection.on('message', async (message) => {
       try {
-        // Message is validated and sanitized in routeMessage function
+        
         await routeMessage(message, userId, connection);
       } catch (err) {
         
-        // Don't expose detailed error messages to client for security reasons
+        
         const clientErrorMessage = err.message.includes('SQL injection') || 
                                   err.message.includes('XSS') ? 
                                   'Security violation detected' : 
@@ -35,7 +35,7 @@ export async function websocketHandler(connection, request) {
       }
     });
 
-    // Handle disconnect
+    
     connection.on('close', async () => {
       if (userId) {
         await handleDisconnect(userId);

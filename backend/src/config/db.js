@@ -7,7 +7,7 @@ export const initDB = async () => {
     driver: sqlite3.Database
   });
 
-  // Create users table
+  
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,7 +26,7 @@ export const initDB = async () => {
     )
   `);
 
-  // Create friends table
+  
   await db.exec(`
     CREATE TABLE IF NOT EXISTS friends (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +39,7 @@ export const initDB = async () => {
     )
   `);
 
-  // Create blocked_users table
+  
   await db.exec(`
     CREATE TABLE IF NOT EXISTS blocked_users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,7 +51,7 @@ export const initDB = async () => {
     )
   `);
 
-  // Create messages table
+  
   await db.exec(`
     CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,7 +96,7 @@ export const initDB = async () => {
       FOREIGN KEY (winnerId) REFERENCES users(id) ON DELETE SET NULL
     )`);
 
-  // Create tournament_pairings table to store all bracket information
+  
   await db.exec(`
     CREATE TABLE IF NOT EXISTS tournament_pairings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

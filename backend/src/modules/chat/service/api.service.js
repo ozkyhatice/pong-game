@@ -1,10 +1,10 @@
 import { initDB } from '../../../config/db.js';
 
-// params: userId (number), otherUserId (number), options (object with limit, offset, before, after)
+
 export async function getChatHistory(userId, otherUserId, options = {}) {
   const db = await initDB();
   
-  // Sanitize and validate input parameters
+  
   const limit = Number.isInteger(options.limit) && options.limit > 0 ? options.limit : 50;
   const offset = Number.isInteger(options.offset) && options.offset >= 0 ? options.offset : 0;
   
@@ -14,9 +14,9 @@ export async function getChatHistory(userId, otherUserId, options = {}) {
   )`;
   let params = [userId, otherUserId, otherUserId, userId];
   
-  // Date filtering - using parameterized queries for safety
+  
   if (options.before) {
-    // Validate date format
+    
     const beforeDate = new Date(options.before);
     if (!isNaN(beforeDate.getTime())) {
       whereClause += ` AND createdAt < ?`;
@@ -25,7 +25,7 @@ export async function getChatHistory(userId, otherUserId, options = {}) {
   }
   
   if (options.after) {
-    // Validate date format
+    
     const afterDate = new Date(options.after);
     if (!isNaN(afterDate.getTime())) {
       whereClause += ` AND createdAt > ?`;
@@ -33,12 +33,12 @@ export async function getChatHistory(userId, otherUserId, options = {}) {
     }
   }
   
-  // Get total count for pagination
+  
   const countQuery = `SELECT COUNT(*) as total FROM messages WHERE ${whereClause}`;
   const countResult = await db.get(countQuery, params);
   const totalCount = countResult.total;
   
-  // Get messages with pagination - using parameterized queries for limit and offset
+  
   let query = `
     SELECT * FROM messages 
     WHERE ${whereClause}
@@ -47,7 +47,7 @@ export async function getChatHistory(userId, otherUserId, options = {}) {
   
   let queryParams = [...params];
   
-  // Eğer limit belirtilmişse sorguya ekle
+  
   if (limit !== null) {
     query += ' LIMIT ? OFFSET ?';
     queryParams.push(limit, offset);
@@ -56,7 +56,7 @@ export async function getChatHistory(userId, otherUserId, options = {}) {
   const messages = await db.all(query, queryParams);
   
   return {
-    messages: messages.reverse(), // Reverse to show oldest first
+    messages: messages.reverse(), 
     totalCount,
     hasMore: offset + limit < totalCount,
     pagination: {
@@ -67,14 +67,14 @@ export async function getChatHistory(userId, otherUserId, options = {}) {
   };
 }
 
-// params: userId (number), otherUserId (number), page (number), limit (number)
+
 export async function getPaginatedMessages(userId, otherUserId, page = 1, limit = 50) {
-  // Handle special case for getting all messages
+  
   if (limit === -1 || limit === '-1') {
     return await getChatHistory(userId, otherUserId, { limit: -1 });
   }
   
-  // Validate and sanitize input
+  
   const sanitizedPage = Number.isInteger(Number(page)) && Number(page) > 0 ? Number(page) : 1;
   const sanitizedLimit = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Number(limit) : 50;
   
@@ -82,11 +82,11 @@ export async function getPaginatedMessages(userId, otherUserId, page = 1, limit 
   return await getChatHistory(userId, otherUserId, { limit: sanitizedLimit, offset });
 }
 
-// params: userId (number), limit (number)
+
 export async function getRecentConversations(userId, limit = 10) {
   const db = await initDB();
   
-  // Sanitize and validate limit
+  
   const sanitizedLimit = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Number(limit) : 10;
   
   const query = `

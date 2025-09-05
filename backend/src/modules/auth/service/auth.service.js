@@ -28,7 +28,7 @@ export async function registerUser({ username, email, password }) {
     throw new Error('Invalid characters detected in input');
   }
 
-  // Sanitize username to allow only letters, numbers, and underscores
+  
   const cleanUsername = username.replace(/[^a-zA-Z0-9_]/g, '');
   
   if (!cleanUsername || cleanUsername.length < 3) {
@@ -44,10 +44,9 @@ export async function registerUser({ username, email, password }) {
     throw new Error('Email or username already taken');
   }
 
-  // Hash the password before storing
+  
   const hashedPassword = await argon2.hash(password);
 
-  // default avatar using Dicebear
   const avatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${cleanUsername}`;
 
   const result = await db.run(
@@ -83,7 +82,7 @@ export async function loginUser({ email, password }) {
     throw new Error('User not found');
   }
 
-  // control if user registered via google oauth
+  
   if (!user.password) {
     throw new Error('This account uses Google OAuth. Please login with Google.');
   }
@@ -125,7 +124,7 @@ export async function handleGoogleUser({ email, name, picture }) {
       avatar: picture 
     };
   } else {
-    // if user exists but has no avatar or uses default avatar, update it with Google picture
+    
     const hasUploadedAvatar = user.avatar && (user.avatar.includes('/api/uploads/avatars/'));
     if (!hasUploadedAvatar) {
       await db.run(
@@ -146,7 +145,7 @@ export async function handleGoogleUser({ email, name, picture }) {
   };
 }
 
-// generates a unique username based on the provided name and current timestamp
+
 function generateUniqueUsername(name) {
   const timestamp = Date.now();
   const cleanName = name.replace(/[^a-zA-Z0-9]/g, '');

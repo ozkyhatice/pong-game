@@ -23,7 +23,7 @@ export async function createFriendRequest(request, reply) {
   const requesterId = request.user.id;
   const targetIdRaw = request.params.targetId;
 
-  // Validate and sanitize target ID
+  
   const targetIdValidation = validateUserId(targetIdRaw);
   if (!targetIdValidation.isValid) {
     return reply.code(400).send({ error: targetIdValidation.message });
@@ -31,7 +31,7 @@ export async function createFriendRequest(request, reply) {
   
   const targetId = targetIdValidation.sanitizedValue;
 
-  // Check for SQL injection patterns in all inputs
+  
   if (containsSqlInjection(String(requesterId)) || containsSqlInjection(String(targetId))) {
     return reply.code(400).send({ error: 'Invalid input detected' });
   }
@@ -45,7 +45,7 @@ export async function createFriendRequest(request, reply) {
     return reply.code(400).send({ error: 'You cannot send a friend request to yourself' });
   }
 
-  // Check if either user has blocked the other
+  
   const isBlocked = await isUserBlocked(requesterId, targetId);
   const isBlockedReverse = await isUserBlocked(targetId, requesterId);
   
@@ -73,7 +73,7 @@ export async function createFriendRequest(request, reply) {
 export async function getIncomingRequests(request, reply) {
   const userId = request.user.id;
   
-  // Check for SQL injection in userId
+  
   if (containsSqlInjection(String(userId))) {
     return reply.code(400).send({ error: 'Invalid input detected' });
   }
@@ -81,12 +81,12 @@ export async function getIncomingRequests(request, reply) {
   try {
     const requests = await getIncomingFriendRequestsWithUserInfo(userId);
     
-    // Sanitize user data before sending response
+    
     const sanitizedRequests = requests.map(request => {
-      // Create a new object to avoid modifying the original
+      
       const sanitizedRequest = { ...request };
       
-      // Sanitize sender info
+      
       if (sanitizedRequest.senderInfo) {
         if (sanitizedRequest.senderInfo.username) {
           sanitizedRequest.senderInfo.username = escapeHTML(sanitizedRequest.senderInfo.username);
@@ -109,7 +109,7 @@ export async function acceptRequest(request, reply) {
   const userId = request.user.id;
   const targetIdRaw = request.params.targetId;
 
-  // Validate and sanitize target ID
+  
   const targetIdValidation = validateUserId(targetIdRaw);
   if (!targetIdValidation.isValid) {
     return reply.code(400).send({ error: targetIdValidation.message });
@@ -117,12 +117,12 @@ export async function acceptRequest(request, reply) {
   
   const targetId = targetIdValidation.sanitizedValue;
 
-  // Check for SQL injection patterns
+  
   if (containsSqlInjection(String(userId)) || containsSqlInjection(String(targetId))) {
     return reply.code(400).send({ error: 'Invalid input detected' });
   }
 
-  // Check if either user has blocked the other
+  
   const isBlocked = await isUserBlocked(userId, targetId);
   const isBlockedReverse = await isUserBlocked(targetId, userId);
   
@@ -152,7 +152,7 @@ export async function rejectRequest(request, reply) {
   const userId = request.user.id;
   const targetIdRaw = request.params.targetId;
 
-  // Validate and sanitize target ID
+  
   const targetIdValidation = validateUserId(targetIdRaw);
   if (!targetIdValidation.isValid) {
     return reply.code(400).send({ error: targetIdValidation.message });
@@ -160,7 +160,7 @@ export async function rejectRequest(request, reply) {
   
   const targetId = targetIdValidation.sanitizedValue;
 
-  // Check for SQL injection patterns
+  
   if (containsSqlInjection(String(userId)) || containsSqlInjection(String(targetId))) {
     return reply.code(400).send({ error: 'Invalid input detected' });
   }
@@ -181,7 +181,7 @@ export async function rejectRequest(request, reply) {
 export async function getFriendsListController(request, reply) {
   const userId = request.user.id;
   
-  // Check for SQL injection in userId
+  
   if (containsSqlInjection(String(userId))) {
     return reply.code(400).send({ error: 'Invalid input detected' });
   }
@@ -189,12 +189,12 @@ export async function getFriendsListController(request, reply) {
   try {
     const friends = await getFriendsListWithUserInfo(userId);
     
-    // Sanitize user data before sending response
+    
     const sanitizedFriends = friends.map(friend => {
-      // Create a new object to avoid modifying the original
+      
       const sanitizedFriend = { ...friend };
       
-      // Sanitize friend info
+      
       if (sanitizedFriend.friendInfo) {
         if (sanitizedFriend.friendInfo.username) {
           sanitizedFriend.friendInfo.username = escapeHTML(sanitizedFriend.friendInfo.username);
@@ -216,7 +216,7 @@ export async function getFriendsListController(request, reply) {
 export async function getSentRequestsController(request, reply) {
   const userId = request.user.id;
   
-  // Check for SQL injection in userId
+  
   if (containsSqlInjection(String(userId))) {
     return reply.code(400).send({ error: 'Invalid input detected' });
   }
@@ -224,12 +224,12 @@ export async function getSentRequestsController(request, reply) {
   try {
     const requests = await getSentRequestsWithUserInfo(userId);
     
-    // Sanitize user data before sending response
+    
     const sanitizedRequests = requests.map(request => {
-      // Create a new object to avoid modifying the original
+      
       const sanitizedRequest = { ...request };
       
-      // Sanitize target info
+      
       if (sanitizedRequest.targetInfo) {
         if (sanitizedRequest.targetInfo.username) {
           sanitizedRequest.targetInfo.username = escapeHTML(sanitizedRequest.targetInfo.username);
@@ -252,7 +252,7 @@ export async function blockFriendController(request, reply) {
   const userId = request.user.id;
   const targetIdRaw = request.params.id;
   
-  // Validate and sanitize target ID
+  
   const targetIdValidation = validateUserId(targetIdRaw);
   if (!targetIdValidation.isValid) {
     return reply.code(400).send({ error: targetIdValidation.message });
@@ -260,7 +260,7 @@ export async function blockFriendController(request, reply) {
   
   const targetId = targetIdValidation.sanitizedValue;
 
-  // Check for SQL injection patterns
+  
   if (containsSqlInjection(String(userId)) || containsSqlInjection(String(targetId))) {
     return reply.code(400).send({ error: 'Invalid input detected' });
   }
@@ -292,7 +292,7 @@ export async function unblockFriendController(request, reply) {
   const userId = request.user.id;
   const targetIdRaw = request.params.id;
   
-  // Validate and sanitize target ID
+  
   const targetIdValidation = validateUserId(targetIdRaw);
   if (!targetIdValidation.isValid) {
     return reply.code(400).send({ error: targetIdValidation.message });
@@ -300,7 +300,7 @@ export async function unblockFriendController(request, reply) {
   
   const targetId = targetIdValidation.sanitizedValue;
 
-  // Check for SQL injection patterns
+  
   if (containsSqlInjection(String(userId)) || containsSqlInjection(String(targetId))) {
     return reply.code(400).send({ error: 'Invalid input detected' });
   }
@@ -332,7 +332,7 @@ export async function deleteFriendController(request, reply) {
   const userId = request.user.id;
   const targetIdRaw = request.params.targetId;
 
-  // Validate and sanitize target ID
+  
   const targetIdValidation = validateUserId(targetIdRaw);
   if (!targetIdValidation.isValid) {
     return reply.code(400).send({ error: targetIdValidation.message });
@@ -340,7 +340,7 @@ export async function deleteFriendController(request, reply) {
   
   const targetId = targetIdValidation.sanitizedValue;
 
-  // Check for SQL injection patterns
+  
   if (containsSqlInjection(String(userId)) || containsSqlInjection(String(targetId))) {
     return reply.code(400).send({ error: 'Invalid input detected' });
   }
@@ -369,7 +369,7 @@ export async function deleteFriendController(request, reply) {
 export async function getBlockedUsersController(request, reply) {
   const userId = request.user.id;
   
-  // Check for SQL injection in userId
+  
   if (containsSqlInjection(String(userId))) {
     return reply.code(400).send({ error: 'Invalid input detected' });
   }
@@ -377,9 +377,9 @@ export async function getBlockedUsersController(request, reply) {
   try {
     const blockedUsers = await getBlockedUsers(userId);
     
-    // Sanitize user data before sending response
+    
     const sanitizedBlockedUsers = blockedUsers.map(user => {
-      // Sanitize any string fields to prevent XSS
+      
       if (user.username) user.username = escapeHTML(user.username);
       if (user.avatar) user.avatar = escapeHTML(user.avatar);
       return user;

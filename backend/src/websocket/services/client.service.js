@@ -1,4 +1,4 @@
-// Global client management service for both chat and game
+
 import { WebSocket } from 'ws';
 
 export const clients = new Map();

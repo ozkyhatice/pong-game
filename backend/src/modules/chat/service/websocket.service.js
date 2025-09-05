@@ -11,18 +11,18 @@ import {
 import { getUserById } from '../../user/service/user.service.js';
 import { isUserBlocked } from '../../friend/service/friend.service.js';
 
-// WebSocket Specific Operations
+
 export async function sendMissedMessages(connection, userId) {
   if (connection && connection.readyState === WebSocket.OPEN) {
-    // get undelivered and unread messages
+    
     const undeliveredMessages = await getUndeliveredMessages(userId);
     const unreadMessages = await getUnreadMessages(userId);
 
-    // Filter out messages from blocked users
+    
     const allowedUndelivered = [];
     for (const msg of undeliveredMessages) {
-      const blockedByRecipient = await isUserBlocked(msg.senderId, userId); // is receiver blocked sender?
-      const blockedRecipient = await isUserBlocked(userId, msg.senderId);  // is sender blocked receiver?
+      const blockedByRecipient = await isUserBlocked(msg.senderId, userId); 
+      const blockedRecipient = await isUserBlocked(userId, msg.senderId);  
       if (!blockedByRecipient && !blockedRecipient) {
         allowedUndelivered.push(msg);
       }
@@ -63,12 +63,11 @@ export async function sendMissedMessages(connection, userId) {
     try {
       connection.send(JSON.stringify(messagePayload));
       
-      // Mark undelivered messages as delivered
+      
       for (const msg of allowedUndelivered) {
         await updateMessageStatus(msg.senderId, msg.receiverId, msg);
       }
     } catch (err) {
-      console.log('Error sending missed messages:', err);
     }
   }
 }
@@ -98,12 +97,11 @@ export async function sendMessage(senderId, receiverId, content, message) {
     
     await updateMessageStatus(senderId, receiverId, message);
   } catch (err) {
-    console.log('Error in sendMessage:', err);
   }
 }
 
 export async function handleRealtimeMessage(senderId, receiverId, content, messageObj) {
-  // Real-time message handling with block checks
+  
   try {
     const isBlocked = await isUserBlocked(senderId, receiverId);
     if (isBlocked) {
@@ -129,13 +127,13 @@ export async function getOnlineClients(requesterId = null) {
     const onlineClients = [];
     
     for (const userId of onlineClientIds) {
-      // If requesterId is provided, hide users who are blocked by the requester
-      // or who have blocked the requester
+      
+      
       if (requesterId) {
-        const blockedByRequester = await isUserBlocked(userId, requesterId); // is userId blocked by requester?
-        const blockedRequester = await isUserBlocked(requesterId, userId); // is requester blocked by userId?
+        const blockedByRequester = await isUserBlocked(userId, requesterId); 
+        const blockedRequester = await isUserBlocked(requesterId, userId); 
         if (blockedByRequester || blockedRequester) {
-          continue; // skip showing this user in the online list
+          continue; 
         }
       }
 

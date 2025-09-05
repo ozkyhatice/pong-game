@@ -47,7 +47,7 @@ app.addHook('onSend', async (request, reply, payload) => {
   return payload;
 });
 
-// cors 
+
 await app.register(fastifyCors, { 
     origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:8080', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -63,13 +63,12 @@ await app.register(initDB);
 await app.register(metricsPlugin);
 
 
-// Static files - avatar resimleri için
+
 await app.register(fastifyStatic, {
   root: path.join(process.cwd(), 'uploads'),
   prefix: '/api/uploads/',
 });
 
-// main route
 app.get('/', async (request, reply) => {
   reply.send({ message: 'Welcome to the Pong Game API!' });
 });
