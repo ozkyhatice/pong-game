@@ -1,19 +1,17 @@
 import promClient from 'prom-client';
 
-// Default metrics'leri topla (CPU, Memory, etc.)
 promClient.collectDefaultMetrics({
   timeout: 5000,
   gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5],
   prefix: 'pong_game_'
 });
 
-// Aktif bağlantılar için bir Gauge metriği oluştur
 const activeConnections = new promClient.Gauge({
   name: 'pong_game_active_connections',
   help: 'Number of active WebSocket connections'
 });
 
-// HTTP Request Duration Histogram
+// HTTP Request Duration
 const httpRequestDuration = new promClient.Histogram({
   name: 'pong_game_http_request_duration_seconds',
   help: 'Duration of HTTP requests in seconds',
@@ -28,14 +26,43 @@ const httpRequestTotal = new promClient.Counter({
   labelNames: ['method', 'route', 'status_code']
 });
 
-// Export metrics globally for use in WebSocket handlers
+// Game metrics
+const totalGamesPlayed = new promClient.Gauge({
+  name: 'pong_game_total_games_played',
+  help: 'Total number of games played'
+});
+
+// User metrics
+const userRegistrations = new promClient.Gauge({
+  name: 'pong_game_user_registrations_total',
+  help: 'Total number of registered users'
+});
+
 export const metrics = {
   httpRequestDuration,
   httpRequestTotal,
-  activeConnections
+  activeConnections,
+  totalGamesPlayed,
+  userRegistrations
 };
 
 export default async function metricsPlugin(fastify, options) {
+  try {
+    const { initDB } = await import('../config/db.js');
+    const db = await initDB();
+
+    const userResult = await db.get('SELECT COUNT(*) as total FROM users');
+    const totalUsers = userResult?.total || 0;
+    userRegistrations.set(totalUsers);
+
+    const gameResult = await db.get('SELECT COUNT(*) as total FROM matches');
+    const totalGames = gameResult?.total || 0;
+    totalGamesPlayed.set(totalGames);
+    
+  } catch (error) {
+    userRegistrations.set(0);
+    totalGamesPlayed.set(0);
+  }
 
   fastify.get('/api/metrics', async (request, reply) => {
     reply.type('text/plain');

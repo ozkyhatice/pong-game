@@ -1,0 +1,29 @@
+groups:
+  - name: pong-game-alerts
+    rules:
+      - alert: ServiceDown
+        expr: up{job="pong-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend service is down!!!"
+          description: "Backend service down for more than 1 minute"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% !!!"
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_free_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "disk space is low"
+          description: "disk space is under 10% !!!"
