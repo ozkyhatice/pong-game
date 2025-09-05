@@ -96,10 +96,10 @@ let paddleFlashTimes: number[] = [0, 0]; // paddle1, paddle2
 let ballColorIndex = 0;
 let lastBallPosition = { x: 0, y: 0, z: 0 };
 
-// Camera controls
-let cameraControlsEnabled = true;
-let lastPointerPosition = { x: 0, y: 0 };
-let isPointerDown = false;
+// Controls restriction during warmup
+let controlsEnabled = false;
+let flashEffectsEnabled = false;
+let warmupTimer: number | null = null;
 
 // Game state
 let gameState: GameState | null = {
@@ -111,6 +111,7 @@ let gameState: GameState | null = {
   score: { 1: 0, 2: 0 },
   gameOver: false
 };
+
 let players: Player[] = [];
 let myPlayerId: number | null = null;
 let keysPressed: { [key: string]: boolean } = {};
@@ -419,6 +420,14 @@ export async function init() {
         y: data.y
       };
       update3DGameState();
+    }
+  });
+
+  // Listen for flash effects from server
+  wsManager.on('flash-effect', (data: any) => {
+    console.log('💥 Flash effect received from server:', data);
+    if (data.flash) {
+      handleServerFlashEffect(data.flash);
     }
   });
 
@@ -740,7 +749,9 @@ export async function init() {
   }
 
   function createParticleSystems() {
-    // Ball trail particles
+    const BABYLON = (window as any).BABYLON;
+
+    // Ball trail particles (existing)
     ballTrailParticles = new BABYLON.ParticleSystem("ballTrail", 50, scene);
     ballTrailParticles.particleTexture = new BABYLON.Texture("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", scene);
     ballTrailParticles.emitter = ball;
@@ -757,6 +768,44 @@ export async function init() {
     ballTrailParticles.minEmitPower = 0.1;
     ballTrailParticles.maxEmitPower = 0.3;
     ballTrailParticles.start();
+
+    // Hit particles for paddle collisions
+    hitParticles = new BABYLON.ParticleSystem("hitParticles", 100, scene);
+    hitParticles.particleTexture = new BABYLON.Texture("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", scene);
+    hitParticles.emitter = new BABYLON.Vector3(0, 0, 0);
+    hitParticles.minEmitBox = new BABYLON.Vector3(-0.1, -0.1, -0.1);
+    hitParticles.maxEmitBox = new BABYLON.Vector3(0.1, 0.1, 0.1);
+    hitParticles.color1 = new BABYLON.Color4(PONG_3D_CONFIG.COLORS.PARTICLES.HIT.r, PONG_3D_CONFIG.COLORS.PARTICLES.HIT.g, PONG_3D_CONFIG.COLORS.PARTICLES.HIT.b, 1);
+    hitParticles.color2 = new BABYLON.Color4(PONG_3D_CONFIG.COLORS.PARTICLES.HIT.r, PONG_3D_CONFIG.COLORS.PARTICLES.HIT.g, PONG_3D_CONFIG.COLORS.PARTICLES.HIT.b, 0);
+    hitParticles.colorDead = new BABYLON.Color4(0, 0, 0, 0);
+    hitParticles.minSize = 0.03;
+    hitParticles.maxSize = 0.08;
+    hitParticles.minLifeTime = 0.3;
+    hitParticles.maxLifeTime = 0.8;
+    hitParticles.emitRate = 0; // Manual emission only
+    hitParticles.minEmitPower = 0.5;
+    hitParticles.maxEmitPower = 1.5;
+    hitParticles.gravity = new BABYLON.Vector3(0, -2, 0);
+    hitParticles.start();
+
+    // Score particles for scoring celebrations
+    scoreParticles = new BABYLON.ParticleSystem("scoreParticles", 200, scene);
+    scoreParticles.particleTexture = new BABYLON.Texture("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", scene);
+    scoreParticles.emitter = new BABYLON.Vector3(0, 1, 0);
+    scoreParticles.minEmitBox = new BABYLON.Vector3(-0.2, 0, -0.2);
+    scoreParticles.maxEmitBox = new BABYLON.Vector3(0.2, 0.5, 0.2);
+    scoreParticles.color1 = new BABYLON.Color4(PONG_3D_CONFIG.COLORS.PARTICLES.SCORE.r, PONG_3D_CONFIG.COLORS.PARTICLES.SCORE.g, PONG_3D_CONFIG.COLORS.PARTICLES.SCORE.b, 1);
+    scoreParticles.color2 = new BABYLON.Color4(PONG_3D_CONFIG.COLORS.PARTICLES.SCORE.r, PONG_3D_CONFIG.COLORS.PARTICLES.SCORE.g, PONG_3D_CONFIG.COLORS.PARTICLES.SCORE.b, 0);
+    scoreParticles.colorDead = new BABYLON.Color4(0, 0, 0, 0);
+    scoreParticles.minSize = 0.05;
+    scoreParticles.maxSize = 0.15;
+    scoreParticles.minLifeTime = 1.0;
+    scoreParticles.maxLifeTime = 2.0;
+    scoreParticles.emitRate = 0; // Manual emission only
+    scoreParticles.minEmitPower = 1.0;
+    scoreParticles.maxEmitPower = 3.0;
+    scoreParticles.gravity = new BABYLON.Vector3(0, -1, 0);
+    scoreParticles.start();
   }
 
   function setupResponsiveCanvas(targetCanvas: HTMLCanvasElement) {
@@ -846,6 +895,8 @@ export async function init() {
   }
 
   function handleBorderFlashes(deltaTime: number) {
+    if (!flashEffectsEnabled) return; // Skip flash effects during warmup
+
     borderFlashTimes.forEach((flashTime, index) => {
       if (flashTime > 0) {
         borderFlashTimes[index] -= deltaTime;
@@ -865,6 +916,8 @@ export async function init() {
   }
 
   function handlePaddleFlashes(deltaTime: number) {
+    if (!flashEffectsEnabled) return; // Skip flash effects during warmup
+
     // Paddle 1 flash
     if (paddleFlashTimes[0] > 0) {
       paddleFlashTimes[0] -= deltaTime;
@@ -951,63 +1004,132 @@ export async function init() {
   }
 
   function checkCollisionEffects() {
-    if (!gameState || !currentRoom?.players || currentRoom.players.length < 2) return;
-
-    if (gameState.ball.y <= 30 || gameState.ball.y >= 770) {
-      gameState.ball.dy = -gameState.ball.dy;
-      borderFlashTimes[gameState.ball.y <= 0 ? 3 : 2] = 1.5;
-    }
+    if (!flashEffectsEnabled || !gameState || !currentRoom?.players || currentRoom.players.length < 2) return;
 
     const ball = gameState.ball;
-    // CONSISTENT PLAYER ORDER: Always use room.players order
-    // Player 1 (index 0) = LEFT side = BLUE paddle
-    // Player 2 (index 1) = RIGHT side = RED paddle
     const paddle1 = gameState.paddles[currentRoom.players[0]]; // LEFT paddle (BLUE)
     const paddle2 = gameState.paddles[currentRoom.players[1]]; // RIGHT paddle (RED)
 
+    // Enhanced collision detection with proper flash timing
+    const ballRadius = 8;
     const paddleMargin = 8;
     const paddleLengthMargin = 5;
 
-    if (ball.x < paddle1.x + paddle1.width + paddleMargin &&
-        ball.x > paddle1.x - paddleMargin &&
-        ball.y + paddleLengthMargin > paddle1.y &&
-        ball.y - paddleLengthMargin < paddle1.y + paddle1.height &&
-        ball.dx < 0) {
-
-      ball.x = paddle1.x + paddle1.width + paddleMargin;
-
-      ball.dx = -ball.dx * 1.10;
-      ball.dy = ball.dy * 1.10;
-
-      paddleFlashTimes[0] = 1.0; // Flash LEFT paddle (BLUE)
-      console.log(`🎮 Ball hit LEFT paddle (BLUE) - Player ${currentRoom.players[0]}`);
+    // Check border collisions for flash effects
+    if (ball.y <= ballRadius + 5) { // Top border collision
+      borderFlashTimes[3] = 1.5; // Flash top border
+      console.log('💥 Ball hit TOP border - flashing');
+    } else if (ball.y >= 400 - ballRadius - 5) { // Bottom border collision
+      borderFlashTimes[2] = 1.5; // Flash bottom border
+      console.log('💥 Ball hit BOTTOM border - flashing');
     }
 
-    if (ball.x > paddle2.x - paddleMargin &&
-        ball.x < paddle2.x + paddle2.width + paddleMargin &&
-        ball.y + paddleLengthMargin > paddle2.y &&
-        ball.y - paddleLengthMargin < paddle2.y + paddle2.height &&
-        ball.dx > 0) {
+    // Enhanced paddle collision detection with flash effects
+    if (paddle1 && ball.dx < 0) { // Ball moving towards left paddle
+      if (ball.x <= paddle1.x + paddle1.width + paddleMargin &&
+          ball.x >= paddle1.x - paddleMargin &&
+          ball.y + ballRadius >= paddle1.y - paddleLengthMargin &&
+          ball.y - ballRadius <= paddle1.y + paddle1.height + paddleLengthMargin) {
 
-      ball.x = paddle2.x - paddleMargin;
-
-      ball.dx = -ball.dx * 1.10;
-      ball.dy = ball.dy * 1.10;
-
-      paddleFlashTimes[1] = 1.0; // Flash RIGHT paddle (RED)
-      console.log(`🎮 Ball hit RIGHT paddle (RED) - Player ${currentRoom.players[1]}`);
+        paddleFlashTimes[0] = 1.0; // Flash LEFT paddle (BLUE)
+        borderFlashTimes[0] = 0.8; // Flash left border briefly too
+        triggerHitParticles(ball.x, ball.y);
+        console.log(`💥 Ball hit LEFT paddle (BLUE) - Player ${currentRoom.players[0]} - FLASH TRIGGERED`);
+      }
     }
 
-    // Trigger border flash on collision
-    if (gameState.ball.y < 30) { // Top border
-      borderFlashTimes[2] = 1.5;
-    } else if (gameState.ball.y > 370) { // Bottom border
-      borderFlashTimes[3] = 1.5;
+    if (paddle2 && ball.dx > 0) { // Ball moving towards right paddle
+      if (ball.x >= paddle2.x - paddleMargin &&
+          ball.x <= paddle2.x + paddle2.width + paddleMargin &&
+          ball.y + ballRadius >= paddle2.y - paddleLengthMargin &&
+          ball.y - ballRadius <= paddle2.y + paddle2.height + paddleLengthMargin) {
+
+        paddleFlashTimes[1] = 1.0; // Flash RIGHT paddle (RED)
+        borderFlashTimes[1] = 0.8; // Flash right border briefly too
+        triggerHitParticles(ball.x, ball.y);
+        console.log(`💥 Ball hit RIGHT paddle (RED) - Player ${currentRoom.players[1]} - FLASH TRIGGERED`);
+      }
+    }
+
+    // Score flash effects when ball goes off screen
+    if (ball.x < -ballRadius) {
+      // Ball went off left side - right player scores
+      triggerScoreFlash(currentRoom.players[1]);
+      borderFlashTimes[0] = 2.0; // Long flash for left border on score
+      console.log(`� RIGHT player scored - LEFT border flash`);
+    } else if (ball.x > 800 + ballRadius) {
+      // Ball went off right side - left player scores
+      triggerScoreFlash(currentRoom.players[0]);
+      borderFlashTimes[1] = 2.0; // Long flash for right border on score
+      console.log(`🎯 LEFT player scored - RIGHT border flash`);
+    }
+  }
+
+  function handleServerFlashEffect(flash: any) {
+    if (!flashEffectsEnabled) return; // Skip flash effects during warmup
+
+    console.log(`🎭 Server flash effect: ${flash.type} index ${flash.index} for ${flash.duration}s`);
+
+    switch (flash.type) {
+      case 'border':
+        if (flash.index >= 0 && flash.index < borderFlashTimes.length) {
+          borderFlashTimes[flash.index] = flash.duration;
+          console.log(`💥 Border ${flash.index} flash triggered for ${flash.duration}s`);
+        }
+        break;
+
+      case 'paddle':
+        if (flash.index >= 0 && flash.index < paddleFlashTimes.length) {
+          paddleFlashTimes[flash.index] = flash.duration;
+          console.log(`🏓 Paddle ${flash.index} flash triggered for ${flash.duration}s`);
+        }
+        break;
+
+      case 'score':
+        // Find the player index for scoring flash
+        const playerIndex = currentRoom?.players.indexOf(flash.index);
+        if (playerIndex !== undefined && playerIndex >= 0 && playerIndex < paddleFlashTimes.length) {
+          paddleFlashTimes[playerIndex] = flash.duration;
+          console.log(`🎯 Score flash for player ${flash.index} (index ${playerIndex}) triggered for ${flash.duration}s`);
+        }
+        break;
+
+      default:
+        console.log(`⚠️ Unknown flash effect type: ${flash.type}`);
+    }
+  }  function triggerHitParticles(x: number, y: number) {
+    if (!hitParticles || !scene) return;
+
+    // Create hit particle effect at ball position
+    hitParticles.manualEmitCount = 20;
+    hitParticles.emitter = new (window as any).BABYLON.Vector3(
+      ((x / 800) - 0.5) * PONG_3D_CONFIG.TABLE.width * 0.9,
+      PONG_3D_CONFIG.BALL.radius,
+      ((y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9
+    );
+  }
+
+  function triggerScoreFlash(scoringPlayerId: number) {
+    // Flash the scoring player's paddle for celebration
+    const playerIndex = currentRoom?.players.indexOf(scoringPlayerId);
+    if (playerIndex !== undefined && playerIndex >= 0) {
+      paddleFlashTimes[playerIndex] = 2.0; // Longer flash for scoring
+
+      // Create score particle effect
+      if (scoreParticles && scene) {
+        scoreParticles.manualEmitCount = 50;
+        const paddleX = playerIndex === 0 ? -PONG_3D_CONFIG.TABLE.width/2 + 0.5 : PONG_3D_CONFIG.TABLE.width/2 - 0.5;
+        scoreParticles.emitter = new (window as any).BABYLON.Vector3(paddleX, 1, 0);
+      }
     }
   }
 
   function startCountdown() {
-    let count = 5;
+    let count = 3;
+    // Disable controls during countdown
+    controlsEnabled = false;
+    flashEffectsEnabled = false;
+
     if (gameStatusEl) gameStatusEl.textContent = `⚡ BATTLE STARTS IN ${count}... ⚡`;
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = `⚡ ${count} ⚡`;
 
@@ -1019,16 +1141,21 @@ export async function init() {
       } else {
         clearInterval(countdownInterval);
 
+        // Enable controls after countdown
+        controlsEnabled = true;
+        flashEffectsEnabled = true;
+        console.log('🎮 Controls enabled - Battle begins!');
+
         const isFirstPlayer = currentRoom && currentRoom.players[0] === myPlayerId;
         if (isFirstPlayer && currentRoom) {
           console.log('🎮 Starting game as first player...');
-          if (gameStatusEl) gameStatusEl.textContent = '⚡ INITIALIZING BATTLE... ⚡';
-          if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚡ INIT ⚡';
+          if (gameStatusEl) gameStatusEl.textContent = '⚡ BATTLE ACTIVE ⚡';
+          if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚡ FIGHT ⚡';
           gameService.startGame(currentRoom.roomId);
         } else {
           console.log('🎮 Waiting for game to start...');
-          if (gameStatusEl) gameStatusEl.textContent = '⚡ WAITING FOR BATTLE START... ⚡';
-          if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚡ WAIT ⚡';
+          if (gameStatusEl) gameStatusEl.textContent = '⚡ BATTLE ACTIVE ⚡';
+          if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚡ FIGHT ⚡';
         }
 
         setTimeout(() => {
@@ -1039,7 +1166,7 @@ export async function init() {
   }
 
   function handleKeyPress() {
-    if (!currentRoom || !gameState || gameState.gameOver || myPlayerId === null) return;
+    if (!controlsEnabled || !currentRoom || !gameState || gameState.gameOver || myPlayerId === null) return;
 
     const myPaddle = gameState.paddles[myPlayerId];
     if (!myPaddle) return;
@@ -1184,7 +1311,7 @@ export async function init() {
     }
 
     function handleMobileMovement() {
-      if (!currentRoom || !gameState || gameState.gameOver || !mobileControlDirection || myPlayerId === null) return;
+      if (!controlsEnabled || !currentRoom || !gameState || gameState.gameOver || !mobileControlDirection || myPlayerId === null) return;
 
       const myPaddle = gameState.paddles[myPlayerId];
       if (!myPaddle) return;
@@ -1417,6 +1544,13 @@ export async function init() {
         console.log('✅ Pause countdown timer cleared');
       }
 
+      // Clear warmup timer
+      if (warmupTimer) {
+        clearTimeout(warmupTimer);
+        warmupTimer = null;
+        console.log('✅ Warmup timer cleared');
+      }
+
       // Remove keyboard event listeners
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
@@ -1431,13 +1565,21 @@ export async function init() {
       keysPressed = {};
       lastPaddlePosition = null;
 
-      // Clean up 3D scene
-      if (ballTrailParticles) {
-        ballTrailParticles.dispose();
-        ballTrailParticles = null;
-      }
+    // Clean up 3D scene
+    if (ballTrailParticles) {
+      ballTrailParticles.dispose();
+      ballTrailParticles = null;
+    }
 
-      if (engine) {
+    if (hitParticles) {
+      hitParticles.dispose();
+      hitParticles = null;
+    }
+
+    if (scoreParticles) {
+      scoreParticles.dispose();
+      scoreParticles = null;
+    }      if (engine) {
         engine.stopRenderLoop();
         engine.dispose();
         engine = null;

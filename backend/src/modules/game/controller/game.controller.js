@@ -11,7 +11,7 @@ export const rooms = new Map();
 export const userRoom = new Map(); // userId -> roomId
 
 export async function handleGameMessage(msgObj, userId, connection) {
-    
+
     // Validate userId to prevent injection
     if (!isValidUserId(userId)) {
         await sendMessage(connection, 'game', 'error', {
@@ -19,12 +19,12 @@ export async function handleGameMessage(msgObj, userId, connection) {
         });
         return;
     }
-    
+
     const { event, data } = msgObj;
-    
+
     // Sanitize input data to prevent XSS attacks
     const sanitizedData = sanitizeGameInput(data);
-    
+
     // Validate input data to prevent SQL injection
     const validation = validateGameInput(sanitizedData);
     if (!validation.isValid) {
@@ -33,7 +33,7 @@ export async function handleGameMessage(msgObj, userId, connection) {
         });
         return;
     }
-    
+
     const handler = eventHandlers[event];
     if (!handler) {
         throw new Error(`No handler for event: ${event}`);
@@ -95,7 +95,7 @@ export async function joinGame(data, userId, connection) {
 
         return;
     }
-    
+
     // check rules of joining
     const canJoin = await checkJoinable(data, room, userId, connection);
     if (!canJoin) {
@@ -124,7 +124,7 @@ export async function joinGame(data, userId, connection) {
 
 export async function startGame(data, userId, connection) {
     const room = rooms.get(data.roomId);
-    
+
     // Check if the room exists
     if (!room) {
         await sendMessage(connection, 'game', 'error', {
@@ -132,7 +132,7 @@ export async function startGame(data, userId, connection) {
         });
         return;
     }
-    
+
     // Check if already started (race condition protection)
     if (room.started) {
         // Don't send error to user, just broadcast current state
@@ -143,7 +143,7 @@ export async function startGame(data, userId, connection) {
         });
         return;
     }
-    
+
     // Check player count
     if (room.players.length < 2) { // Array length instead of Set size
         await sendMessage(connection, 'game', 'error', {
@@ -151,7 +151,7 @@ export async function startGame(data, userId, connection) {
         });
         return;
     }
-    
+
     // Check if user is in the room
     if (!room.players.includes(userId)) { // Array includes instead of Set has
         await sendMessage(connection, 'game', 'error', {
@@ -159,12 +159,12 @@ export async function startGame(data, userId, connection) {
         });
         return;
     }
-    
+
     // Set started flag and start game
     room.started = true;
-    
+
     startGameLoop(room, connection);
-    
+
     // Broadcast to all players in the room
     for (const [playerId, socket] of room.sockets) {
         await sendMessage(socket, 'game', 'game-started', {
@@ -178,32 +178,32 @@ export async function startGame(data, userId, connection) {
 export async function scoreGame(data, userId, connection) {
     const room = rooms.get(data.roomId);
     if (!room) return;
-    
-    
+
+
     // Skoru güncelle (+1 artır)
     room.state.score[userId] = room.state.score[userId] + 1;
-    
-    
-  
+
+
+
 }
 export async function handlePlayerMove(data, userId) {
     const room = rooms.get(data.roomId);
     if (!room) {
         return;
     }
-    
+
     if (room.state.paddles[userId]) {
         const oldY = room.state.paddles[userId].y;
-        
+
         const CANVAS_HEIGHT = 400;
         const PADDLE_HEIGHT = 100;
-        
+
         // Direct position update with boundary safety margins
         const targetY = Math.max(1, Math.min(CANVAS_HEIGHT - PADDLE_HEIGHT - 1, data.y));
-        
+
         // Direct assignment for instant response
         room.state.paddles[userId].y = targetY;
-        
+
         // Always update for smoother real-time movement
         await stateGame(data, userId);
     }
@@ -213,7 +213,7 @@ export async function stateGame(data, userId) {
     if (!room) {
         return;
     }
-    
+
     // Oyun durumunu güncelle
     const stateData = {
         ball: room.state.ball,
@@ -221,7 +221,7 @@ export async function stateGame(data, userId) {
         score: room.state.score,
         gameOver: room.state.gameOver,
     };
-    
+
     // Tüm oyunculara oyun durumunu gönder
     for (const [playerId, socket] of room.sockets) {
         await sendMessage(socket, 'game', 'state-update', {
@@ -233,7 +233,7 @@ export async function stateGame(data, userId) {
 
 export async function leaveGame(data, userId, connection) {
     await clearAll(userId, 'leave'); // Clear user-room mapping and broadcast game over if necessary
-    
+
 }
 
 export async function handlePlayerReady(data, userId, connection) {
@@ -273,7 +273,7 @@ export async function handlePlayerReady(data, userId, connection) {
 
     // Check if all players are ready (and we have 2 players)
     if (room.readyPlayers.size === 2 && room.players.length === 2) { // Array length instead of Set size
-        
+
         // Broadcast that game can start
         for (const [playerId, socket] of room.sockets) {
             await sendMessage(socket, 'game', 'all-ready', {
@@ -293,74 +293,74 @@ export async function handleReconnection(connection, userId) {
         });
         return;
     }
-    
+
     const roomId = userRoom.get(userId);
-    
+
     // Check if user has active tournament or game to reconnect to
     const { initDB } = await import('../../../config/db.js');
     const db = await initDB();
-    
+
     // Use parameterized query to prevent SQL injection
     const user = await db.get('SELECT currentTournamentId FROM users WHERE id = ?', [userId]);
-    
+
     // If user is in an active game, redirect to remote-game
     if (roomId) {
         const room = rooms.get(roomId);
         if (room && room.started) {
-            
+
             // Reconnect the user to the room
             room.sockets.set(userId, connection);
-            
+
             // Cancel disconnection timeout if it exists
             if (room.disconnectionTimeout) {
                 clearTimeout(room.disconnectionTimeout);
                 room.disconnectionTimeout = null;
             }
-            
+
             // Resume game if paused
             if (room.state.paused) {
                 resumeGame(room);
-                
+
                 // Game loop'u yeniden başlat
                 if (!room.loop) {
                     startGameLoop(room, connection);
                 }
             }
-            
+
             // Redirect to remote-game page
             sendMessage(connection, 'navigation', 'redirect', {
                 page: 'remote-game',
                 reason: 'game_reconnection'
             });
-            
+
             // Send current state to reconnected user
             sendMessage(connection, 'game', "room-state", {
                 roomId: room.id,
                 state: room.state,
                 players: room.players // Already an array
             });
-            
+
             // Notify all users about reconnection
             broadcast(room, 'game', 'reconnected', {
                 userId: userId,
                 message: `Player ${userId} has reconnected! Game resuming...`
             });
-            
+
             return;
         }
     }
-    
+
     // If user is in tournament but no active game, redirect to tournament page
     if (user && user.currentTournamentId) {
-        
+
         sendMessage(connection, 'navigation', 'redirect', {
             page: 'tournament',
             reason: 'tournament_reconnection'
         });
-        
+
         return;
     }
-    
+
     // If no room found, just return (normal case for users not in game)
     if (!roomId) {
         return;
@@ -378,21 +378,21 @@ export async function handleGameInvite(data, userId, connection) {
         });
         return;
     }
-    
+
     const { receiverId, senderUsername } = sanitizeGameInput(data);
-    
-    
+
+
     // Check if either user has blocked the other
     const isBlocked = await isUserBlocked(userId, receiverId);
     const isBlockedReverse = await isUserBlocked(receiverId, userId);
-    
+
     if (isBlocked || isBlockedReverse) {
         await sendMessage(connection, 'game', 'error', {
             message: 'Cannot send game invite to this user'
         });
         return;
     }
-    
+
     // Get recipient's WebSocket connection
     const recipientClient = getClientById(receiverId);
     if (!recipientClient) {
@@ -401,7 +401,7 @@ export async function handleGameInvite(data, userId, connection) {
         });
         return;
     }
-    
+
     // Send game invitation to recipient
     const inviteMessage = {
         type: 'game',
@@ -412,7 +412,7 @@ export async function handleGameInvite(data, userId, connection) {
             senderUsername: senderUsername || 'Unknown'
         }
     };
-    
+
     recipientClient.send(JSON.stringify(inviteMessage));
 }
 
@@ -424,10 +424,10 @@ export async function handleInviteAccepted(data, userId, connection) {
         });
         return;
     }
-    
+
     const { senderId } = sanitizeGameInput(data);
-    
-    
+
+
     // Check if both users are still online
     const senderClient = getClientById(senderId);
     if (!senderClient) {
@@ -436,53 +436,53 @@ export async function handleInviteAccepted(data, userId, connection) {
         });
         return;
     }
-    
+
     // Check if users are already in rooms
     const accepterInRoom = userRoom.get(userId);
     const senderInRoom = userRoom.get(senderId);
-    
+
     if (accepterInRoom) {
         await sendMessage(connection, 'game', 'error', {
             message: `You are already in room ${accepterInRoom}`
         });
         return;
     }
-    
+
     if (senderInRoom) {
         await sendMessage(connection, 'game', 'error', {
             message: `Inviter is already in another room`
         });
         return;
     }
-    
+
     // Create new room with sender (inviter) as the creator
     const roomId = await createRoom(senderId, senderClient, rooms);
     const room = rooms.get(roomId);
-    
+
     if (!room) {
         await sendMessage(connection, 'game', 'error', {
             message: `Failed to create room`
         });
         return;
     }
-    
+
     // Add accepter (current user) to room
     await addPlayerToRoom(room, userId, connection);
-    
+
     // Notify both users
     await sendMessage(connection, 'game', 'room-created', {
         roomId: room.id,
         players: room.players, // Already an array
         message: 'Game room created! You can now start the game.'
     });
-    
+
     await sendMessage(senderClient, 'game', 'invite-accepted', {
         roomId: room.id,
         acceptedBy: userId,
         players: room.players, // Already an array
         message: 'Your game invitation was accepted! Room created.'
     });
-    
+
 }
 
 // HTTP endpoint for getting match history
@@ -496,7 +496,7 @@ export async function getMatchHistory(request, reply) {
 
     try {
         const matches = await getMatchHistoryByUserId(userId);
-        
+
         // Format the response with additional user details if needed
         const formattedMatches = matches.map(match => ({
             id: match.id,
