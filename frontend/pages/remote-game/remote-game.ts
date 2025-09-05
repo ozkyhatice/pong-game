@@ -121,6 +121,10 @@ let mobileControlInterval: number | null = null;
 let keyboardControlInterval: number | null = null; // Add this for keyboard controls
 let lastPaddlePosition: number | null = null; // Track last sent position to prevent spam
 
+// Avatar tracking
+let player1Avatar: string | null = null;
+let player2Avatar: string | null = null;
+
 // Global resize handler
 let resizeHandler: (() => void) | null = null;
 
@@ -1433,17 +1437,27 @@ export async function init() {
 
       console.log(`🎮 Player order from room - LEFT (BLUE): ${player1?.username} (${currentRoom.players[0]}), RIGHT (RED): ${player2?.username} (${currentRoom.players[1]})`);
 
+      // Store avatars
+      player1Avatar = player1?.avatar || null;
+      player2Avatar = player2?.avatar || null;
+
       // Update desktop elements
       if (player1NameEl) player1NameEl.textContent = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
       if (player2NameEl) player2NameEl.textContent = player2?.username || `WARRIOR ${currentRoom.players[1]}`;
-      if (player1InitialEl) player1InitialEl.textContent = player1?.username?.[0]?.toUpperCase() || 'W1';
-      if (player2InitialEl) player2InitialEl.textContent = player2?.username?.[0]?.toUpperCase() || 'W2';
+
+      // Display avatars for desktop
+      const player1Initial = player1?.username?.[0]?.toUpperCase() || 'W1';
+      const player2Initial = player2?.username?.[0]?.toUpperCase() || 'W2';
+      displayPlayerAvatar('player1-avatar-container', player1Avatar, player1Initial, true);
+      displayPlayerAvatar('player2-avatar-container', player2Avatar, player2Initial, false);
 
       // Update mobile elements
       if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
       if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2?.username || `WARRIOR ${currentRoom.players[1]}`;
-      if (mobilePlayer1InitialEl) mobilePlayer1InitialEl.textContent = player1?.username?.[0]?.toUpperCase() || 'W1';
-      if (mobilePlayer2InitialEl) mobilePlayer2InitialEl.textContent = player2?.username?.[0]?.toUpperCase() || 'W2';
+
+      // Display avatars for mobile
+      displayPlayerAvatar('mobile-player1-avatar-container', player1Avatar, player1Initial, true);
+      displayPlayerAvatar('mobile-player2-avatar-container', player2Avatar, player2Initial, false);
     } catch (e) {
       console.error('Error updating player names:', e);
     }
@@ -1487,6 +1501,10 @@ export async function init() {
         userService.getUserById(currentRoom.players[1])  // RIGHT player (RED)
       ]);
 
+      // Store avatars
+      player1Avatar = player1?.avatar || null;
+      player2Avatar = player2?.avatar || null;
+
       // Update all player name elements
       const player1Name = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
       const player2Name = player2?.username || `WARRIOR ${currentRoom.players[1]}`;
@@ -1496,26 +1514,58 @@ export async function init() {
       // Desktop elements
       if (player1NameEl) player1NameEl.textContent = player1Name;
       if (player2NameEl) player2NameEl.textContent = player2Name;
-      if (player1InitialEl) player1InitialEl.textContent = player1Initial;
-      if (player2InitialEl) player2InitialEl.textContent = player2Initial;
+
+      // Display avatars for desktop
+      displayPlayerAvatar('player1-avatar-container', player1Avatar, player1Initial, true);
+      displayPlayerAvatar('player2-avatar-container', player2Avatar, player2Initial, false);
 
       // Mobile elements
       if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1Name;
       if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2Name;
-      if (mobilePlayer1InitialEl) mobilePlayer1InitialEl.textContent = player1Initial;
-      if (mobilePlayer2InitialEl) mobilePlayer2InitialEl.textContent = player2Initial;
+
+      // Display avatars for mobile
+      displayPlayerAvatar('mobile-player1-avatar-container', player1Avatar, player1Initial, true);
+      displayPlayerAvatar('mobile-player2-avatar-container', player2Avatar, player2Initial, false);
 
       // Initialize scores
       [player1ScoreEl, player2ScoreEl, mobilePlayer1ScoreEl, mobilePlayer2ScoreEl].forEach(el => {
         if (el) el.textContent = '0';
       });
 
-      console.log('🎮 Enhanced player names initialized:', {
-        leftBlue: `${player1Name} (ID: ${currentRoom.players[0]})`,
-        rightRed: `${player2Name} (ID: ${currentRoom.players[1]})`
+      console.log('🎮 Enhanced player names and avatars initialized:', {
+        leftBlue: `${player1Name} (ID: ${currentRoom.players[0]}) - Avatar: ${player1Avatar ? 'loaded' : 'fallback'}`,
+        rightRed: `${player2Name} (ID: ${currentRoom.players[1]}) - Avatar: ${player2Avatar ? 'loaded' : 'fallback'}`
       });
     } catch (e) {
       console.error('Error initializing player names:', e);
+    }
+  }
+
+  function displayPlayerAvatar(containerId: string, avatarUrl: string | null, fallbackText: string, isPlayer1: boolean = true) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    // Clear existing content
+    container.innerHTML = '';
+
+    if (avatarUrl && avatarUrl.trim() !== '') {
+      // Create image element for avatar
+      const img = document.createElement('img');
+      img.src = avatarUrl;
+      img.alt = `Player Avatar`;
+      img.className = 'w-full h-full object-cover';
+
+      // Add error handler to fallback to text
+      img.onerror = () => {
+        container.innerHTML = `<span class="text-white font-bold ${containerId.includes('mobile') ? 'text-sm' : 'text-2xl'}">${fallbackText}</span>`;
+      };
+
+      container.appendChild(img);
+      console.log(`🖼️ Avatar loaded for ${containerId}:`, avatarUrl);
+    } else {
+      // Show fallback text
+      container.innerHTML = `<span class="text-white font-bold ${containerId.includes('mobile') ? 'text-sm' : 'text-2xl'}">${fallbackText}</span>`;
+      console.log(`📝 Fallback text for ${containerId}:`, fallbackText);
     }
   }
 
@@ -1565,21 +1615,23 @@ export async function init() {
       keysPressed = {};
       lastPaddlePosition = null;
 
-    // Clean up 3D scene
-    if (ballTrailParticles) {
-      ballTrailParticles.dispose();
-      ballTrailParticles = null;
-    }
+      // Clean up 3D scene
+      if (ballTrailParticles) {
+        ballTrailParticles.dispose();
+        ballTrailParticles = null;
+      }
 
-    if (hitParticles) {
-      hitParticles.dispose();
-      hitParticles = null;
-    }
+      if (hitParticles) {
+        hitParticles.dispose();
+        hitParticles = null;
+      }
 
-    if (scoreParticles) {
-      scoreParticles.dispose();
-      scoreParticles = null;
-    }      if (engine) {
+      if (scoreParticles) {
+        scoreParticles.dispose();
+        scoreParticles = null;
+      }
+
+      if (engine) {
         engine.stopRenderLoop();
         engine.dispose();
         engine = null;

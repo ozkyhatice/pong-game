@@ -14,7 +14,7 @@
       <!-- Player 1 (Left Player - Blue) -->
       <div class="flex items-center space-x-3">
         <div class="relative">
-          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-2 border-blue-400 shadow-lg shadow-blue-500/30">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-2 border-blue-400 shadow-lg shadow-blue-500/30 overflow-hidden" id="mobile-player1-avatar-container">
             <span class="text-white font-bold text-sm" id="mobile-player1-initial">P1</span>
           </div>
           <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
@@ -48,7 +48,7 @@
           <div class="text-red-400 font-mono text-2xl font-bold text-right tracking-wider" id="mobile-player2-score">0</div>
         </div>
         <div class="relative">
-          <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center border-2 border-red-400 shadow-lg shadow-red-500/30">
+          <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center border-2 border-red-400 shadow-lg shadow-red-500/30 overflow-hidden" id="mobile-player2-avatar-container">
             <span class="text-white font-bold text-sm" id="mobile-player2-initial">P2</span>
           </div>
           <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
@@ -128,7 +128,7 @@
         <!-- Player 1 (Left Player - Blue) -->
         <div class="flex flex-col items-center space-y-2 group">
           <div class="relative">
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-2 border-blue-400 shadow-lg">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-2 border-blue-400 shadow-lg overflow-hidden" id="player1-avatar-container">
               <span class="text-white font-bold text-2xl" id="player1-initial">P1</span>
             </div>
             <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
@@ -166,7 +166,7 @@
         <!-- Player 2 (Right Player - Red) -->
         <div class="flex flex-col items-center space-y-2 group">
           <div class="relative">
-            <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center border-2 border-red-400 shadow-lg">
+            <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center border-2 border-red-400 shadow-lg overflow-hidden" id="player2-avatar-container">
               <span class="text-white font-bold text-2xl" id="player2-initial">P2</span>
             </div>
             <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
