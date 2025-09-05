@@ -372,8 +372,26 @@ export async function uploadAvatar(): Promise<void> {
     }
 }
 
-export function removeAvatar(): void {
-    notify('soon');
+export async function removeAvatar(): Promise<void> {
+    const token = getToken();
+    if (!token) return notify('No token found', 'red');
+
+    try {
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.DELETE_AVATAR), {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data: StandardResponse = await response.json();
+
+        if (response.ok) {
+            notify(data.message || 'Avatar removed successfully!');
+            loadProfile(); // Reload profile to update avatar display
+        } else {
+            notify(data.error || 'Failed to remove avatar', 'red');
+        }
+    } catch (error) {
+        notify('Error removing avatar', 'red');
+    }
 }
 
 export function init() {
