@@ -1075,18 +1075,22 @@ export class GameAreaComponent extends Component {
 
     this.gameService.onMatchFound(async (data) => {
       console.log("🎮 Match found:", data);
+      console.log("🎮 Match found players order from server:", data.players);
       this.hideMatchmakingStatus();
       notify(`Match found! Opponent: ${data.opponent}`);
 
       // Set room info and navigate to game
       if (data.roomId) {
         const appState = AppState.getInstance();
-        const currentUser = await this.userService.getCurrentUser();
-        const myPlayerId = currentUser?.id;
+        
+        // CRITICAL: Use server's players order instead of manually creating array
+        const playersOrder = data.players || [];
+        console.log("🎮 MATCHMAKING: Using server players order:", playersOrder);
+        console.log("🎮 MATCHMAKING POSITIONS - LEFT (BLUE):", playersOrder[0], ", RIGHT (RED):", playersOrder[1]);
 
         appState.setCurrentRoom({
           roomId: data.roomId,
-          players: myPlayerId ? [myPlayerId, data.opponent] : [data.opponent],
+          players: playersOrder, // Use server's authoritative order
           createdAt: Date.now(),
           isMatchmaking: true,
         });

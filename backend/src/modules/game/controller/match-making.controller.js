@@ -117,17 +117,21 @@ async function attemptMatchmaking() {
         // Add second player to room
         await addPlayerToRoom(room, player2.userId, player2.connection);
 
+        console.log(`🎮 MATCHMAKING: Room created for match - Room players order: [${room.players.join(', ')}]`);
+        console.log(`🎮 MATCHMAKING: Player positions - LEFT (BLUE): ${room.players[0]}, RIGHT (RED): ${room.players[1]}`);
 
-        // Notify players about match and room
+        // Notify players about match and room - include players order for consistency
         await sendMessage(player1.connection, 'game', 'match-found', {
             roomId,
             opponent: player2.userId,
+            players: room.players, // Add room players order
             message: 'Match found! Game starting...'
         });
 
         await sendMessage(player2.connection, 'game', 'match-found', {
             roomId,
             opponent: player1.userId,
+            players: room.players, // Add room players order
             message: 'Match found! Game starting...'
         });
 

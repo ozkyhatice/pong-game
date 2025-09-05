@@ -51,7 +51,8 @@ async function createTournamentMatch(match) {
     // Match bilgilerini room'a kaydet
     room.matchId = matchId;
     
-    console.log(`🏆 TOURNAMENT MATCH: Room created -> Match: ${matchId}, Room: ${roomId}, Players: ${match.player1Id}, ${match.player2Id}`);
+    console.log(`🏆 TOURNAMENT MATCH: Room created -> Match: ${matchId}, Room: ${roomId}, Room players order: [${room.players.join(', ')}]`);
+    console.log(`🏆 TOURNAMENT MATCH: Player positions - LEFT (BLUE): ${room.players[0]}, RIGHT (RED): ${room.players[1]}`);
     
     // Maçın başladığını veritabanında güncelle
     const db = await initDB();
@@ -59,27 +60,25 @@ async function createTournamentMatch(match) {
         'UPDATE matches SET startedAt = ? WHERE id = ?',
         [new Date().toISOString(), matchId]
     );
-    
-    // Oyunculara maç başladığını bildir
+
+    // Oyunculara maç başladığını bildir - ROOM'DAKİ GERÇEK SIRALAMA KULLAN
     await sendMessage(player1Connection, 'tournament', 'matchStarted', {
         roomId,
         matchId,
         tournamentId,
         round,
         opponent: match.player2Username,
-        players: [player1Id, player2Id]
+        players: room.players // Room'daki gerçek sırayı kullan
     });
-    
+
     await sendMessage(player2Connection, 'tournament', 'matchStarted', {
         roomId,
         matchId,
         tournamentId,
         round,
         opponent: match.player1Username,
-        players: [player1Id, player2Id]
-    });
-    
-    console.log(`🏆 TOURNAMENT MATCH: Match started -> Match: ${matchId}, Room: ${roomId}`);
+        players: room.players // Room'daki gerçek sırayı kullan
+    });    console.log(`🏆 TOURNAMENT MATCH: Match started -> Match: ${matchId}, Room: ${roomId}`);
 }
 
 // Oyuncular online olduğunda bekleyen maçları başlatma

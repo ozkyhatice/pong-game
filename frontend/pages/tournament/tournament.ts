@@ -232,6 +232,9 @@ export function init() {
     // Match started
     tournamentService.onTournamentMatchStarted((data) => {
       console.log('🎮 Tournament match starting:', data);
+      console.log('🎮 Tournament match players order from server:', data.players);
+      console.log('🎮 TOURNAMENT POSITION ASSIGNMENT - LEFT (BLUE):', data.players?.[0], ', RIGHT (RED):', data.players?.[1]);
+      
       currentMatch = {
         matchId: data.matchId,
         opponent: data.opponent,

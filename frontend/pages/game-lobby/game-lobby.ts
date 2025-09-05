@@ -107,28 +107,30 @@ export function init() {
       if (!currentUser || !currentRoom?.players || currentRoom.players.length < 2) return;
 
       const [playerId1, playerId2] = currentRoom.players;
-      console.log('Player 1 ID:', playerId1);
-      console.log('Player 2 ID:', playerId2);
+      console.log('Player 1 ID (LEFT/BLUE):', playerId1);
+      console.log('Player 2 ID (RIGHT/RED):', playerId2);
 
-      // Load both players based on their position in the array (like end-game)
+      // CONSISTENT PLAYER ORDER: Always use room.players order
+      // Player 1 (index 0) = LEFT side = BLUE (like end-game and remote-game)
+      // Player 2 (index 1) = RIGHT side = RED (like end-game and remote-game)
       const [player1, player2] = await Promise.all([
-        userService.getUserById(playerId1),
-        userService.getUserById(playerId2)
+        userService.getUserById(playerId1), // LEFT player (BLUE)
+        userService.getUserById(playerId2)  // RIGHT player (RED)
       ]);
 
-      // Player 1 (Sol)
+      // Player 1 (LEFT/BLUE)
       if (player1Name) player1Name.textContent = player1?.username || `Player ${playerId1}`;
       if (player1Avatar && player1?.avatar) {
         player1Avatar.src = player1.avatar;
       }
 
-      // Player 2 (Sağ) 
+      // Player 2 (RIGHT/RED) 
       if (player2Name) player2Name.textContent = player2?.username || `Player ${playerId2}`;
       if (player2Avatar && player2?.avatar) {
         player2Avatar.src = player2.avatar;
       }
 
-      console.log('Player positions set - Left:', player1?.username, 'Right:', player2?.username);
+      console.log('🎮 Player positions set - LEFT (BLUE):', player1?.username, 'RIGHT (RED):', player2?.username);
     } catch (e) {
       console.error('Error loading player info:', e);
     }
@@ -142,15 +144,18 @@ export function init() {
       roomStatus.textContent = `> ${readyCount}/${totalPlayers} PLAYERS READY`;
     }
 
-    // Update ready status for each player
+    // Update ready status for each player - CONSISTENT ORDER
     const player1ReadyText = document.getElementById('player1-ready-text');
     const player2ReadyText = document.getElementById('player2-ready-text');
     const readyPlayerIds = data.readyPlayers || [];
     
     if (currentRoom?.players && currentRoom.players.length >= 2) {
+      // CONSISTENT PLAYER ORDER: Always use room.players order
+      // Player 1 (index 0) = LEFT side = BLUE
+      // Player 2 (index 1) = RIGHT side = RED
       const [playerId1, playerId2] = currentRoom.players;
       
-      // Update Player 1 ready status
+      // Update Player 1 ready status (LEFT/BLUE)
       if (player1ReadyText) {
         if (readyPlayerIds.includes(playerId1)) {
           player1ReadyText.textContent = 'READY';
@@ -163,7 +168,7 @@ export function init() {
         }
       }
       
-      // Update Player 2 ready status
+      // Update Player 2 ready status (RIGHT/RED)
       if (player2ReadyText) {
         if (readyPlayerIds.includes(playerId2)) {
           player2ReadyText.textContent = 'READY';
@@ -175,6 +180,8 @@ export function init() {
           player2ReadyText.classList.add('text-neon-red');
         }
       }
+      
+      console.log(`🎮 Ready status - LEFT (BLUE) Player ${playerId1}: ${readyPlayerIds.includes(playerId1) ? 'READY' : 'NOT READY'}, RIGHT (RED) Player ${playerId2}: ${readyPlayerIds.includes(playerId2) ? 'READY' : 'NOT READY'}`);
     }
   }
 }
