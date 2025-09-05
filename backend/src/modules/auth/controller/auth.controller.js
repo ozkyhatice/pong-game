@@ -3,8 +3,10 @@ import {
   isValidEmail, 
   isValidUsername, 
   containsSqlInjection,
-  sanitizeGeneralInput 
+  sanitizeGeneralInput,
+  validatePassword 
 } from '../../../utils/validation.js';
+import { metrics } from '../../../plugins/metrics.js';
 
 export async function register(request, reply) {
   const { username, email, password } = request.body;
@@ -30,17 +32,15 @@ export async function register(request, reply) {
     });
   }
 
-  // will be activated later for stronger
-  // Password validation
-  // const passwordValidation = validatePassword(password);
-  // if (!passwordValidation.isValid) {
-  //   return reply.code(400).send({
-  //     success: false,
-  //     message: passwordValidation.message
-  //   });
-  // }
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.isValid) {
+    return reply.code(400).send({
+      success: false,
+      message: passwordValidation.message
+    });
+  }
 
-  // SQL injection kontrolü
+  // SQL injection protection
   if (containsSqlInjection(username) || containsSqlInjection(email)) {
     return reply.code(400).send({
       success: false,
@@ -58,6 +58,8 @@ export async function register(request, reply) {
       email: sanitizedEmail, 
       password 
     });
+
+    metrics.userRegistrations.inc();
 
     const token = await reply.jwtSign({
       id: user.id,
@@ -157,7 +159,7 @@ export async function googleCallbackHandler(request, reply) {
     });
 
     if (user.isTwoFAEnabled) {
-      return reply.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8080'}?oauth=2fa_required&userId=${user.id}`);
+      return reply.redirect(`${process.env.BASE_URL || 'http://localhost:8080'}?oauth=2fa_required&userId=${user.id}`);
     }
 
     // generate JWT token
@@ -168,9 +170,9 @@ export async function googleCallbackHandler(request, reply) {
     });
 
     // redirect to frontend with token
-    reply.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8080'}?token=${jwtToken}&oauth=success`);
+    reply.redirect(`${process.env.BASE_URL || 'http://localhost:8080'}?token=${jwtToken}&oauth=success`);
   } catch (error) {
-    reply.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8080'}?error=oauth_failed`);
+    reply.redirect(`${process.env.BASE_URL || 'http://localhost:8080'}?error=oauth_failed`);
   }
 }
 

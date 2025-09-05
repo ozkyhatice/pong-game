@@ -128,12 +128,10 @@ export const API_CONFIG = {
   }
 };
 
-// Helper function to get full API URL
 export const getApiUrl = (endpoint: string): string => {
   return `${API_CONFIG.BASE_URL}${endpoint}`;
 };
 
-// Helper function to get WebSocket URL
 export const getWsUrl = (): string => {
   return API_CONFIG.WS_URL;
 };

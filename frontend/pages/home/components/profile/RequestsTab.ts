@@ -28,17 +28,17 @@ export class RequestsTab {
 		  <h1 class="text-[10px] font-medium text-neon-green/50">> ACCEPT OR DECLINE, IT'S YOUR CHOICE...</h1>
         </div>
         ${this.requests.map(request => `
-          <div class="flex items-center justify-between p-3 bg-radial-bg rounded-lg border border-neon-yellow">
-            <div class="flex items-center">
-              <img src="${request.senderInfo.avatar || `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(request.senderInfo.username)}`}" alt="Avatar" class="w-8 h-8 rounded-full mr-3">
-              <span class="text-sm text-neon-white font-medium">${request.senderInfo.username}</span>
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 bg-radial-bg rounded-lg border border-neon-yellow gap-2">
+            <div class="flex items-center min-w-0">
+              <img src="${request.senderInfo.avatar || `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(request.senderInfo.username)}`}" alt="Avatar" class="w-6 h-6 rounded-full mr-2">
+              <span class="text-xs text-neon-white font-medium truncate">${request.senderInfo.username}</span>
             </div>
-            <div class="flex space-x-2">
-              <button class="accept-btn px-2 py-0.5 text-[10px] font-medium bg-neon-green text-terminal-border rounded hover:bg-neon-green/80 transition-colors border border-neon-green" 
+            <div class="flex gap-1.5 w-full sm:w-auto">
+              <button class="accept-btn flex-1 sm:flex-initial px-2 py-1 text-[10px] font-medium bg-neon-green text-terminal-border rounded hover:bg-neon-green/80 transition-colors border border-neon-green whitespace-nowrap" 
                       data-id="${request.senderInfo.id}">
                 ACCEPT
               </button>
-              <button class="decline-btn px-2 py-0.5 text-[10px] font-medium bg-neon-red text-terminal-border rounded hover:bg-neon-red/80 transition-colors border border-neon-red" 
+              <button class="decline-btn flex-1 sm:flex-initial px-2 py-1 text-[10px] font-medium bg-neon-red text-terminal-border rounded hover:bg-neon-red/80 transition-colors border border-neon-red whitespace-nowrap" 
                       data-id="${request.senderInfo.id}">
                 DECLINE
               </button>

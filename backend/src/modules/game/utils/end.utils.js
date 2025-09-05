@@ -3,6 +3,7 @@ import { saveGametoDbServices } from '../services/game.service.js';
 import { rooms, userRoom } from '../controller/game.controller.js';
 import { updateMultipleUserStats } from '../../user/service/user.service.js';
 import { processTournamentMatchResult } from '../../tournament/service/tournament.service.js';
+import { metrics } from '../../../plugins/metrics.js';
 export async function broadcastGameOver(room, userId) {
     if (!room || !room.started) {
         return;
@@ -26,6 +27,8 @@ export async function broadcastGameOver(room, userId) {
             });
         }
         await saveGametoDbServices(room, userId);
+        
+        metrics.totalGamesPlayed.inc();
         
         // if tournament match, process the result
         if (room.tournamentId && room.winnerId) {
@@ -119,6 +122,8 @@ export async function clearAll(userId, message) {
                     
                     // Save game and process tournament if applicable
                     await saveGametoDbServices(currentRoom);
+                    metrics.totalGamesPlayed.inc();
+
                     if (currentRoom.tournamentId && currentRoom.winnerId) {
                         await processTournamentMatchResult(currentRoom.matchId, currentRoom.winnerId);
                     }
@@ -161,6 +166,8 @@ export async function clearAll(userId, message) {
                 if (players.length === 2) {
                     room.winnerId = user2;
                     await saveGametoDbServices(room);
+                    metrics.totalGamesPlayed.inc();
+
                     
                     // if it is tournament match, process the result
                     if (room.tournamentId && room.winnerId) {

@@ -4,6 +4,7 @@ import { userRoom } from "../controller/game.controller.js";
 import { updateMultipleUserStats } from "../../user/service/user.service.js";
 import { processTournamentMatchResult } from "../../tournament/service/tournament.service.js";
 import { getUserById } from "../../user/service/user.service.js";
+import { metrics } from '../../../plugins/metrics.js';
 
 // Game constants
 const CANVAS_WIDTH = 800;
@@ -162,6 +163,8 @@ async function endGame(room, winnerId) {
         // Save to database
         await saveGametoDbServices(room);
 
+        metrics.totalGamesPlayed.inc();
+        
         // Eğer bu bir turnuva maçıysa, turnuva ilerlemesini kontrol et
         if (room.tournamentId && room.winnerId) {
             await processTournamentMatchResult(room.matchId, room.winnerId);
