@@ -48,6 +48,8 @@ const PONG_3D_CONFIG = {
   }
 };
 
+const PADDLE_MOVE_SPEED = 8;
+
 interface Player {
   id: number;
   name: string;
@@ -122,14 +124,14 @@ let resizeHandler: (() => void) | null = null;
 
 function initResponsiveLayout() {
   // Improved mobile detection - check for actual mobile devices, not just screen size
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                   (window.innerWidth <= 768 && 'ontouchstart' in window);
 
-  console.log('📱 Initializing responsive layout:', { 
+  console.log('📱 Initializing responsive layout:', {
     userAgent: navigator.userAgent,
     screenWidth: window.innerWidth,
     hasTouchSupport: 'ontouchstart' in window,
-    isMobile 
+    isMobile
   });
 
   const mobileLayout = document.getElementById('mobile-layout');
@@ -151,52 +153,52 @@ function initResponsiveLayout() {
 export async function init() {
   // Initialize proper layout based on device detection
   initResponsiveLayout();
-  
+
   // Check if this is a page reload (no WebSocket connection)
   const wsManager = WebSocketManager.getInstance();
   const currentAppState = AppState.getInstance();
-  
+
   // If WebSocket is not connected but we have room data in state, try to reconnect
   if (!wsManager.isConnected()) {
     const currentRoom = currentAppState.getCurrentRoom();
     const userToken = localStorage.getItem('token');
-    
+
     if (currentRoom && userToken) {
       console.log('🔄 Remote-game: Page reloaded, attempting to reconnect and rejoin room...');
-      
+
       try {
         // Reconnect WebSocket
         wsManager.connect(userToken);
-        
+
         // Wait for connection to establish
         await new Promise((resolve, reject) => {
           const timeout = setTimeout(() => reject(new Error('Connection timeout')), 5000);
-          
+
           const onConnected = () => {
             clearTimeout(timeout);
             wsManager.off('connected', onConnected);
             wsManager.off('error', onError);
             resolve(true);
           };
-          
+
           const onError = (error: any) => {
             clearTimeout(timeout);
             wsManager.off('connected', onConnected);
             wsManager.off('error', onError);
             reject(error);
           };
-          
+
           wsManager.on('connected', onConnected);
           wsManager.on('error', onError);
         });
-        
+
         // Try to rejoin the room using reconnectToGame
         const gameService = new GameService();
         gameService.reconnectToGame();
-        
+
         console.log('✅ Remote-game: Successfully reconnected to WebSocket');
         notify('Reconnecting to game...');
-        
+
       } catch (error) {
         console.error('❌ Remote-game: Failed to reconnect:', error);
         notify('Failed to reconnect. Returning to home...');
@@ -421,7 +423,7 @@ export async function init() {
     }
 
     // Improved mobile detection - check for actual mobile devices, not just screen size
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                     (window.innerWidth <= 768 && 'ontouchstart' in window);
     const targetCanvas = (isMobile && mobileCanvas) ? mobileCanvas : desktopCanvas;
 
@@ -680,14 +682,14 @@ export async function init() {
 
   function setupResponsiveCanvas(targetCanvas: HTMLCanvasElement) {
     // Improved mobile detection - check for actual mobile devices, not just screen size
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                     (window.innerWidth <= 768 && 'ontouchstart' in window);
 
-    console.log('📱 Device detection:', { 
+    console.log('📱 Device detection:', {
       userAgent: navigator.userAgent,
       screenWidth: window.innerWidth,
       hasTouchSupport: 'ontouchstart' in window,
-      isMobile 
+      isMobile
     });
 
     if (isMobile && mobileCanvas) {
@@ -696,35 +698,35 @@ export async function init() {
       const aspectRatio = 0.75; // Better aspect ratio for 3D view
       mobileCanvas.width = maxWidth;
       mobileCanvas.height = maxWidth * aspectRatio;
-      
+
       // Ensure mobile layout is visible
       const mobileLayout = document.getElementById('mobile-layout');
       const desktopLayout = document.getElementById('desktop-layout');
-      
+
       if (mobileLayout) {
         mobileLayout.style.display = 'block';
       }
       if (desktopLayout) {
         desktopLayout.style.display = 'none';
       }
-      
+
       console.log(`📱 Enhanced 3D Mobile canvas: ${mobileCanvas.width}x${mobileCanvas.height}`);
     } else if (desktopCanvas) {
       // Desktop layout
       desktopCanvas.width = 1000;
       desktopCanvas.height = 600; // Enhanced resolution for desktop
-      
+
       // Ensure desktop layout is visible
       const mobileLayout = document.getElementById('mobile-layout');
       const desktopLayout = document.getElementById('desktop-layout');
-      
+
       if (mobileLayout) {
         mobileLayout.style.display = 'none';
       }
       if (desktopLayout) {
         desktopLayout.style.display = 'flex';
       }
-      
+
       console.log(`🖥️ Enhanced 3D Desktop canvas: ${desktopCanvas.width}x${desktopCanvas.height}`);
     }
 
@@ -958,14 +960,13 @@ export async function init() {
     if (!myPaddle) return;
 
     let newY: number | null = null;
-    const paddleSpeed = 18; // Enhanced speed for better responsiveness
     const paddleHeight = 100;
     const gameHeight = 400;
 
     if (keysPressed['KeyW'] || keysPressed['ArrowUp']) {
-      newY = Math.min(gameHeight - paddleHeight - 1, myPaddle.y + paddleSpeed);
+      newY = Math.min(gameHeight - paddleHeight - 1, myPaddle.y + PADDLE_MOVE_SPEED);
     } else if (keysPressed['KeyS'] || keysPressed['ArrowDown']) {
-      newY = Math.max(1, myPaddle.y - paddleSpeed);
+      newY = Math.max(1, myPaddle.y - PADDLE_MOVE_SPEED);
     }
 
     if (newY !== null) {
@@ -1058,13 +1059,12 @@ export async function init() {
       const myPaddle = gameState.paddles[myPlayerId];
       if (!myPaddle) return;
 
-      const moveSpeed = 25; // Enhanced mobile movement speed
       let newY = myPaddle.y;
 
-      if (mobileControlDirection === 'up') {
-        newY = Math.max(0, myPaddle.y - moveSpeed);
-      } else if (mobileControlDirection === 'down') {
-        newY = Math.min(400 - 100, myPaddle.y + moveSpeed);
+      if (mobileControlDirection === 'down') {
+        newY = Math.max(0, myPaddle.y - PADDLE_MOVE_SPEED);
+      } else if (mobileControlDirection === 'up') {
+        newY = Math.min(400 - 100, myPaddle.y + PADDLE_MOVE_SPEED);
       }
 
       if (newY !== myPaddle.y) {
@@ -1148,7 +1148,7 @@ export async function init() {
   async function initPlayerInfo() {
     const currentUser = await userService.getCurrentUser();
     myPlayerId = currentUser?.id || null;
-    
+
     if (myPlayerId && currentRoom?.players) {
       const myPosition = currentRoom.players.indexOf(myPlayerId);
       const side = myPosition === 0 ? 'LEFT (BLUE)' : myPosition === 1 ? 'RIGHT (RED)' : 'UNKNOWN';
