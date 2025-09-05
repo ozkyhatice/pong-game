@@ -21,7 +21,6 @@ dotenv.config();
 
 const app = fastify({ logger: true });
 
-// Global metrics hook - tüm istekleri yakalar
 app.addHook('onRequest', async (request, reply) => {
   request.startTime = Date.now();
 });
@@ -29,21 +28,18 @@ app.addHook('onRequest', async (request, reply) => {
 app.addHook('onSend', async (request, reply, payload) => {
   const route = request.routeOptions?.url || request.url.split('?')[0];
   
-  // /api/metrics endpoint'ini metrik toplamasından hariç tut
   if (route === '/api/metrics') {
     return payload;
   }
 
-  const duration = (Date.now() - request.startTime) / 1000;
   const method = request.method;
   const statusCode = reply.statusCode.toString();
+  const duration = (Date.now() - request.startTime) / 1000;
 
-  // Request suresi
   metrics.httpRequestDuration
     .labels(method, route, statusCode)
     .observe(duration);
 
-  // Request sayısı
   metrics.httpRequestTotal
     .labels(method, route, statusCode)
     .inc();
@@ -53,9 +49,10 @@ app.addHook('onSend', async (request, reply, payload) => {
 
 // cors 
 await app.register(fastifyCors, { 
-    origin: true,
+    origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:8080', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 });
 
 await app.register(fastifySensible);

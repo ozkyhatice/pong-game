@@ -3,8 +3,10 @@ import argon2 from 'argon2';
 import { 
   isValidEmail, 
   isValidUsername, 
-  containsSqlInjection 
+  containsSqlInjection,
+  validatePassword 
 } from '../../../utils/validation.js';
+import { metrics } from '../../../plugins/metrics.js';
 
 export async function registerUser({ username, email, password }) {
   const db = await initDB();
@@ -17,11 +19,10 @@ export async function registerUser({ username, email, password }) {
     throw new Error('Username must be 3-20 characters and contain only letters, numbers, and underscores');
   }
 
-  // Password validation (uncomment to enforce strong passwords)
-  // const passwordValidation = validatePassword(password);
-  // if (!passwordValidation.isValid) {
-  //   throw new Error(passwordValidation.message);
-  // }
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.isValid) {
+    throw new Error(passwordValidation.message);
+  }
 
   if (containsSqlInjection(username) || containsSqlInjection(email)) {
     throw new Error('Invalid characters detected in input');
@@ -114,6 +115,8 @@ export async function handleGoogleUser({ email, name, picture }) {
       'INSERT INTO users (username, email, avatar, password, isGoogleAuth) VALUES (?, ?, ?, ?, ?)',
       [uniqueUsername, email, picture, null, true]
     );
+    
+    metrics.userRegistrations.inc();
     
     user = { 
       id: result.lastID, 

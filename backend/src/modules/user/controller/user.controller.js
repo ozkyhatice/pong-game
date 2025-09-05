@@ -155,7 +155,7 @@ export async function updateMyAvatar(request, reply) {
     const filePath = path.join(uploadDir, fileName);
     fs.writeFileSync(filePath, buffer);
 
-    const avatarUrl = `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/uploads/avatars/${fileName}`;
+    const avatarUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/api/uploads/avatars/${fileName}`;
     const updatedUser = await updateAvatar(userId, avatarUrl);
 
     reply.send({ 
