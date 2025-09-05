@@ -19,7 +19,7 @@ export class UserService {
   private cache = new Map<number, UserInfo>();
   private currentUserCache: UserInfo | null = null;
   private currentUserCacheTime: number = 0;
-  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  private readonly CACHE_DURATION = 5 * 60 * 1000;
 
   private getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('authToken');
@@ -27,7 +27,6 @@ export class UserService {
   }
 
   async getCurrentUser(): Promise<UserInfo | null> {
-    // Check cache first
     if (this.currentUserCache && 
         Date.now() - this.currentUserCacheTime < this.CACHE_DURATION) {
       return this.currentUserCache;
@@ -43,7 +42,6 @@ export class UserService {
       const data = await response.json();
       const user: UserInfo = data.user || data;
       
-      // Update cache
       this.currentUserCache = user;
       this.currentUserCacheTime = Date.now();
       this.cache.set(user.id, user);
@@ -84,7 +82,6 @@ export class UserService {
       if (!response.ok) return null;
 
       const data = await response.json();
-      // Backend response wrapped olabilir: { user: {...} }
       const user: UserInfo = data.user || data;
       this.cache.set(user.id, user);
       return user;
@@ -107,10 +104,8 @@ export class UserService {
       if (!response.ok) return null;
 
       const responseData = await response.json();
-      // Backend response wrapped olabilir: { user: {...} }
       const user: UserInfo = responseData.user || responseData;
       
-      // Clear current user cache to force refresh
       this.currentUserCache = null;
       this.currentUserCacheTime = 0;
       this.cache.set(user.id, user);
@@ -135,10 +130,8 @@ export class UserService {
       if (!response.ok) return null;
 
       const data = await response.json();
-      // Backend response wrapped olabilir: { user: {...} }
       const user: UserInfo = data.user || data;
-      
-      // Clear current user cache to force refresh
+
       this.currentUserCache = null;
       this.currentUserCacheTime = 0;
       this.cache.set(user.id, user);
@@ -155,7 +148,6 @@ export class UserService {
     this.currentUserCacheTime = 0;
   }
 
-  // Utility method to check if user is authenticated
   isAuthenticated(): boolean {
     return !!localStorage.getItem('token');
   }

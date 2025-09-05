@@ -48,14 +48,11 @@ export class GameService {
     this.send('invite-accepted', { senderId });
   }
 
-  // Matchmaking methods
   joinMatchmakingQueue(): void {
-    console.log('🎮 GAMESERVICE: Sending matchmaking-join-queue event...');
     this.send('matchmaking-join-queue', {});
   }
 
   leaveMatchmakingQueue(): void {
-    console.log('🎮 GAMESERVICE: Sending matchmaking-leave-queue event...');
     this.send('matchmaking-leave-queue', {});
   }
 
@@ -90,15 +87,12 @@ export class GameService {
   onGameResumed(callback: (data: any) => void): void { this.wsManager.on('resumed', callback); }
   onPlayerReconnected(callback: (data: any) => void): void { this.wsManager.on('reconnected', callback); }
 
-  // Matchmaking event listeners
   onMatchmakingJoined(callback: (data: any) => void): void { this.wsManager.on('matchmaking-joined', callback); }
   onMatchmakingLeft(callback: (data: any) => void): void { this.wsManager.on('matchmaking-left', callback); }
   onMatchmakingStatus(callback: (data: any) => void): void { this.wsManager.on('matchmaking-status', callback); }
   onMatchFound(callback: (data: any) => void): void { this.wsManager.on('match-found', callback); }
 
-  // Cleanup method to remove all game-related listeners
   cleanup(): void {
-    console.log('🧹 GameService cleanup: Removing all event listeners');
     const gameEvents = [
       'room-created', 'joined', 'game-started', 'state-update', 'error', 'game-invite',
       'invite-accepted', 'player left', 'player-ready', 'all-ready', 'game-over',

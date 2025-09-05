@@ -7,7 +7,6 @@ export class TournamentService {
     this.wsManager = WebSocketManager.getInstance();
   }
 
-  // Aktif turnuvaya katılma
   joinTournament(tournamentId?: number) {
     this.wsManager.send({
       type: "tournament",
@@ -16,7 +15,6 @@ export class TournamentService {
     });
   }
 
-  // Turnuvadan ayrılma
   leaveTournament(tournamentId?: number) {
     this.wsManager.send({
       type: "tournament",
@@ -25,7 +23,6 @@ export class TournamentService {
     });
   }
 
-  // Turnuva detaylarını getirme
   getTournamentDetails(tournamentId?: number) {
     this.wsManager.send({
       type: "tournament",
@@ -34,7 +31,6 @@ export class TournamentService {
     });
   }
 
-  // Turnuva bracket'ini getirme
   getTournamentBracket(tournamentId?: number) {
     this.wsManager.send({
       type: "tournament",
@@ -43,19 +39,15 @@ export class TournamentService {
     });
   }
 
-  // Turnuva eventlerini dinleme
   onTournamentPlayerJoined(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:playerJoined listener');
     this.wsManager.on("tournament:playerJoined", callback);
   }
 
   onTournamentPlayerLeft(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:playerLeft listener');
     this.wsManager.on("tournament:playerLeft", callback);
   }
 
   onTournamentStarted(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:tournamentStarted listener');
     this.wsManager.on("tournament:tournamentStarted", callback);
   }
 
@@ -64,54 +56,44 @@ export class TournamentService {
   }
 
   onTournamentMatchStarted(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:matchStarted listener');
     this.wsManager.on("tournament:matchStarted", callback);
   }
 
   onTournamentMatchCompleted(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:matchCompleted listener');
     this.wsManager.on("tournament:matchCompleted", callback);
   }
 
   onTournamentRoundCompleted(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:roundCompleted listener');
     this.wsManager.on("tournament:roundCompleted", callback);
   }
 
   onTournamentNextRound(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:nextRoundStarted listener');
     this.wsManager.on("tournament:nextRoundStarted", callback);
   }
 
   onTournamentEnded(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:tournamentEnded listener');
     this.wsManager.on("tournament:tournamentEnded", callback);
   }
 
   onNewTournamentCreated(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:newTournamentCreated listener');
     this.wsManager.on("tournament:newTournamentCreated", callback);
   }
 
   onTournamentDetails(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:details listener');
     this.wsManager.on("tournament:details", callback);
   }
 
   onTournamentBracket(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:bracket listener');
     this.wsManager.on("tournament:bracket", callback);
   }
 
-  // Cleanup method to remove all tournament-related listeners
   cleanup(): void {
-    console.log('🧹 TournamentService cleanup: Removing all event listeners');
     const tournamentEvents = [
       'tournament:playerJoined', 'tournament:playerLeft', 'tournament:tournamentStarted',
       'tournament:matchPairingsRevealed', 'tournament:matchStarted', 'tournament:matchCompleted',
       'tournament:roundCompleted', 'tournament:nextRoundStarted', 'tournament:tournamentEnded',
       'tournament:newTournamentCreated', 'tournament:details', 'tournament:bracket',
-      'tournament', // General tournament events
+      'tournament',
     ];
     
     tournamentEvents.forEach(event => {
@@ -120,7 +102,6 @@ export class TournamentService {
   }
 
   onPlayerDisconnected(callback: (data: any) => void) {
-    console.log('🎯 Setting up tournament:playerDisconnected listener');
     this.wsManager.on("tournament:playerDisconnected", callback);
   }
 }

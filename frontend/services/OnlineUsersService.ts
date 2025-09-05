@@ -15,7 +15,7 @@ export class OnlineUsersService {
 
   private constructor() {
     this.wsManager = WebSocketManager.getInstance();
-    this.initialize(); // Otomatik initialize
+    this.initialize();
   }
 
   static getInstance(): OnlineUsersService {
@@ -31,36 +31,29 @@ export class OnlineUsersService {
     this.setupWebSocketListeners();
     this.isInitialized = true;
     
-    // WebSocket bağlantısı kurulduğunda online users listesini iste
     this.wsManager.on('connected', () => {
-      console.log('🔌 OnlineUsersService: WebSocket connected, requesting online users');
       this.requestOnlineUsers();
     });
     
-    // Eğer zaten bağlıysa hemen iste
     if (this.wsManager.isConnected()) {
       this.requestOnlineUsers();
     }
   }
 
   private requestOnlineUsers(): void {
-    // Backend'den online users listesini iste
     this.wsManager.send({
       type: 'getOnlineUsers'
     });
   }
 
   private setupWebSocketListeners(): void {
-    console.log('🔌 OnlineUsersService: Setting up WebSocket listeners');
     
     this.wsManager.on('onlineClients', (data: any) => {
-      console.log('📊 OnlineUsersService: Received online clients:', data);
       const clients = this.parseOnlineClientsData(data);
       this.updateOnlineUsers(clients);
     });
 
     this.wsManager.on('userStatus', (data: any) => {
-      console.log('👤 OnlineUsersService: User status change:', data);
       const userId = data.userID || data.userId || data.id;
       const status = data.status;
       if (userId && status) {
@@ -68,18 +61,14 @@ export class OnlineUsersService {
       }
     });
 
-    // Kullanıcı online oldu
     this.wsManager.on('userOnline', (data: any) => {
-      console.log('🟢 OnlineUsersService: User came online:', data);
       const userId = data.userID || data.userId || data.id;
       if (userId) {
         this.updateUserStatus(userId, 'online');
       }
     });
 
-    // Kullanıcı offline oldu
     this.wsManager.on('userOffline', (data: any) => {
-      console.log('🔴 OnlineUsersService: User went offline:', data);
       const userId = data.userID || data.userId || data.id;
       if (userId) {
         this.updateUserStatus(userId, 'offline');
@@ -98,18 +87,13 @@ export class OnlineUsersService {
   }
 
   private updateOnlineUsers(clients: OnlineUser[]): void {
-    console.log('📊 OnlineUsersService: Updating online users list:', clients);
-    
-    // Mevcut offline kullanıcıları koru, sadece online olan kullanıcıları güncelle
     const currentUsers = new Map(this.onlineUsers);
     
-    // Önce tüm mevcut kullanıcıları offline yap
     currentUsers.forEach((user, userId) => {
       user.status = 'offline';
       user.lastSeen = new Date();
     });
     
-    // Sonra online olanları güncelle
     clients.forEach(client => {
       currentUsers.set(client.id, {
         ...client,
@@ -124,8 +108,6 @@ export class OnlineUsersService {
 
   private updateUserStatus(userId: number, status: 'online' | 'offline'): void {
     const currentTime = new Date();
-    console.log(`👤 OnlineUsersService: Updating user ${userId} status to ${status}`);
-    
     if (status === 'online') {
       this.setUserOnline(userId, currentTime);
     } else {
