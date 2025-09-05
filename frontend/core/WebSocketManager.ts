@@ -78,13 +78,15 @@ export class WebSocketManager {
               }, 100);
             }
           } else if (message.event === 'match-found') {
-            console.log('🎮 WS: Match found, redirecting to game-lobby');
+            console.log('🎮 WS: Match found - checking if matchmaking or friend invite');
             const currentPage = (window as any).router?.currentPage;
-            if (currentPage !== 'game-lobby') {
-              setTimeout(() => {
-                (window as any).router.navigate('game-lobby');
-              }, 100);
-            }
+            
+            // For matchmaking, go directly to remote-game, skip lobby
+            // The GameAreaComponent.onMatchFound handler sets isMatchmaking: true
+            setTimeout(() => {
+              console.log('🎮 WS: Matchmaking match found, redirecting directly to remote-game');
+              (window as any).router.navigate('remote-game');
+            }, 100);
           } else if (message.event === 'room-created') {
             console.log('🎮 WS: Room created, redirecting to game-lobby');
             const currentPage = (window as any).router?.currentPage;

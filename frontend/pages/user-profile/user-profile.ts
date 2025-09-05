@@ -413,19 +413,14 @@ function updateStatsDisplay(userData: any) {
       return timeOptions[date] || `${date + 1} days ago`;
     }
     
-    // New behavior for Date objects
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffDays > 0) {
-      return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-    } else if (diffHours > 0) {
-      return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-    } else {
-      return 'Less than an hour ago';
-    }
+    // New behavior for Date objects with date and time display
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   }
 
 async function handleChallenge() {

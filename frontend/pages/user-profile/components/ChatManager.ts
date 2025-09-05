@@ -3,6 +3,7 @@ import { WebSocketManager } from '../../../core/WebSocketManager.js';
 import { notify } from '../../../core/notify.js';
 import { GameInviteManager } from './GameInviteManager.js';
 import { getApiUrl, API_CONFIG } from '../../../config.js';
+import { UserService } from '../../../services/UserService.js';
 
 interface ApiMessage {
   id: number;
@@ -31,6 +32,9 @@ export class ChatManager {
   private chatService: ChatService;
   private gameInviteManager: GameInviteManager;
   private sentMessages = new Set<string>(); // Gönderilen mesajları takip etmek için
+  private userService: UserService;
+  private currentUserAvatar: string | null = null;
+  private friendUserAvatar: string | null = null;
 
   constructor(
     chatInput: HTMLInputElement,
@@ -45,10 +49,12 @@ export class ChatManager {
     this.currentUserId = currentUserId;
     this.friendUserId = friendUserId;
     this.chatService = new ChatService();
+    this.userService = new UserService();
     this.gameInviteManager = new GameInviteManager(chatMessages, currentUserId, friendUserId);
 
     this.setupEventListeners();
     this.setupWebSocketForChat();
+    this.loadUserAvatars();
   }
 
   private setupEventListeners(): void {
@@ -67,6 +73,22 @@ export class ChatManager {
       if (authToken) {
         wsManager.connect(authToken);
       }
+    }
+  }
+
+  private async loadUserAvatars(): Promise<void> {
+    try {
+      if (this.currentUserId) {
+        const currentUser = await this.userService.getUserById(this.currentUserId);
+        this.currentUserAvatar = currentUser?.avatar || null;
+      }
+      
+      if (this.friendUserId) {
+        const friendUser = await this.userService.getUserById(this.friendUserId);
+        this.friendUserAvatar = friendUser?.avatar || null;
+      }
+    } catch (error) {
+      console.error('Error loading user avatars:', error);
     }
   }
 
@@ -150,6 +172,7 @@ export class ChatManager {
     const isFromMe = message.senderId === this.currentUserId;
 
     if (isFromMe) {
+      const avatarSrc = this.currentUserAvatar || 'https://placehold.co/400x400?text=ME';
       messageDiv.innerHTML = `
         <div class="flex items-end gap-2 justify-end">
           <div class="max-w-[280px] min-w-[60px]">
@@ -158,13 +181,18 @@ export class ChatManager {
             </div>
             <div class="text-[10px] text-neon-white/30 mt-1 text-right">${displayTime}</div>
           </div>
-          <div class="w-8 h-8 bg-neon-yellow rounded-full flex items-center justify-center text-console-bg text-sm font-bold flex-shrink-0">ME</div>
+          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-neon-yellow">
+            <img src="${avatarSrc}" alt="Your Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full bg-neon-yellow rounded-full flex items-center justify-center text-console-bg text-sm font-bold\\'>ME</div>';">
+          </div>
         </div>
       `;
     } else {
+      const avatarSrc = this.friendUserAvatar || 'https://placehold.co/400x400?text=U';
       messageDiv.innerHTML = `
         <div class="flex items-end gap-2">
-          <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-console-bg text-sm font-bold flex-shrink-0">U</div>
+          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-neon-white">
+            <img src="${avatarSrc}" alt="Friend Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full bg-white rounded-full flex items-center justify-center text-console-bg text-sm font-bold\\'>U</div>';">
+          </div>
           <div class="max-w-[280px] min-w-[60px]">
             <div class="border border-neon-white border-opacity-50 p-3 rounded-lg shadow-sm bg-terminal-border break-words">
               <p class="text-neon-white leading-relaxed">${this.escapeHtml(message.content)}</p>
