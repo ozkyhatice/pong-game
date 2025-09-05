@@ -49,7 +49,6 @@ export function init() {
   const onlineUsersService = OnlineUsersService.getInstance();
   let unsubscribeStatusChange: (() => void) | null = null;
 
-  // OnlineUsersService'in initialize edildiğinden emin ol
   onlineUsersService.initialize();
 
   setupEventListeners();
@@ -57,7 +56,6 @@ export function init() {
   setupGameInviteListeners();
 
   function setupGameInviteListeners(): void {
-    // Listen for game invites
     gameService.onGameInvite((data: any) => {
       console.log('🎮 USER-PROFILE: Game invite received:', data);
       notify(`Game invite from ${data.senderUsername || 'Unknown player'}`, 'blue');
@@ -67,7 +65,6 @@ export function init() {
       console.log('🎮 USER-PROFILE: Game invite Recent Maed:', data);
       notify('Game invite accepted! Starting game...', 'green');
 
-      // Store room info if provided
       if (data.roomId) {
         const appState = AppState.getInstance();
         appState.setCurrentRoom({
@@ -76,7 +73,6 @@ export function init() {
           createdAt: Date.now()
         });
 
-        // Navigate to game lobby
         (window as any).router.navigate('game-lobby');
       }
     });
@@ -91,7 +87,6 @@ export function init() {
           createdAt: Date.now()
         });
 
-        // Navigate to game lobby
         (window as any).router.navigate('game-lobby');
       }
     });
@@ -180,12 +175,10 @@ export function init() {
     userSidebar?.classList.remove('translate-x-full');
     sidebarOverlay?.classList.remove('hidden');
 
-    // Rotate the toggle icon
     if (sidebarToggleIcon) {
       sidebarToggleIcon.style.transform = 'rotate(180deg)';
     }
 
-    // Load match history when sidebar opens
     loadMatchHistory();
   }
 
@@ -194,14 +187,12 @@ export function init() {
     userSidebar?.classList.add('translate-x-full');
     sidebarOverlay?.classList.add('hidden');
 
-    // Reset the toggle icon
     if (sidebarToggleIcon) {
       sidebarToggleIcon.style.transform = 'rotate(0deg)';
     }
   }
 
   async function initCurrentUser(): Promise<void> {
-    // user bilgisi authtoken ile
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
@@ -258,7 +249,6 @@ export function init() {
 
       console.log('ChatManager created, loading messages...');
 
-      // Load messages immediately after creating the chat manager
       setTimeout(() => {
         if (chatManager) {
           console.log('Calling loadChatMessages...');
@@ -286,41 +276,32 @@ export function init() {
 		if (usernameEl) usernameEl.textContent = user.username;
 		if (sidebarAvatarImgEl) sidebarAvatarImgEl.src = userInfo.avatar || 'https://placehold.co/400x400?text=Player';
 	}
-    // Load user stats from API
     loadUserStats(user.id);
 
-    // Re-setup online status listener with new friendUserId
     if (unsubscribeStatusChange) {
       unsubscribeStatusChange();
     }
     setupOnlineStatusListener();
 
-    // Update friend online status with retry mechanism for refresh issues
     updateFriendOnlineStatusWithRetry();
 
-    // Initialize chat automatically since it's the main view
     if (chatManager) {
       chatManager.loadChatMessages();
     }
   }
-
 function updateFriendOnlineStatusWithRetry(attempt: number = 1): void {
     console.log(`Attempting to update friend status, attempt ${attempt}`);
 
-    // WebSocket bağlantısının kurulu olup olmadığını kontrol et
     const wsManager = WebSocketManager.getInstance();
     const isWSConnected = wsManager.isConnected();
     console.log('WebSocket connected:', isWSConnected);
 
-    // OnlineUsersService'te kullanıcılar var mı kontrol et
     const hasUsers = onlineUsersService.getAllUsers().length > 0;
     console.log('OnlineUsersService has users:', hasUsers);
 
     if ((isWSConnected && hasUsers) || attempt > 5) {
-      // Service hazır veya yeterince denedik
       updateFriendOnlineStatus();
     } else {
-      // WebSocket bağlantısı yoksa bağlanmayı dene
       if (!isWSConnected && attempt <= 2) {
         const token = localStorage.getItem('authToken');
         if (token) {
@@ -329,10 +310,9 @@ function updateFriendOnlineStatusWithRetry(attempt: number = 1): void {
         }
       }
 
-      // Tekrar dene
       setTimeout(() => {
         updateFriendOnlineStatusWithRetry(attempt + 1);
-      }, 1000 * attempt); // Artan gecikme
+      }, 1000 * attempt);
     }
 }
 
@@ -384,24 +364,10 @@ function updateStatsDisplay(userData: any) {
     if (winRateEl) winRateEl.textContent = `${winRate}%`;
     if (totalGamesEl) totalGamesEl.textContent = totalGames.toString();
 
-	const matchHistoryEl = document.getElementById('match-history');
-	const matchHistory = gameService.getMatchHistory(userData.id);
-	console.log('Match history:', matchHistory);
-	console.log('user data:', userData);
-	// if (matchHistoryEl) {
-	//   matchHistoryEl.innerHTML = '';
-	// //   matchHistory.forEach((match: any) => {
-	// // 	const matchEl = document.createElement('div');
-	// // 	matchEl.className = 'match';
-	// // 	matchEl.innerHTML = `
-	// // 	  <div class="match-details">
-	// // 		<span class="match-date">${getTimeAgo(match.date)}</span>
-	// // 		<span class="match-result">${match.result}</span>
-	// // 	  </div>
-	// // 	`;
-	// 	matchHistoryEl.appendChild(matchEl);
-	//   });
-	// }
+  const matchHistoryEl = document.getElementById('match-history');
+  const matchHistory = gameService.getMatchHistory(userData.id);
+  console.log('Match history:', matchHistory);
+  console.log('user data:', userData);
 
 	console.log('Stats updated:', { wins, losses, winRate, totalGames });
   }
@@ -656,7 +622,6 @@ async function handleBlockFriend() {
   (window as any).userProfileCleanup = cleanup;
 }
 
-// Export cleanup function for use by router
 export function cleanup() {
   console.log('🧹 USER-PROFILE: Cleaning up user-profile page...');
   if ((window as any).userProfileCleanup) {

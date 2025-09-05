@@ -18,7 +18,6 @@ interface GameState {
   gameOver: boolean;
 }
 
-// Enhanced 3D Game constants
 const PONG_3D_CONFIG = {
   TABLE: { width: 12, height: 0.15, depth: 6 },
   PADDLE: { width: 0.2, height: 0.4, depth: 1.2 },
@@ -32,7 +31,6 @@ const PONG_3D_CONFIG = {
     MAX_BETA: Math.PI / 2 - 0.1
   },
   COLORS: {
-    // Enhanced neon color scheme
     TABLE: { r: 0.1, g: 0.2, b: 0.1 },
     BORDER: { r: 0.2, g: 1, b: 0.2 },
     LEFT_PADDLE: { r: 0, g: 0.8, b: 1 },
@@ -56,14 +54,11 @@ interface Player {
   isLeft: boolean;
 }
 
-// 3D Game variables
 let engine: any = null;
 let scene: any = null;
 let camera: any = null;
 let glowLayer: any = null;
-// CRT post-process removed for cleaner look
 
-// 3D Game objects
 let table: any = null;
 let borders: any[] = [];
 let paddle1: any = null;
@@ -71,37 +66,31 @@ let paddle2: any = null;
 let ball: any = null;
 let ballTrail: any = null;
 
-// Materials
 let tableMat: any = null;
 let borderMats: any[] = [];
 let paddle1Mat: any = null;
 let paddle2Mat: any = null;
 let ballMat: any = null;
 
-// Lights and effects
 let mainLight: any = null;
 let paddle1Light: any = null;
 let paddle2Light: any = null;
 let ballLight: any = null;
 let ambientLight: any = null;
 
-// Particle systems
 let hitParticles: any = null;
 let scoreParticles: any = null;
 let ballTrailParticles: any = null;
 
-// Animation tracking
-let borderFlashTimes: number[] = [0, 0, 0, 0]; // left, right, top, bottom
-let paddleFlashTimes: number[] = [0, 0]; // paddle1, paddle2
+let borderFlashTimes: number[] = [0, 0, 0, 0];
+let paddleFlashTimes: number[] = [0, 0];
 let ballColorIndex = 0;
 let lastBallPosition = { x: 0, y: 0, z: 0 };
 
-// Controls restriction during warmup
 let controlsEnabled = false;
 let flashEffectsEnabled = false;
 let warmupTimer: number | null = null;
 
-// Game state
 let gameState: GameState | null = {
   ball: { x: 400, y: 200, dx: 3, dy: 2 },
   paddles: {
@@ -118,18 +107,15 @@ let keysPressed: { [key: string]: boolean } = {};
 let pauseCountdownTimer: number | null = null;
 let mobileControlDirection: 'up' | 'down' | null = null;
 let mobileControlInterval: number | null = null;
-let keyboardControlInterval: number | null = null; // Add this for keyboard controls
-let lastPaddlePosition: number | null = null; // Track last sent position to prevent spam
+let keyboardControlInterval: number | null = null;
+let lastPaddlePosition: number | null = null;
 
-// Avatar tracking
 let player1Avatar: string | null = null;
 let player2Avatar: string | null = null;
 
-// Global resize handler
 let resizeHandler: (() => void) | null = null;
 
 function initResponsiveLayout() {
-  // Improved mobile detection - check for actual mobile devices, not just screen size
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                   (window.innerWidth <= 768 && 'ontouchstart' in window);
 
@@ -144,12 +130,10 @@ function initResponsiveLayout() {
   const desktopLayout = document.getElementById('desktop-layout');
 
   if (isMobile) {
-    // Show mobile layout
     if (mobileLayout) mobileLayout.style.display = 'block';
     if (desktopLayout) desktopLayout.style.display = 'none';
     console.log('📱 Mobile layout activated');
   } else {
-    // Show desktop layout
     if (mobileLayout) mobileLayout.style.display = 'none';
     if (desktopLayout) desktopLayout.style.display = 'flex';
     console.log('🖥️ Desktop layout activated');
@@ -157,27 +141,22 @@ function initResponsiveLayout() {
 }
 
 export async function init() {
-  // Initialize proper layout based on device detection
   initResponsiveLayout();
 
-  // Check if this is a page reload (no WebSocket connection)
   const wsManager = WebSocketManager.getInstance();
   const currentAppState = AppState.getInstance();
 
-  // If WebSocket is not connected but we have room data in state, try to reconnect
   if (!wsManager.isConnected()) {
     const currentRoom = currentAppState.getCurrentRoom();
-    const userToken = localStorage.getItem('authToken'); // Use 'authToken' not 'token'
+    const userToken = localStorage.getItem('authToken');
 
     if (currentRoom && userToken) {
       console.log('🔄 Remote-game: Page reloaded, attempting to reconnect and rejoin room...');
 
       try {
-        // Reconnect WebSocket
         wsManager.connect(userToken);
-        // Wait for connection to establish with timeout
         await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('Connection timeout')), 10000); // Increased to 10s
+          const timeout = setTimeout(() => reject(new Error('Connection timeout')), 10000);
 
           const onConnected = () => {
             clearTimeout(timeout);
@@ -197,7 +176,6 @@ export async function init() {
           wsManager.on('error', onError);
         });
 
-        // Try to rejoin the room using reconnectToGame
         const gameService = new GameService();
         gameService.reconnectToGame();
 
@@ -218,7 +196,6 @@ export async function init() {
     }
   }
 
-  // Check for BabylonJS
   const BABYLON = (window as any).BABYLON;
   if (!BABYLON) {
     console.error('BABYLON is not loaded. Please include Babylon.js via CDN in your index.html.');
@@ -226,7 +203,6 @@ export async function init() {
     return;
   }
 
-  // Get canvas elements
   const desktopCanvas = document.getElementById('game-canvas') as HTMLCanvasElement | null;
   const mobileCanvas = document.getElementById('mobile-game-canvas') as HTMLCanvasElement | null;
 
@@ -236,7 +212,6 @@ export async function init() {
     return;
   }
 
-  // Get UI elements
   const player1NameEl = document.getElementById('player1-name');
   const player2NameEl = document.getElementById('player2-name');
   const player1InitialEl = document.getElementById('player1-initial');
@@ -247,12 +222,10 @@ export async function init() {
   const gameStatusEl = document.getElementById('game-status');
   const leaveGameBtn = document.getElementById('leave-game-btn');
 
-  // Pause elements
   const pauseMessageEl = document.getElementById('pause-message');
   const pauseTextEl = document.getElementById('pause-text');
   const pauseCountdownEl = document.getElementById('pause-countdown');
 
-  // Mobile elements
   const mobilePlayer1NameEl = document.getElementById('mobile-player1-name');
   const mobilePlayer2NameEl = document.getElementById('mobile-player2-name');
   const mobilePlayer1InitialEl = document.getElementById('mobile-player1-initial');
@@ -264,14 +237,13 @@ export async function init() {
   const mobileUpBtn = document.getElementById('mobile-up-btn');
   const mobileDownBtn = document.getElementById('mobile-down-btn');
 
-  // Mobile pause elements
   const mobilePauseMessageEl = document.getElementById('mobile-pause-message');
   const mobilePauseTextEl = document.getElementById('mobile-pause-text');
   const mobilePauseCountdownEl = document.getElementById('mobile-pause-countdown');
 
   const gameService = new GameService();
   const userService = new UserService();
-  let currentRoom = currentAppState.getCurrentRoom(); // Changed to let for updates
+  let currentRoom = currentAppState.getCurrentRoom();
 
   if (!currentRoom) {
     notify('No room found!');
@@ -283,17 +255,14 @@ export async function init() {
   if (leaveGameBtn) leaveGameBtn.addEventListener('click', handleLeaveGame);
   if (mobileLeaveBtn) mobileLeaveBtn.addEventListener('click', handleLeaveGame);
 
-  // Initialize 3D scene
   init3DScene();
 
-  // Setup controls
   setupMobileControls();
   setupKeyboardControls();
 
   initPlayerInfo();
   initRoomPlayerNames();
 
-  // Game Service Events
   gameService.onStateUpdate((data) => {
     if (gameStatusEl) gameStatusEl.textContent = ' BATTLE ';
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' BATTLE ';
@@ -308,18 +277,16 @@ export async function init() {
     if (gameStatusEl) gameStatusEl.textContent = ' BATTLE ';
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' BATTLE ';
 
-    // CRITICAL: Update room players order from server to ensure consistency
     if (data.players && currentRoom) {
       console.log('🎮 Updating room players order from game-started event:', data.players);
       console.log('🎮 Previous room players order:', currentRoom.players);
 
-      // Update the room with the authoritative player order from server
       const updatedRoom = {
         ...currentRoom,
         players: data.players
       };
       currentAppState.setCurrentRoom(updatedRoom);
-      currentRoom = updatedRoom; // Update local reference
+      currentRoom = updatedRoom;
 
       console.log('🎮 Room players order updated to:', currentRoom.players);
       console.log('🎮 CONSISTENT ORDER - LEFT (BLUE):', currentRoom.players[0], ', RIGHT (RED):', currentRoom.players[1]);
@@ -357,7 +324,6 @@ export async function init() {
       currentAppState.updateTournamentStatus('active', data.round);
       currentAppState.clearCurrentRoom();
 
-      // Store minimal tournament match result for potential display
       localStorage.setItem('lastTournamentMatchResult', JSON.stringify({
         winner: data.winner,
         finalScore: data.finalScore,
@@ -369,7 +335,6 @@ export async function init() {
       cleanup3D();
       router.navigate('tournament');
     } else {
-      // Regular game - go to end-game page
       localStorage.setItem('gameResult', JSON.stringify({
         winner: data.winner,
         finalScore: data.finalScore,
@@ -393,7 +358,6 @@ export async function init() {
     hidePauseMessage();
   });
 
-  // Listen for room-state messages directly from WebSocket Manager
   wsManager.on('room-state', (data: any) => {
     console.log('🎮 REMOTE-GAME: Room state received:', data);
     if (data.roomId && data.state) {
@@ -404,19 +368,15 @@ export async function init() {
     }
   });
 
-  // Listen for player reconnection events
   gameService.onPlayerReconnected((data: any) => {
     console.log('🔄 Player reconnected:', data);
     notify(`Player ${data.playerId} reconnected`, 'green');
   });
 
-  // Listen for game invites (in case received during game)
   gameService.onGameInvite((data: any) => {
     console.log('🎮 REMOTE-GAME: Game invite received during game:', data);
-    // Ignore game invites while in an active game
   });
 
-  // Listen for move events from other players
   wsManager.on('player-move', (data: any) => {
     if (data.userId && data.y !== undefined && gameState) {
       gameState.paddles[data.userId] = {
@@ -427,7 +387,6 @@ export async function init() {
     }
   });
 
-  // Listen for flash effects from server
   wsManager.on('flash-effect', (data: any) => {
     console.log('💥 Flash effect received from server:', data);
     if (data.flash) {
@@ -435,7 +394,6 @@ export async function init() {
     }
   });
 
-  // Listen for general game updates
   wsManager.on('game-update', (data: any) => {
     console.log('🎮 REMOTE-GAME: Game update received:', data);
     if (data.state) {
@@ -445,13 +403,11 @@ export async function init() {
     }
   });
 
-  // Listen for game end events
   wsManager.on('game-end', (data: any) => {
     console.log('🎮 REMOTE-GAME: Game end received:', data);
     // This is handled by gameService.onGameOver, but adding as backup
   });
 
-  // Tournament ended event listener
   const tournamentService = new (await import('../../services/TournamentService.js')).TournamentService();
   tournamentService.onTournamentEnded((data: any) => {
     console.log('🏆 Tournament ended during game:', data);
@@ -462,30 +418,25 @@ export async function init() {
 
     notify(message);
 
-    // Immediately stop the game and clean up
     gameState = null;
     players = [];
     myPlayerId = null;
 
-    // Clear mobile control intervals
     if (mobileControlInterval) {
       clearInterval(mobileControlInterval);
       mobileControlInterval = null;
     }
 
-    // Clear pause countdown
     if (pauseCountdownTimer) {
       clearTimeout(pauseCountdownTimer);
       pauseCountdownTimer = null;
     }
 
-    // Show tournament end result
     setTimeout(() => {
       currentAppState.clearCurrentRoom();
       currentAppState.clearCurrentTournament();
       cleanup3D();
 
-      // Store tournament result for end-game page
       localStorage.setItem('tournamentResult', JSON.stringify({
         isWinner,
         winnerUsername: data.winnerUsername,
@@ -502,19 +453,16 @@ export async function init() {
     hidePauseMessage();
   });
 
-  // Start countdown
   startCountdown();
 
   function init3DScene() {
     console.log('🎮 Initializing Enhanced 3D Pong Arena...');
 
-    // If engine already exists, clean it up first
     if (engine) {
       console.log('🧹 Cleaning up existing engine...');
       cleanup3D();
     }
 
-    // Improved mobile detection - check for actual mobile devices, not just screen size
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                     (window.innerWidth <= 768 && 'ontouchstart' in window);
     const targetCanvas = (isMobile && mobileCanvas) ? mobileCanvas : desktopCanvas;
@@ -526,7 +474,6 @@ export async function init() {
       return;
     }
 
-    // Initialize Babylon.js engine with enhanced settings
     engine = new BABYLON.Engine(targetCanvas, true, {
       antialias: true,
       adaptToDeviceRatio: true,
@@ -537,7 +484,6 @@ export async function init() {
     scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
 
-    // Setup fixed camera - 45 degree view from the other side
     camera = new BABYLON.ArcRotateCamera('camera',
       -Math.PI / 2,          // Alpha: -90 degrees (opposite side view)
       Math.PI / 4,           // Beta: 45 degrees (45 degree angle from top)
@@ -546,23 +492,17 @@ export async function init() {
       scene
     );
 
-    // Lock camera - no user controls
-    camera.inputs.clear(); // Remove all camera inputs (mouse, keyboard, etc.)
+    camera.inputs.clear();
 
-    // Set camera target to center of game area
     camera.setTarget(BABYLON.Vector3.Zero());
 
     console.log('🎮 Fixed camera setup: 45° view from opposite side');
 
-    // Skip CRT post-processing for cleaner look
-    // setupPostProcessing(targetCanvas);
 
-    // Setup glow layer - reduced intensity for better visibility
     glowLayer = new BABYLON.GlowLayer("glow", scene);
     glowLayer.intensity = 0.8;
     glowLayer.blurKernelSize = 64;
 
-    // Create scene objects
     createEnhancedTable();
     createEnhancedBorders();
     createEnhancedPaddles();
@@ -570,16 +510,13 @@ export async function init() {
     createEnhancedLighting();
     createParticleSystems();
 
-    // Setup responsive canvas
     setupResponsiveCanvas(targetCanvas);
 
-    // Start render loop with enhanced animations
     engine.runRenderLoop(() => {
       handleEnhancedAnimations();
       scene.render();
     });
 
-    // Handle window resize
     if (resizeHandler) {
       window.removeEventListener('resize', resizeHandler);
     }
@@ -589,7 +526,6 @@ export async function init() {
         engine.resize();
         setupResponsiveCanvas(targetCanvas);
       }
-      // Re-evaluate layout on resize for better responsiveness
       initResponsiveLayout();
     };
 
@@ -613,7 +549,6 @@ export async function init() {
     table.material = tableMat;
     table.position.y = -PONG_3D_CONFIG.TABLE.height / 2;
 
-    // Add center line
     const centerLine = BABYLON.MeshBuilder.CreateBox('centerLine', {
       width: 0.05,
       height: 0.02,
@@ -663,7 +598,6 @@ export async function init() {
   function createEnhancedPaddles() {
     const paddleConfig = PONG_3D_CONFIG.PADDLE;
 
-    // Left paddle (Player 1) - Enhanced design
     paddle1 = BABYLON.MeshBuilder.CreateBox('paddle1', {
       width: paddleConfig.width,
       height: paddleConfig.height,
@@ -683,7 +617,6 @@ export async function init() {
     paddle1.position.z = 0; // Center position initially
     glowLayer.addIncludedOnlyMesh(paddle1);
 
-    // Right paddle (Player 2) - Enhanced design
     paddle2 = BABYLON.MeshBuilder.CreateBox('paddle2', {
       width: paddleConfig.width,
       height: paddleConfig.height,
@@ -719,22 +652,18 @@ export async function init() {
     ball.position.y = PONG_3D_CONFIG.BALL.radius;
     glowLayer.addIncludedOnlyMesh(ball);
 
-    // Store initial position for trail calculation
     lastBallPosition = { x: 0, y: PONG_3D_CONFIG.BALL.radius, z: 0 };
   }
 
   function createEnhancedLighting() {
-    // Main directional light
     mainLight = new BABYLON.DirectionalLight("mainLight", new BABYLON.Vector3(-0.5, -1, -0.5), scene);
     mainLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
     mainLight.intensity = 0.5;
 
-    // Ambient light for overall illumination
     ambientLight = new BABYLON.HemisphericLight("ambientLight", new BABYLON.Vector3(0, 1, 0), scene);
     ambientLight.diffuse = new BABYLON.Color3(0.2, 0.3, 0.4);
     ambientLight.intensity = 0.3;
 
-    // Paddle lights - reduced intensity for better visibility
     paddle1Light = new BABYLON.PointLight("paddle1Light", new BABYLON.Vector3(-5, 2, 0), scene);
     paddle1Light.diffuse = new BABYLON.Color3(PONG_3D_CONFIG.COLORS.LEFT_PADDLE.r, PONG_3D_CONFIG.COLORS.LEFT_PADDLE.g, PONG_3D_CONFIG.COLORS.LEFT_PADDLE.b);
     paddle1Light.intensity = 0.8;
@@ -745,7 +674,6 @@ export async function init() {
     paddle2Light.intensity = 0.8;
     paddle2Light.range = 3;
 
-    // Ball light - reduced intensity
     ballLight = new BABYLON.PointLight("ballLight", new BABYLON.Vector3(0, 1, 0), scene);
     ballLight.diffuse = new BABYLON.Color3(PONG_3D_CONFIG.COLORS.BALL.r, PONG_3D_CONFIG.COLORS.BALL.g, PONG_3D_CONFIG.COLORS.BALL.b);
     ballLight.intensity = 1.0;
@@ -755,7 +683,6 @@ export async function init() {
   function createParticleSystems() {
     const BABYLON = (window as any).BABYLON;
 
-    // Ball trail particles (existing)
     ballTrailParticles = new BABYLON.ParticleSystem("ballTrail", 50, scene);
     ballTrailParticles.particleTexture = new BABYLON.Texture("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", scene);
     ballTrailParticles.emitter = ball;
@@ -773,7 +700,6 @@ export async function init() {
     ballTrailParticles.maxEmitPower = 0.3;
     ballTrailParticles.start();
 
-    // Hit particles for paddle collisions
     hitParticles = new BABYLON.ParticleSystem("hitParticles", 100, scene);
     hitParticles.particleTexture = new BABYLON.Texture("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", scene);
     hitParticles.emitter = new BABYLON.Vector3(0, 0, 0);
@@ -786,13 +712,12 @@ export async function init() {
     hitParticles.maxSize = 0.08;
     hitParticles.minLifeTime = 0.3;
     hitParticles.maxLifeTime = 0.8;
-    hitParticles.emitRate = 0; // Manual emission only
+    hitParticles.emitRate = 0;
     hitParticles.minEmitPower = 0.5;
     hitParticles.maxEmitPower = 1.5;
     hitParticles.gravity = new BABYLON.Vector3(0, -2, 0);
     hitParticles.start();
 
-    // Score particles for scoring celebrations
     scoreParticles = new BABYLON.ParticleSystem("scoreParticles", 200, scene);
     scoreParticles.particleTexture = new BABYLON.Texture("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", scene);
     scoreParticles.emitter = new BABYLON.Vector3(0, 1, 0);
@@ -813,7 +738,6 @@ export async function init() {
   }
 
   function setupResponsiveCanvas(targetCanvas: HTMLCanvasElement) {
-    // Improved mobile detection - check for actual mobile devices, not just screen size
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                     (window.innerWidth <= 768 && 'ontouchstart' in window);
 
@@ -825,13 +749,11 @@ export async function init() {
     });
 
     if (isMobile && mobileCanvas) {
-      // Mobile layout
       const maxWidth = Math.min(window.innerWidth - 32, 400);
-      const aspectRatio = 0.75; // Better aspect ratio for 3D view
+      const aspectRatio = 0.75;
       mobileCanvas.width = maxWidth;
       mobileCanvas.height = maxWidth * aspectRatio;
 
-      // Ensure mobile layout is visible
       const mobileLayout = document.getElementById('mobile-layout');
       const desktopLayout = document.getElementById('desktop-layout');
 
@@ -844,11 +766,9 @@ export async function init() {
 
       console.log(`📱 Enhanced 3D Mobile canvas: ${mobileCanvas.width}x${mobileCanvas.height}`);
     } else if (desktopCanvas) {
-      // Desktop layout
       desktopCanvas.width = 1000;
-      desktopCanvas.height = 600; // Enhanced resolution for desktop
+      desktopCanvas.height = 600;
 
-      // Ensure desktop layout is visible
       const mobileLayout = document.getElementById('mobile-layout');
       const desktopLayout = document.getElementById('desktop-layout');
 
@@ -872,11 +792,9 @@ export async function init() {
 
     const deltaTime = engine.getDeltaTime() / 1000;
 
-    // Handle flash animations
     handleBorderFlashes(deltaTime);
     handlePaddleFlashes(deltaTime);
 
-    // Update light positions
     if (paddle1Light && paddle1) {
       paddle1Light.position.x = paddle1.position.x;
       paddle1Light.position.z = paddle1.position.z;
@@ -891,7 +809,6 @@ export async function init() {
       ballLight.position.z = ball.position.z;
     }
 
-    // Animate ball rotation for visual effect
     if (ball && gameState) {
       ball.rotation.x += deltaTime * 5;
       ball.rotation.z += deltaTime * 3;
@@ -899,7 +816,7 @@ export async function init() {
   }
 
   function handleBorderFlashes(deltaTime: number) {
-    if (!flashEffectsEnabled) return; // Skip flash effects during warmup
+    if (!flashEffectsEnabled) return;
 
     borderFlashTimes.forEach((flashTime, index) => {
       if (flashTime > 0) {
@@ -920,9 +837,8 @@ export async function init() {
   }
 
   function handlePaddleFlashes(deltaTime: number) {
-    if (!flashEffectsEnabled) return; // Skip flash effects during warmup
+    if (!flashEffectsEnabled) return;
 
-    // Paddle 1 flash
     if (paddleFlashTimes[0] > 0) {
       paddleFlashTimes[0] -= deltaTime;
       const flashIntensity = Math.max(0, paddleFlashTimes[0] / 1.0);
@@ -943,7 +859,6 @@ export async function init() {
       if (paddle1Light) paddle1Light.intensity = 1.5;
     }
 
-    // Paddle 2 flash
     if (paddleFlashTimes[1] > 0) {
       paddleFlashTimes[1] -= deltaTime;
       const flashIntensity = Math.max(0, paddleFlashTimes[1] / 1.0);
@@ -968,19 +883,14 @@ export async function init() {
   function update3DGameState() {
     if (!gameState || !ball || !paddle1 || !paddle2) return;
 
-    // Update ball position - direct coordinate mapping for 45° view
-    // Game coordinates: x: 0-800, y: 0-400
-    // 3D coordinates: x: -4 to 4, z: -2 to 2 (table bounds)
-    const ballX = ((gameState.ball.x / 800) - 0.5) * PONG_3D_CONFIG.TABLE.width * 0.9; // Scale to table width
-    const ballZ = ((gameState.ball.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9; // Scale to table depth
+    const ballX = ((gameState.ball.x / 800) - 0.5) * PONG_3D_CONFIG.TABLE.width * 0.9;
+    const ballZ = ((gameState.ball.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9;
 
     ball.position.x = ballX;
     ball.position.z = ballZ;
     ball.position.y = PONG_3D_CONFIG.BALL.radius;
 
-    // Update paddle positions - CONSISTENT ORDER using room.players
     if (currentRoom?.players && currentRoom.players.length >= 2) {
-      // LEFT paddle (Player 1) - BLUE - First player in room (index 0)
       const paddle1Data = gameState.paddles[currentRoom.players[0]];
       if (paddle1Data) {
         const paddleZ = ((paddle1Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9;
@@ -991,7 +901,6 @@ export async function init() {
         console.log(`🎮 Left paddle (BLUE) - Player ${currentRoom.players[0]} at Z: ${paddleZ}`);
       }
 
-      // RIGHT paddle (Player 2) - RED - Second player in room (index 1)
       const paddle2Data = gameState.paddles[currentRoom.players[1]];
       if (paddle2Data) {
         const paddleZ = ((paddle2Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9;
@@ -1003,7 +912,6 @@ export async function init() {
       }
     }
 
-    // Check for collisions and trigger effects
     checkCollisionEffects();
   }
 
@@ -1014,22 +922,19 @@ export async function init() {
     const paddle1 = gameState.paddles[currentRoom.players[0]]; // LEFT paddle (BLUE)
     const paddle2 = gameState.paddles[currentRoom.players[1]]; // RIGHT paddle (RED)
 
-    // Enhanced collision detection with proper flash timing
     const ballRadius = 8;
     const paddleMargin = 8;
     const paddleLengthMargin = 5;
 
-    // Check border collisions for flash effects
-    if (ball.y <= ballRadius + 5) { // Top border collision
-      borderFlashTimes[3] = 1.5; // Flash top border
+    if (ball.y <= ballRadius + 5) {
+      borderFlashTimes[3] = 1.5;
       console.log('💥 Ball hit TOP border - flashing');
-    } else if (ball.y >= 400 - ballRadius - 5) { // Bottom border collision
-      borderFlashTimes[2] = 1.5; // Flash bottom border
+    } else if (ball.y >= 400 - ballRadius - 5) {
+      borderFlashTimes[2] = 1.5;
       console.log('💥 Ball hit BOTTOM border - flashing');
     }
 
-    // Enhanced paddle collision detection with flash effects
-    if (paddle1 && ball.dx < 0) { // Ball moving towards left paddle
+    if (paddle1 && ball.dx < 0) {
       if (ball.x <= paddle1.x + paddle1.width + paddleMargin &&
           ball.x >= paddle1.x - paddleMargin &&
           ball.y + ballRadius >= paddle1.y - paddleLengthMargin &&
@@ -1042,7 +947,7 @@ export async function init() {
       }
     }
 
-    if (paddle2 && ball.dx > 0) { // Ball moving towards right paddle
+    if (paddle2 && ball.dx > 0) {
       if (ball.x >= paddle2.x - paddleMargin &&
           ball.x <= paddle2.x + paddle2.width + paddleMargin &&
           ball.y + ballRadius >= paddle2.y - paddleLengthMargin &&
@@ -1055,22 +960,19 @@ export async function init() {
       }
     }
 
-    // Score flash effects when ball goes off screen
     if (ball.x < -ballRadius) {
-      // Ball went off left side - right player scores
       triggerScoreFlash(currentRoom.players[1]);
-      borderFlashTimes[0] = 2.0; // Long flash for left border on score
+      borderFlashTimes[0] = 2.0;
       console.log(`� RIGHT player scored - LEFT border flash`);
     } else if (ball.x > 800 + ballRadius) {
-      // Ball went off right side - left player scores
       triggerScoreFlash(currentRoom.players[0]);
-      borderFlashTimes[1] = 2.0; // Long flash for right border on score
+      borderFlashTimes[1] = 2.0;
       console.log(`🎯 LEFT player scored - RIGHT border flash`);
     }
   }
 
   function handleServerFlashEffect(flash: any) {
-    if (!flashEffectsEnabled) return; // Skip flash effects during warmup
+    if (!flashEffectsEnabled) return;
 
     console.log(`🎭 Server flash effect: ${flash.type} index ${flash.index} for ${flash.duration}s`);
 
@@ -1090,7 +992,6 @@ export async function init() {
         break;
 
       case 'score':
-        // Find the player index for scoring flash
         const playerIndex = currentRoom?.players.indexOf(flash.index);
         if (playerIndex !== undefined && playerIndex >= 0 && playerIndex < paddleFlashTimes.length) {
           paddleFlashTimes[playerIndex] = flash.duration;
@@ -1104,7 +1005,6 @@ export async function init() {
   }  function triggerHitParticles(x: number, y: number) {
     if (!hitParticles || !scene) return;
 
-    // Create hit particle effect at ball position
     hitParticles.manualEmitCount = 20;
     hitParticles.emitter = new (window as any).BABYLON.Vector3(
       ((x / 800) - 0.5) * PONG_3D_CONFIG.TABLE.width * 0.9,
@@ -1114,12 +1014,10 @@ export async function init() {
   }
 
   function triggerScoreFlash(scoringPlayerId: number) {
-    // Flash the scoring player's paddle for celebration
     const playerIndex = currentRoom?.players.indexOf(scoringPlayerId);
     if (playerIndex !== undefined && playerIndex >= 0) {
-      paddleFlashTimes[playerIndex] = 2.0; // Longer flash for scoring
+      paddleFlashTimes[playerIndex] = 2.0;
 
-      // Create score particle effect
       if (scoreParticles && scene) {
         scoreParticles.manualEmitCount = 50;
         const paddleX = playerIndex === 0 ? -PONG_3D_CONFIG.TABLE.width/2 + 0.5 : PONG_3D_CONFIG.TABLE.width/2 - 0.5;
@@ -1130,7 +1028,6 @@ export async function init() {
 
   function startCountdown() {
     let count = 3;
-    // Disable controls during countdown
     controlsEnabled = false;
     flashEffectsEnabled = false;
 
@@ -1145,7 +1042,6 @@ export async function init() {
       } else {
         clearInterval(countdownInterval);
 
-        // Enable controls after countdown
         controlsEnabled = true;
         flashEffectsEnabled = true;
         console.log('🎮 Controls enabled - Battle begins!');
@@ -1179,11 +1075,9 @@ export async function init() {
     const paddleHeight = 100;
     const gameHeight = 400;
 
-    // Check if any movement keys are pressed
     const isMovingUp = keysPressed['KeyW'] || keysPressed['ArrowUp'];
     const isMovingDown = keysPressed['KeyS'] || keysPressed['ArrowDown'];
 
-    // Only calculate new position if exactly one direction is pressed
     if (isMovingUp && !isMovingDown) {
       newY = Math.min(gameHeight - paddleHeight - 1, myPaddle.y + PADDLE_MOVE_SPEED);
     } else if (isMovingDown && !isMovingUp) {
@@ -1208,7 +1102,6 @@ export async function init() {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
 
-    // Handle window blur to prevent stuck keys
     const handleWindowBlur = () => {
       console.log('🎮 WINDOW: Focus lost, clearing keys');
       keysPressed = {};
@@ -1224,16 +1117,14 @@ export async function init() {
     window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('focus', handleWindowFocus);
 
-    // Continuous keyboard movement with throttling - reduced frequency to prevent spam
     keyboardControlInterval = setInterval(() => {
       if (Object.keys(keysPressed).some(key => keysPressed[key])) {
         handleKeyPress();
       }
-    }, 32) as any; // 30 FPS instead of 60 to reduce message spam
+    }, 32) as any;
   }
 
   function handleKeyDown(e: KeyboardEvent) {
-    // Prevent default behavior for game keys
     if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
       e.preventDefault();
     }
@@ -1246,7 +1137,6 @@ export async function init() {
   }
 
   function handleKeyUp(e: KeyboardEvent) {
-    // Prevent default behavior for game keys
     if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
       e.preventDefault();
     }
@@ -1301,8 +1191,7 @@ export async function init() {
       if (mobileControlInterval) return;
 
       handleMobileMovement();
-      // Reduce mobile control frequency to match keyboard
-      mobileControlInterval = setInterval(handleMobileMovement, 32) as any; // 30 FPS
+      mobileControlInterval = setInterval(handleMobileMovement, 32) as any;
     }
 
     function stopMobileMovement() {
@@ -1311,7 +1200,7 @@ export async function init() {
         mobileControlInterval = null;
       }
       mobileControlDirection = null;
-      lastPaddlePosition = null; // Reset position tracking for mobile too
+      lastPaddlePosition = null;
     }
 
     function handleMobileMovement() {
@@ -1330,7 +1219,6 @@ export async function init() {
         newY = Math.min(gameHeight - paddleHeight - 1, myPaddle.y + PADDLE_MOVE_SPEED);
       }
 
-      // Only send move message if position actually changed and is different from last sent position
       if (newY !== myPaddle.y && newY !== lastPaddlePosition) {
         lastPaddlePosition = newY;
         gameService.movePlayer(currentRoom.roomId, newY);
@@ -1338,7 +1226,6 @@ export async function init() {
       }
     }
 
-    // Prevent scrolling when touching game controls
     document.addEventListener('touchmove', (e) => {
       if (e.target === mobileUpBtn || e.target === mobileDownBtn) {
         e.preventDefault();
@@ -1427,9 +1314,6 @@ export async function init() {
     if (!gameState?.score || !currentRoom?.players || currentRoom.players.length < 2) return;
 
     try {
-      // CONSISTENT PLAYER ORDER: Always use room.players order
-      // Player 1 (index 0) = LEFT side = BLUE paddle
-      // Player 2 (index 1) = RIGHT side = RED paddle
       const [player1, player2] = await Promise.all([
         userService.getUserById(currentRoom.players[0]), // LEFT player (BLUE)
         userService.getUserById(currentRoom.players[1])  // RIGHT player (RED)
@@ -1437,25 +1321,20 @@ export async function init() {
 
       console.log(`🎮 Player order from room - LEFT (BLUE): ${player1?.username} (${currentRoom.players[0]}), RIGHT (RED): ${player2?.username} (${currentRoom.players[1]})`);
 
-      // Store avatars
       player1Avatar = player1?.avatar || null;
       player2Avatar = player2?.avatar || null;
 
-      // Update desktop elements
       if (player1NameEl) player1NameEl.textContent = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
       if (player2NameEl) player2NameEl.textContent = player2?.username || `WARRIOR ${currentRoom.players[1]}`;
 
-      // Display avatars for desktop
       const player1Initial = player1?.username?.[0]?.toUpperCase() || 'W1';
       const player2Initial = player2?.username?.[0]?.toUpperCase() || 'W2';
       displayPlayerAvatar('player1-avatar-container', player1Avatar, player1Initial, true);
       displayPlayerAvatar('player2-avatar-container', player2Avatar, player2Initial, false);
 
-      // Update mobile elements
       if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
       if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2?.username || `WARRIOR ${currentRoom.players[1]}`;
 
-      // Display avatars for mobile
       displayPlayerAvatar('mobile-player1-avatar-container', player1Avatar, player1Initial, true);
       displayPlayerAvatar('mobile-player2-avatar-container', player2Avatar, player2Initial, false);
     } catch (e) {
@@ -1466,19 +1345,14 @@ export async function init() {
   function updateScores() {
     if (!gameState?.score || !currentRoom?.players || currentRoom.players.length < 2) return;
 
-    // CONSISTENT PLAYER ORDER: Always use room.players order
-    // Player 1 (index 0) = LEFT side = BLUE paddle
-    // Player 2 (index 1) = RIGHT side = RED paddle
     const score1 = gameState.score[currentRoom.players[0]] || 0; // LEFT player (BLUE)
     const score2 = gameState.score[currentRoom.players[1]] || 0; // RIGHT player (RED)
 
     console.log(`🎮 Score update - LEFT (BLUE): ${score1}, RIGHT (RED): ${score2}`);
 
-    // Update desktop scores
     if (player1ScoreEl) player1ScoreEl.textContent = score1.toString();
     if (player2ScoreEl) player2ScoreEl.textContent = score2.toString();
 
-    // Update mobile scores
     if (mobilePlayer1ScoreEl) mobilePlayer1ScoreEl.textContent = score1.toString();
     if (mobilePlayer2ScoreEl) mobilePlayer2ScoreEl.textContent = score2.toString();
   }
@@ -1493,41 +1367,31 @@ export async function init() {
     console.log('🎮 POSITION ASSIGNMENT - LEFT (BLUE): Player', currentRoom.players[0], ', RIGHT (RED): Player', currentRoom.players[1]);
 
     try {
-      // CONSISTENT PLAYER ORDER: Always use room.players order
-      // Player 1 (index 0) = LEFT side = BLUE paddle
-      // Player 2 (index 1) = RIGHT side = RED paddle
       const [player1, player2] = await Promise.all([
         userService.getUserById(currentRoom.players[0]), // LEFT player (BLUE)
         userService.getUserById(currentRoom.players[1])  // RIGHT player (RED)
       ]);
 
-      // Store avatars
       player1Avatar = player1?.avatar || null;
       player2Avatar = player2?.avatar || null;
 
-      // Update all player name elements
       const player1Name = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
       const player2Name = player2?.username || `WARRIOR ${currentRoom.players[1]}`;
       const player1Initial = player1?.username?.[0]?.toUpperCase() || 'W1';
       const player2Initial = player2?.username?.[0]?.toUpperCase() || 'W2';
 
-      // Desktop elements
       if (player1NameEl) player1NameEl.textContent = player1Name;
       if (player2NameEl) player2NameEl.textContent = player2Name;
 
-      // Display avatars for desktop
       displayPlayerAvatar('player1-avatar-container', player1Avatar, player1Initial, true);
       displayPlayerAvatar('player2-avatar-container', player2Avatar, player2Initial, false);
 
-      // Mobile elements
       if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1Name;
       if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2Name;
 
-      // Display avatars for mobile
       displayPlayerAvatar('mobile-player1-avatar-container', player1Avatar, player1Initial, true);
       displayPlayerAvatar('mobile-player2-avatar-container', player2Avatar, player2Initial, false);
 
-      // Initialize scores
       [player1ScoreEl, player2ScoreEl, mobilePlayer1ScoreEl, mobilePlayer2ScoreEl].forEach(el => {
         if (el) el.textContent = '0';
       });
@@ -1545,17 +1409,14 @@ export async function init() {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    // Clear existing content
     container.innerHTML = '';
 
     if (avatarUrl && avatarUrl.trim() !== '') {
-      // Create image element for avatar
       const img = document.createElement('img');
       img.src = avatarUrl;
       img.alt = `Player Avatar`;
       img.className = 'w-full h-full object-cover';
 
-      // Add error handler to fallback to text
       img.onerror = () => {
         container.innerHTML = `<span class="text-white font-bold ${containerId.includes('mobile') ? 'text-sm' : 'text-2xl'}">${fallbackText}</span>`;
       };
@@ -1563,7 +1424,6 @@ export async function init() {
       container.appendChild(img);
       console.log(`🖼️ Avatar loaded for ${containerId}:`, avatarUrl);
     } else {
-      // Show fallback text
       container.innerHTML = `<span class="text-white font-bold ${containerId.includes('mobile') ? 'text-sm' : 'text-2xl'}">${fallbackText}</span>`;
       console.log(`📝 Fallback text for ${containerId}:`, fallbackText);
     }
@@ -1573,49 +1433,41 @@ export async function init() {
     try {
       console.log('🧹 Starting complete cleanup of remote-game page...');
 
-      // Clear keyboard controls interval
       if (keyboardControlInterval) {
         clearInterval(keyboardControlInterval);
         keyboardControlInterval = null;
         console.log('✅ Keyboard control interval cleared');
       }
 
-      // Clear mobile control interval
       if (mobileControlInterval) {
         clearInterval(mobileControlInterval);
         mobileControlInterval = null;
         console.log('✅ Mobile control interval cleared');
       }
 
-      // Clear pause countdown timer
       if (pauseCountdownTimer) {
         clearInterval(pauseCountdownTimer);
         pauseCountdownTimer = null;
         console.log('✅ Pause countdown timer cleared');
       }
 
-      // Clear warmup timer
       if (warmupTimer) {
         clearTimeout(warmupTimer);
         warmupTimer = null;
         console.log('✅ Warmup timer cleared');
       }
 
-      // Remove keyboard event listeners
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
       console.log('✅ Keyboard event listeners removed');
 
-      // Remove other document event listeners
       document.removeEventListener('touchmove', () => {});
       document.removeEventListener('visibilitychange', () => {});
       window.removeEventListener('blur', () => {});
 
-      // Clear keys pressed state and paddle position tracking
       keysPressed = {};
       lastPaddlePosition = null;
 
-      // Clean up 3D scene
       if (ballTrailParticles) {
         ballTrailParticles.dispose();
         ballTrailParticles = null;
@@ -1637,17 +1489,14 @@ export async function init() {
         engine = null;
       }
 
-      // Remove window event listeners
       if (resizeHandler) {
         window.removeEventListener('resize', resizeHandler);
         resizeHandler = null;
       }
 
-      // Reset all variables
       scene = null;
       camera = null;
       glowLayer = null;
-      // CRT post-process removed
 
       table = null;
       borders = [];
@@ -1672,7 +1521,6 @@ export async function init() {
       scoreParticles = null;
       ballTrailParticles = null;
 
-      // Clear game state
       gameState = null;
       players = [];
       myPlayerId = null;
@@ -1684,17 +1532,13 @@ export async function init() {
     }
   }
 
-  // Cleanup on page unload
   window.addEventListener('beforeunload', cleanup3D);
 
-  // Store cleanup function globally for external access
   (window as any).remoteGameCleanup = cleanup3D;
 
-  // Export cleanup function for external use
   return { cleanup: cleanup3D };
 }
 
-// Export cleanup function globally
 export function cleanup() {
   if ((window as any).remoteGameCleanup) {
     (window as any).remoteGameCleanup();

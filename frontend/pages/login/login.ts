@@ -4,13 +4,9 @@ import { notify } from '../../core/notify.js';
 export async function init() {
   console.log('Login page loaded');
 
-  // Regular login form
   const form = document.getElementById('loginForm') as HTMLFormElement;
-
-  // Google login button
   const googleLoginBtn = document.getElementById('googleLoginBtn') as HTMLButtonElement;
 
-  // Google login handler
   googleLoginBtn?.addEventListener('click', () => {
     const googleAuthUrl = getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE);
     window.location.href = googleAuthUrl;
@@ -40,7 +36,6 @@ export async function init() {
       console.log('Login response:', data);
 
       if (data.message === '2FA_REQUIRED') {
-        // Store userId for 2FA verification
         sessionStorage.setItem('tempUserId', data.userId.toString());
         router.navigate('2fa-code');
         return;
@@ -49,7 +44,6 @@ export async function init() {
       if (response.ok && data.token) {
         localStorage.setItem('authToken', data.token);
         notify(`Login successful! Welcome ${data.user.username}!`, 'green');
-
         router.navigate('home');
       } else {
         throw new Error(data.message || 'Login failed');

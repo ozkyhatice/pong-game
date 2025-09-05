@@ -65,6 +65,29 @@
     box-shadow: 0 0 8px var(--neon-glow);
   }
 
+  /* Responsive button layout */
+  .button-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+  }
+
+  /* Mobile: vertical layout */
+  @media (max-width: 768px) {
+    .button-container {
+      flex-direction: column;
+    }
+  }
+
+  /* Desktop: horizontal layout */
+  @media (min-width: 769px) {
+    .button-container {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  }
+
   /* Fade out the landing UI when user starts controlling the paddle */
   #landing-ui { transition: opacity 300ms ease, filter 300ms ease; }
   #landing-ui.fade-out {
@@ -81,7 +104,7 @@
   </h1>
 
   <!-- Butonlar -->
-  <div class="flex flex-row items-center justify-center gap-8 flex-wrap">
+  <div class="button-container">
     <button
       onclick="window.closeBabylonGame && window.closeBabylonGame(); router.navigate('game')"
       class="w-48 rounded-md neon-btn py-3 text-lg sm:text-xl font-bold">
