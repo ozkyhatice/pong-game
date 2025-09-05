@@ -21,7 +21,6 @@ export class Component {
   }
 
   protected init(): void {
-    // Override in child components
   }
 
   getElement(): HTMLElement {

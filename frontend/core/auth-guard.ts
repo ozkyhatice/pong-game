@@ -10,20 +10,18 @@ export class AuthGuard {
   public static getRedirectPage(requestedPage: string): string | null {
     const isAuth = this.isAuthenticated();
     
-    // Auth token varsa
     if (isAuth) {
       if (requestedPage === 'login' || requestedPage === 'register' || requestedPage === 'landing') {
-        return 'home'; // Authenticated user'ları home'a yönlendir
+        return 'home';
       }
-      return null; // Diğer sayfalar için yönlendirme yok
+      return null;
     }
     
-    // Auth token yoksa - game sayfasını public sayfa olarak izin ver
     if (!isAuth) {
       if (requestedPage !== 'landing' && requestedPage !== 'login' && requestedPage !== 'register' && requestedPage !== '2fa-code' && requestedPage !== 'game') {
-        return 'landing'; // Unauthenticated user'ları landing'e yönlendir (game hariç)
+        return 'landing';
       }
-      return null; // Public sayfalar için yönlendirme yok
+      return null;
     }
 
     return null;
@@ -39,15 +37,11 @@ export class AuthGuard {
       router.navigate(redirectPage);
     }
     
-    // If authenticated and WebSocket not connected, connect it
     if (this.isAuthenticated()) {
       const wsManager = WebSocketManager.getInstance();
       if (!wsManager.isConnected()) {
         const token = localStorage.getItem('authToken');
         if (token) {
-          console.log('🔌 AUTH: Auto-connecting WebSocket after page reload');
-          
-          // Initialize OnlineUsersService when WebSocket connects
           const onlineUsersService = OnlineUsersService.getInstance();
           wsManager.on('connected', () => {
             onlineUsersService.initialize();
@@ -66,8 +60,7 @@ export class AuthGuard {
 
     const wsManager = WebSocketManager.getInstance();
     wsManager.disconnect();
-
-    // Clean up OnlineUsersService
+    
     const onlineUsersService = OnlineUsersService.getInstance();
     onlineUsersService.destroy();
   }

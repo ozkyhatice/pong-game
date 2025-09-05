@@ -59,7 +59,6 @@ export class AppState {
       createdAt: Date.now()
     };
     localStorage.setItem('currentRoom', JSON.stringify(this.currentRoom));
-    console.log('Room stored in AppState:', this.currentRoom);
   }
 
   getCurrentRoom(): RoomInfo | null {
@@ -72,21 +71,18 @@ export class AppState {
   clearCurrentRoom(): void {
     this.currentRoom = null;
     localStorage.removeItem('currentRoom');
-    console.log('Room cleared from AppState');
   }
 
   isInRoom(): boolean {
     return this.getCurrentRoom() !== null;
   }
 
-  // Tournament state management
   setCurrentTournament(tournamentInfo: TournamentInfo): void {
     this.currentTournament = {
       ...tournamentInfo,
       joinedAt: Date.now()
     };
     localStorage.setItem('currentTournament', JSON.stringify(this.currentTournament));
-    console.log('Tournament stored in AppState:', this.currentTournament);
   }
 
   getCurrentTournament(): TournamentInfo | null {
@@ -99,7 +95,6 @@ export class AppState {
   clearCurrentTournament(): void {
     this.currentTournament = null;
     localStorage.removeItem('currentTournament');
-    console.log('Tournament cleared from AppState');
   }
 
   isInTournament(): boolean {
@@ -127,37 +122,27 @@ export class AppState {
       const storedRoom = localStorage.getItem('currentRoom');
       if (storedRoom) {
         const roomData = JSON.parse(storedRoom);
-        // Check if room is not too old (24 hours)
         const now = Date.now();
         const roomAge = now - roomData.createdAt;
-        if (roomAge < 24 * 60 * 60 * 1000) { // 24 hours
+        if (roomAge < 24 * 60 * 60 * 1000) {
           this.currentRoom = roomData;
-          console.log('Room loaded from storage:', this.currentRoom);
         } else {
-          // Remove expired room
           localStorage.removeItem('currentRoom');
-          console.log('Expired room removed from storage');
         }
       }
 
-      // Load tournament data
       const storedTournament = localStorage.getItem('currentTournament');
       if (storedTournament) {
         const tournamentData = JSON.parse(storedTournament);
-        // Check if tournament is not too old (24 hours)
         const now = Date.now();
         const tournamentAge = now - tournamentData.joinedAt;
-        if (tournamentAge < 24 * 60 * 60 * 1000) { // 24 hours
+        if (tournamentAge < 24 * 60 * 60 * 1000) {
           this.currentTournament = tournamentData;
-          console.log('Tournament loaded from storage:', this.currentTournament);
         } else {
-          // Remove expired tournament
           localStorage.removeItem('currentTournament');
-          console.log('Expired tournament removed from storage');
         }
       }
     } catch (error) {
-      console.error('Failed to load from storage:', error);
       this.viewingUser = null;
       this.currentRoom = null;
       this.currentTournament = null;

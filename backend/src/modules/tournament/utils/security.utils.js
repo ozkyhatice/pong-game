@@ -1,15 +1,6 @@
-/**
- * Security utilities for the tournament module
- * Provides protection against XSS and SQL injection attacks
- */
 import { escapeHTML, sanitizeInput } from '../../../utils/security.js';
 import { containsSqlInjection } from '../../../utils/validation.js';
 
-/**
- * Sanitizes tournament input data to prevent XSS attacks
- * @param {Object} data - The input data object
- * @returns {Object} - Sanitized data object
- */
 export function sanitizeTournamentInput(data) {
   if (!data || typeof data !== 'object') {
     return data;
@@ -17,20 +8,15 @@ export function sanitizeTournamentInput(data) {
   
   const sanitized = { ...data };
   
-  
   if (sanitized.name && typeof sanitized.name === 'string') {
     sanitized.name = sanitizeInput(sanitized.name);
   }
-  
   if (sanitized.tournamentId && typeof sanitized.tournamentId === 'string') {
     sanitized.tournamentId = sanitizeInput(sanitized.tournamentId);
   }
-  
   if (sanitized.message && typeof sanitized.message === 'string') {
     sanitized.message = sanitizeInput(sanitized.message);
   }
-  
-  
   if (sanitized.maxPlayers !== undefined) {
     sanitized.maxPlayers = Number(sanitized.maxPlayers);
   }
@@ -38,11 +24,6 @@ export function sanitizeTournamentInput(data) {
   return sanitized;
 }
 
-/**
- * Validates tournament input data to prevent SQL injection
- * @param {Object} data - The input data object
- * @returns {Object} - Validation result {isValid: boolean, message: string}
- */
 export function validateTournamentInput(data) {
   if (!data) {
     return { isValid: false, message: 'No data provided' };
@@ -93,21 +74,11 @@ export function validateTournamentInput(data) {
   return { isValid: true, message: 'Input is valid' };
 }
 
-/**
- * Checks if a userId is valid to prevent injection attacks
- * @param {string} userId - The userId to validate
- * @returns {boolean} - Whether the userId is valid
- */
 export function isValidUserId(userId) {
   
   return !isNaN(parseInt(userId)) && parseInt(userId).toString() === userId.toString();
 }
 
-/**
- * Prepares parameters for SQL queries to prevent SQL injection
- * @param {Array} params - Array of parameters to prepare
- * @returns {Array} - Array of sanitized parameters
- */
 export function prepareSqlParams(params) {
   if (!Array.isArray(params)) {
     return [];
@@ -121,12 +92,6 @@ export function prepareSqlParams(params) {
     return param;
   });
 }
-
-/**
- * Sanitizes and validates a tournament message before sending
- * @param {Object} message - The message to sanitize
- * @returns {Object} - The sanitized message
- */
 export function sanitizeTournamentMessage(message) {
   if (!message || typeof message !== 'object') {
     return message;

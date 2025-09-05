@@ -16,45 +16,34 @@ class Router {
   }
 
   navigate(pageName: string): void {
-    console.log(`Navigating to: ${pageName}`);
     
-    // Sayfa değişikliği gerekli mi veya zaten navigating mi?
     if (pageName === this.currentPage) {
-      console.log(`Already on page: ${pageName}, skipping navigation`);
       return;
     }
     
     if (this.isNavigating) {
-      console.log(`Navigation already in progress, ignoring navigation to: ${pageName}`);
       return;
     }
     
-    // Auth kontrolü ve yönlendirme
     const redirectPage = AuthGuard.getRedirectPage(pageName);
     if (redirectPage && redirectPage !== pageName) {
-      // Sadece gerçekten login gereken sayfalar için hata mesajı göster
       if (!AuthGuard.isAuthenticated() && pageName !== 'landing' && pageName !== 'game' && pageName !== 'login' && pageName !== 'register') {
         notify('Please login to access this page!');
       }
       return this.navigate(redirectPage);
     }
     
-    // Set navigation flag to prevent concurrent navigations
     this.isNavigating = true;
     
-    // History state güncelle (URL değişmeden)
     window.history.pushState({ page: pageName }, '', window.location.href);
     this.loadPage(pageName);
   }
 
-  // AuthGuard için direct page load (auth kontrolü olmadan)
   loadPageDirect(pageName: string) {
-    console.log(`Direct loading page: ${pageName}`);
     
     if (pageName === this.currentPage) return;
     
     if (this.isNavigating) {
-      console.log(`Navigation already in progress, ignoring direct load: ${pageName}`);
       return;
     }
     
@@ -68,7 +57,6 @@ class Router {
     window.addEventListener('popstate', (event) => {
       const page = event.state?.page || 'landing';
       
-      // Auth kontrolü ile yönlendirme
       const redirectPage = AuthGuard.getRedirectPage(page);
       if (redirectPage) {
         this.loadPageDirect(redirectPage);
@@ -77,14 +65,12 @@ class Router {
       }
     });
 
-    // Initial state set
     if (!window.history.state || !window.history.state.page) {
       window.history.replaceState({ page: 'landing' }, '', window.location.href);
     }
   }
 
   private getInitialPage(): string {
-    // OAuth params kontrolü
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('oauth') || urlParams.has('token') || urlParams.has('error')) {
       const error = urlParams.get('error');
@@ -94,51 +80,40 @@ class Router {
       if (error === 'oauth_failed') return 'login';
       if (oauth === '2fa_required') return '2fa-code';
       if (oauth === 'success' && token) {
-        // OAuth success durumunda token'ı localStorage'a kaydet
         localStorage.setItem('authToken', token);
-        // URL'den parametreleri temizle
         window.history.replaceState({}, '', window.location.pathname);
         return 'home';
       }
     }
 
-    // History state'den sayfa al veya default landing
     return window.history.state?.page || 'landing';
   }
 
   private async loadPage(pageName: string) {
     try {
-      console.log(`Loading page: ${pageName}`);
 
-      // Babylon.js cleanup
       if (this.currentPage === 'landing' && pageName !== 'landing') {
         this.cleanupBabylonjs();
       }
 
-      // Sayfa dosyasını yükle
       const response = await fetch(`./pages/${pageName}/${pageName}.html`);
       if (!response.ok) throw new Error(`Page not found: ${pageName}`);
 
       const html = await response.text();
 
-      // Clean up existing event listeners and components
       this.cleanupCurrentPage();
       
-      // Container'ı temizle ve yeni içeriği ekle
       this.container.innerHTML = html;
 
-      // Sayfa scriptini yükle ve çalıştır
       const module = await import(`../pages/${pageName}/${pageName}.js`);
       if (module.init) module.init();
 
       this.currentPage = pageName;
       
-      // Reset navigation flag
       this.isNavigating = false;
       
     } catch (error) {
-      console.error('Page Load Error:', error);
-      this.isNavigating = false; // Reset flag on error too
+      this.isNavigating = false;
       this.showError(pageName, error);
     }
   }
@@ -158,70 +133,51 @@ class Router {
   }
 
   private cleanupCurrentPage() {
-    // Page-specific cleanup
     if (this.currentPage === 'home') {
-      // Call home page cleanup if available
       import('../pages/home/home.js').then(module => {
         if ((module as any).cleanup) {
-          console.log('🧹 Calling home page cleanup before navigation...');
           (module as any).cleanup();
         }
       }).catch(() => {
-        // Cleanup method might not exist, that's ok
       });
     }
 
     if (this.currentPage === 'remote-game') {
-      // Call remote-game cleanup if available
       import('../pages/remote-game/remote-game.js').then(module => {
         if ((module as any).cleanup) {
-          console.log('🧹 Calling remote-game cleanup before navigation...');
           (module as any).cleanup();
         }
       }).catch(() => {
-        // Cleanup method might not exist, that's ok
       });
     }
 
     if (this.currentPage === 'game-lobby') {
-      // Call game-lobby cleanup if available
       import('../pages/game-lobby/game-lobby.js').then(module => {
         if ((module as any).cleanup) {
-          console.log('🧹 Calling game-lobby cleanup before navigation...');
           (module as any).cleanup();
         }
       }).catch(() => {
-        // Cleanup method might not exist, that's ok
       });
     }
 
     if (this.currentPage === 'tournament') {
-      // Call tournament cleanup if available
       import('../pages/tournament/tournament.js').then(module => {
         if ((module as any).cleanup) {
-          console.log('🧹 Calling tournament cleanup before navigation...');
           (module as any).cleanup();
         }
       }).catch(() => {
-        // Cleanup method might not exist, that's ok
       });
     }
 
-    // General cleanup for any page
     const allEventElements = this.container.querySelectorAll('[data-event-listener]');
     allEventElements.forEach(element => {
-      // Remove custom event listeners if marked
       element.removeAttribute('data-event-listener');
     });
 
-    // AGGRESSIVE: Clear ALL WebSocket listeners when changing any page
-    // This prevents duplicate event listeners from accumulating
     const wsManager = WebSocketManager.getInstance();
     wsManager.clearAllListeners();
 
-    // Also cleanup services if they have cleanup methods
     try {
-      // Import and cleanup services
       import('../services/GameService.js').then(module => {
         const gameService = new module.GameService();
         if (gameService.cleanup) gameService.cleanup();
@@ -237,35 +193,26 @@ class Router {
         if (tournamentService.cleanup) tournamentService.cleanup();
       }).catch(() => {});
     } catch (e) {
-      console.warn('Error during service cleanup:', e);
     }
 
-    // Babylon.js specific cleanup
     if (this.currentPage === 'landing') {
       this.cleanupBabylonjs();
     }
-
-    // Clear any running intervals or timeouts
-    // Components should handle their own cleanup, but this is a safety net
   }
 
   private cleanupBabylonjs() {
-    // Call the global cleanup function if it exists
     if (typeof (window as any).closeBabylonGame === 'function') {
       try {
         (window as any).closeBabylonGame();
       } catch (e) {
-        console.warn('Error calling closeBabylonGame:', e);
       }
     }
 
-    // Remove canvas element
     const babylonCanvas = document.getElementById('babylon-canvas');
     if (babylonCanvas && babylonCanvas.parentNode) {
       babylonCanvas.parentNode.removeChild(babylonCanvas);
     }
 
-    // Reset body background
     document.body.style.background = '';
     document.documentElement.style.background = '';
   }
