@@ -94,7 +94,7 @@ export class FriendsTab {
     ).length;
 
     this.element.innerHTML = `
-      <div class="overflow-hidden">
+      <div class="overflow-hidden h-full">
         <div class="mb-4">
           <div class="flex justify-between items-center mb-1">
             <span class="text-[10px] font-medium text-neon-blue/50">> FRIENDS [${this.friends.length}]</span>
@@ -102,7 +102,7 @@ export class FriendsTab {
           </div>
           <div class="text-[10px] text-neon-green/50 font-medium">> CHALLENGE YOUR FRIENDS OR CHAT WITH THEM</div>
         </div>
-        <div class="space-y-3 overflow-y-auto max-h-96">
+        <div class="space-y-3 overflow-y-auto h-full max-h-full">
           ${sortedFriends.map(friend => {
             const status = this.getFriendOnlineStatus(friend.friendInfo.id);
             const lastSeenText = !status.isOnline && status.lastSeen ? 
