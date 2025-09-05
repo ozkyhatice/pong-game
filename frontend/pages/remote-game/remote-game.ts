@@ -290,7 +290,7 @@ export async function init() {
 
   // Game Service Events
   gameService.onStateUpdate((data) => {
-    if (gameStatusEl) gameStatusEl.textContent = ' CYBER BATTLE ';
+    if (gameStatusEl) gameStatusEl.textContent = ' BATTLE ';
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' BATTLE ';
 
     gameState = data.state;
@@ -300,7 +300,7 @@ export async function init() {
   });
 
   gameService.onGameStarted((data) => {
-    if (gameStatusEl) gameStatusEl.textContent = ' CYBER BATTLE ';
+    if (gameStatusEl) gameStatusEl.textContent = ' BATTLE ';
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' BATTLE ';
     
     // CRITICAL: Update room players order from server to ensure consistency

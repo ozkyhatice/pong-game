@@ -78,15 +78,27 @@ export class ChatManager {
 
   private async loadUserAvatars(): Promise<void> {
     try {
+      console.log('Loading user avatars...', {
+        currentUserId: this.currentUserId,
+        friendUserId: this.friendUserId
+      });
+
       if (this.currentUserId) {
         const currentUser = await this.userService.getUserById(this.currentUserId);
+        console.log('Current user data:', currentUser);
         this.currentUserAvatar = currentUser?.avatar || null;
       }
       
       if (this.friendUserId) {
         const friendUser = await this.userService.getUserById(this.friendUserId);
+        console.log('Friend user data:', friendUser);
         this.friendUserAvatar = friendUser?.avatar || null;
       }
+
+      console.log('Avatar URLs loaded:', {
+        currentUserAvatar: this.currentUserAvatar,
+        friendUserAvatar: this.friendUserAvatar
+      });
     } catch (error) {
       console.error('Error loading user avatars:', error);
     }
@@ -107,6 +119,9 @@ export class ChatManager {
     this.isLoadingMessages = true;
     
     try {
+      // Ensure avatars are loaded before rendering messages
+      await this.loadUserAvatars();
+      
       const token = localStorage.getItem('authToken');
       
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.HISTORY(this.friendUserId.toString())), {
@@ -172,7 +187,11 @@ export class ChatManager {
     const isFromMe = message.senderId === this.currentUserId;
 
     if (isFromMe) {
-      const avatarSrc = this.currentUserAvatar || 'https://placehold.co/400x400?text=ME';
+      // My message - use current user's avatar or create a proper fallback
+      const avatarSrc = this.currentUserAvatar && this.currentUserAvatar.trim() !== '' 
+        ? this.currentUserAvatar 
+        : null;
+        
       messageDiv.innerHTML = `
         <div class="flex items-end gap-2 justify-end">
           <div class="max-w-[280px] min-w-[60px]">
@@ -182,16 +201,26 @@ export class ChatManager {
             <div class="text-[10px] text-neon-white/30 mt-1 text-right">${displayTime}</div>
           </div>
           <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-neon-yellow">
-            <img src="${avatarSrc}" alt="Your Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full bg-neon-yellow rounded-full flex items-center justify-center text-console-bg text-sm font-bold\\'>ME</div>';">
+            ${avatarSrc 
+              ? `<img src="${avatarSrc}" alt="Your Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full bg-neon-yellow rounded-full flex items-center justify-center text-console-bg text-sm font-bold\\'>ME</div>';">`
+              : `<div class="w-full h-full bg-neon-yellow rounded-full flex items-center justify-center text-console-bg text-sm font-bold">ME</div>`
+            }
           </div>
         </div>
       `;
     } else {
-      const avatarSrc = this.friendUserAvatar || 'https://placehold.co/400x400?text=U';
+      // Friend's message - use friend's avatar or create a proper fallback
+      const avatarSrc = this.friendUserAvatar && this.friendUserAvatar.trim() !== '' 
+        ? this.friendUserAvatar 
+        : null;
+      
       messageDiv.innerHTML = `
         <div class="flex items-end gap-2">
           <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-neon-white">
-            <img src="${avatarSrc}" alt="Friend Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full bg-white rounded-full flex items-center justify-center text-console-bg text-sm font-bold\\'>U</div>';">
+            ${avatarSrc 
+              ? `<img src="${avatarSrc}" alt="Friend Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full bg-neon-white rounded-full flex items-center justify-center text-console-bg text-sm font-bold\\'>U</div>';">`
+              : `<div class="w-full h-full bg-neon-white rounded-full flex items-center justify-center text-console-bg text-sm font-bold">U</div>`
+            }
           </div>
           <div class="max-w-[280px] min-w-[60px]">
             <div class="border border-neon-white border-opacity-50 p-3 rounded-lg shadow-sm bg-terminal-border break-words">
