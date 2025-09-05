@@ -183,6 +183,30 @@ class Router {
       });
     }
 
+    if (this.currentPage === 'game-lobby') {
+      // Call game-lobby cleanup if available
+      import('../pages/game-lobby/game-lobby.js').then(module => {
+        if ((module as any).cleanup) {
+          console.log('🧹 Calling game-lobby cleanup before navigation...');
+          (module as any).cleanup();
+        }
+      }).catch(() => {
+        // Cleanup method might not exist, that's ok
+      });
+    }
+
+    if (this.currentPage === 'tournament') {
+      // Call tournament cleanup if available
+      import('../pages/tournament/tournament.js').then(module => {
+        if ((module as any).cleanup) {
+          console.log('🧹 Calling tournament cleanup before navigation...');
+          (module as any).cleanup();
+        }
+      }).catch(() => {
+        // Cleanup method might not exist, that's ok
+      });
+    }
+
     // General cleanup for any page
     const allEventElements = this.container.querySelectorAll('[data-event-listener]');
     allEventElements.forEach(element => {
@@ -194,6 +218,27 @@ class Router {
     // This prevents duplicate event listeners from accumulating
     const wsManager = WebSocketManager.getInstance();
     wsManager.clearAllListeners();
+
+    // Also cleanup services if they have cleanup methods
+    try {
+      // Import and cleanup services
+      import('../services/GameService.js').then(module => {
+        const gameService = new module.GameService();
+        if (gameService.cleanup) gameService.cleanup();
+      }).catch(() => {});
+
+      import('../services/ChatService.js').then(module => {
+        const chatService = new module.ChatService();
+        if (chatService.cleanup) chatService.cleanup();
+      }).catch(() => {});
+
+      import('../services/TournamentService.js').then(module => {
+        const tournamentService = new module.TournamentService();
+        if (tournamentService.cleanup) tournamentService.cleanup();
+      }).catch(() => {});
+    } catch (e) {
+      console.warn('Error during service cleanup:', e);
+    }
 
     // Babylon.js specific cleanup
     if (this.currentPage === 'landing') {

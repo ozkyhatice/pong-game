@@ -46,7 +46,7 @@ export class ChatService {
 
   async getChatHistory(userId: number): Promise<ChatMessage[]> {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken'); // Fix: use 'authToken' not 'token'
       if (!token) return [];
 
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.HISTORY(userId.toString())), {
@@ -62,7 +62,7 @@ export class ChatService {
 
   async markMessagesAsReadHTTP(userId: number): Promise<boolean> {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken'); // Fix: use 'authToken' not 'token'
       if (!token) return false;
 
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.MARK_READ(userId.toString())), {
@@ -74,5 +74,14 @@ export class ChatService {
     } catch {
       return false;
     }
+  }
+
+  cleanup(): void {
+    console.log('🧹 ChatService cleanup: Removing all event listeners');
+    const chatEvents = ['message', 'onlineClients', 'delivered', 'read'];
+    
+    chatEvents.forEach(event => {
+      this.wsManager.off(event);
+    });
   }
 }

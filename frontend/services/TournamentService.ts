@@ -103,6 +103,22 @@ export class TournamentService {
     this.wsManager.on("tournament:bracket", callback);
   }
 
+  // Cleanup method to remove all tournament-related listeners
+  cleanup(): void {
+    console.log('🧹 TournamentService cleanup: Removing all event listeners');
+    const tournamentEvents = [
+      'tournament:playerJoined', 'tournament:playerLeft', 'tournament:tournamentStarted',
+      'tournament:matchPairingsRevealed', 'tournament:matchStarted', 'tournament:matchCompleted',
+      'tournament:roundCompleted', 'tournament:nextRoundStarted', 'tournament:tournamentEnded',
+      'tournament:newTournamentCreated', 'tournament:details', 'tournament:bracket',
+      'tournament', // General tournament events
+    ];
+    
+    tournamentEvents.forEach(event => {
+      this.wsManager.off(event);
+    });
+  }
+
   onPlayerDisconnected(callback: (data: any) => void) {
     console.log('🎯 Setting up tournament:playerDisconnected listener');
     this.wsManager.on("tournament:playerDisconnected", callback);

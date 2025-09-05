@@ -16,8 +16,8 @@ export function init() {
   if (!currentRoom?.roomId) {
     notify('No room found');
     router.navigate('home');
+    return;
   }
-
 
   const roomStatus = document.getElementById('room-status');
   const roomId = document.getElementById('room-id');
@@ -31,18 +31,23 @@ export function init() {
   const gameService = new GameService();
   const userService = new UserService();
 
+  // Event handlers
   if (readyBtn) readyBtn.addEventListener('click', handleReady);
   if (leaveBtn) leaveBtn.addEventListener('click', handleLeave);
   
+  // Initialize lobby
   initLobby();
 
+  // Game service listeners with improved handling
   gameService.onPlayerLeft((data) => {
+    console.log('🎮 LOBBY: Player left:', data);
     appState.clearCurrentRoom();
     notify(`Player left the game.`);
     router.navigate('home');
   });
 
   gameService.onPlayerReady((data) => {
+    console.log('🎮 LOBBY: Player ready:', data);
     updateLobbyStatus(data);
     // Reload player info when someone joins  
     if (data.newPlayerJoined) {
@@ -51,7 +56,7 @@ export function init() {
   });
 
   gameService.onPlayerJoined((data) => {
-    console.log('Player joined event:', data);
+    console.log('🎮 LOBBY: Player joined:', data);
     // Update room info when someone joins
     if (data.roomInfo) {
       console.log('Updating room info:', data.roomInfo);
@@ -60,9 +65,33 @@ export function init() {
     }
   });
 
-  gameService.onAllReady(() => {
+  gameService.onAllReady((data) => {
+    console.log('🎮 LOBBY: All players ready:', data);
     notify('All players ready! Starting game...');
+    // Navigation is handled by WebSocketManager
+  });
+
+  gameService.onGameStarted((data) => {
+    console.log('🎮 LOBBY: Game started:', data);
+    notify('Game started!', 'green');
     router.navigate('remote-game');
+  });
+
+  gameService.onGameError((data) => {
+    console.log('🎮 LOBBY: Game error:', data);
+    notify(data.message || 'Game error occurred', 'red');
+  });
+
+  gameService.onRoomCreated((data) => {
+    console.log('🎮 LOBBY: Room created while in lobby:', data);
+    if (data.roomId) {
+      appState.setCurrentRoom({
+        roomId: data.roomId,
+        players: data.players || [],
+        createdAt: Date.now()
+      });
+      setTimeout(() => loadPlayerInfo(), 500);
+    }
   });
 
   function handleReady() {
@@ -184,5 +213,13 @@ export function init() {
       console.log(`🎮 Ready status - LEFT (BLUE) Player ${playerId1}: ${readyPlayerIds.includes(playerId1) ? 'READY' : 'NOT READY'}, RIGHT (RED) Player ${playerId2}: ${readyPlayerIds.includes(playerId2) ? 'READY' : 'NOT READY'}`);
     }
   }
+}
+
+// Cleanup function for game-lobby
+export function cleanup() {
+  console.log('🧹 LOBBY: Cleaning up game-lobby page...');
+  
+  // GameService cleanup is handled by router's cleanupCurrentPage
+  // since it calls GameService.cleanup() automatically
 }
 

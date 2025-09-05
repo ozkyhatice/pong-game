@@ -3,6 +3,7 @@ import { saveGametoDbServices } from "../services/game.service.js";
 import { userRoom } from "../controller/game.controller.js";
 import { updateMultipleUserStats } from "../../user/service/user.service.js";
 import { processTournamentMatchResult } from "../../tournament/service/tournament.service.js";
+import { getUserById } from "../../user/service/user.service.js";
 
 // Game constants
 const CANVAS_WIDTH = 800;
@@ -164,11 +165,12 @@ async function endGame(room, winnerId) {
     
     // Broadcast game over to all players
     for (const [playerId, socket] of room.sockets) {
+        const user = await getUserById(winnerId);
         await sendMessage(socket, 'game', 'game-over', {
             roomId: room.id,
             winner: winnerId,
             finalScore: room.state.score,
-            message: `Player ${winnerId} wins!`,
+            message: `Player ${user.username} wins!`,
             isTournamentMatch: !!room.tournamentId,
             tournamentId: room.tournamentId,
             round: room.round

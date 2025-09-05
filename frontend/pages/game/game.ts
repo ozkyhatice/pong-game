@@ -202,8 +202,8 @@ export async function init() {
   }
 
   function startLocalGame() {
-    if (gameStatusEl) gameStatusEl.textContent = '⚔️ LOCAL BATTLE ⚔️';
-    if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚔️ BATTLE ⚔️';
+    if (gameStatusEl) gameStatusEl.textContent = 'LOCAL BATTLE';
+    if (mobileGameStatusEl) mobileGameStatusEl.textContent = 'BATTLE';
 
     gameLoopInterval = setInterval(updateLocalGame, 16) as any;
     console.log('🎮 Local game started');
@@ -359,8 +359,8 @@ export async function init() {
       } else {
         if (!localGameState.gameOver) {
           gamePaused = false;
-          if (gameStatusEl) gameStatusEl.textContent = '⚔️ LOCAL BATTLE ⚔️';
-          if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚔️ BATTLE ⚔️';
+          if (gameStatusEl) gameStatusEl.textContent = 'LOCAL BATTLE';
+          if (mobileGameStatusEl) mobileGameStatusEl.textContent = 'BATTLE';
           if (ballTrailParticles) ballTrailParticles.start();
           console.log('🎮 Game resumed - tab visible');
         }

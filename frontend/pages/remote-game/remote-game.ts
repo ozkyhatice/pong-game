@@ -159,7 +159,7 @@ export async function init() {
   // If WebSocket is not connected but we have room data in state, try to reconnect
   if (!wsManager.isConnected()) {
     const currentRoom = currentAppState.getCurrentRoom();
-    const userToken = localStorage.getItem('token');
+    const userToken = localStorage.getItem('authToken'); // Use 'authToken' not 'token'
     
     if (currentRoom && userToken) {
       console.log('🔄 Remote-game: Page reloaded, attempting to reconnect and rejoin room...');
@@ -168,9 +168,9 @@ export async function init() {
         // Reconnect WebSocket
         wsManager.connect(userToken);
         
-        // Wait for connection to establish
+        // Wait for connection to establish with timeout
         await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('Connection timeout')), 5000);
+          const timeout = setTimeout(() => reject(new Error('Connection timeout')), 10000); // Increased to 10s
           
           const onConnected = () => {
             clearTimeout(timeout);
@@ -349,9 +349,20 @@ export async function init() {
       notify(data.message + ' Returning to tournament...');
       currentAppState.updateTournamentStatus('active', data.round);
       currentAppState.clearCurrentRoom();
+      
+      // Store minimal tournament match result for potential display
+      localStorage.setItem('lastTournamentMatchResult', JSON.stringify({
+        winner: data.winner,
+        finalScore: data.finalScore,
+        message: data.message,
+        round: data.round,
+        timestamp: Date.now()
+      }));
+      
       cleanup3D();
       router.navigate('tournament');
     } else {
+      // Regular game - go to end-game page
       localStorage.setItem('gameResult', JSON.stringify({
         winner: data.winner,
         finalScore: data.finalScore,
@@ -373,6 +384,56 @@ export async function init() {
   gameService.onGameResumed((data: any) => {
     console.log('▶️ Game resumed:', data);
     hidePauseMessage();
+  });
+
+  // Listen for room-state messages directly from WebSocket Manager
+  wsManager.on('room-state', (data: any) => {
+    console.log('🎮 REMOTE-GAME: Room state received:', data);
+    if (data.roomId && data.state) {
+      gameState = data.state;
+      update3DGameState();
+      updateScores();
+      updatePlayerNames();
+    }
+  });
+
+  // Listen for player reconnection events
+  gameService.onPlayerReconnected((data: any) => {
+    console.log('🔄 Player reconnected:', data);
+    notify(`Player ${data.playerId} reconnected`, 'green');
+  });
+
+  // Listen for game invites (in case received during game)
+  gameService.onGameInvite((data: any) => {
+    console.log('🎮 REMOTE-GAME: Game invite received during game:', data);
+    // Ignore game invites while in an active game
+  });
+
+  // Listen for move events from other players
+  wsManager.on('player-move', (data: any) => {
+    if (data.userId && data.y !== undefined && gameState) {
+      gameState.paddles[data.userId] = {
+        ...gameState.paddles[data.userId],
+        y: data.y
+      };
+      update3DGameState();
+    }
+  });
+
+  // Listen for general game updates
+  wsManager.on('game-update', (data: any) => {
+    console.log('🎮 REMOTE-GAME: Game update received:', data);
+    if (data.state) {
+      gameState = data.state;
+      update3DGameState();
+      updateScores();
+    }
+  });
+
+  // Listen for game end events
+  wsManager.on('game-end', (data: any) => {
+    console.log('🎮 REMOTE-GAME: Game end received:', data);
+    // This is handled by gameService.onGameOver, but adding as backup
   });
 
   // Tournament ended event listener

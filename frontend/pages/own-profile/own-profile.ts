@@ -306,3 +306,13 @@ function formatFullDate(date: Date): string {
     
     return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
+
+// Export cleanup function for use by router
+export function cleanup() {
+    console.log('🧹 OWN-PROFILE: Cleaning up own-profile page...');
+    // Reset global variables
+    currentUser = null;
+    matchHistory = [];
+    currentFilter = 'all';
+    userService = new UserService();
+}
