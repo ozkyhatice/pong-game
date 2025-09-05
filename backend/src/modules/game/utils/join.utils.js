@@ -24,7 +24,7 @@ export async function createRoom(userId, connection, rooms, tournamentId = null,
     const roomId = await generateRoomId();
     const room = {
         id: roomId,
-        players: new Set([userId]),
+        players: [userId], // Changed from Set to Array to preserve join order
         sockets: new Map([[userId, connection]]),
         state: {
             ball: {
@@ -60,7 +60,7 @@ export async function createRoom(userId, connection, rooms, tournamentId = null,
 
 export async function displayRoomState(room) {
     console.log(`Room ID: ${room.id}`);
-    console.log(`Players: ${Array.from(room.players).join(', ')}`);
+    console.log(`Players: ${room.players.join(', ')}`); // Array join instead of Set conversion
     console.log(`Sockets: ${Array.from(room.sockets.keys()).join(', ')}`);
     console.log(`State:`, room.state);
     console.log(`Created At: ${new Date(room.createdAt).toLocaleString()}`);
@@ -69,7 +69,7 @@ export async function displayRoomState(room) {
 }
 
 export async function addPlayerToRoom(room, userId, connection) {
-  room.players.add(userId);
+  room.players.push(userId); // Push to array instead of Set.add()
   room.sockets.set(userId, connection);
   
   // initialize paddle and score for the new player
@@ -90,13 +90,13 @@ export async function checkJoinable(data, room, userId, connection) {
         });
         return false;
     }
-    if (room.players.has(userId)) {
+    if (room.players.includes(userId)) { // Array includes instead of Set has
         await sendMessage(connection, 'game', 'already-joined', {
             roomId: room.id
         });
         return false
     }
-    if (room.players.size >= 2) {
+    if (room.players.length >= 2) { // Array length instead of Set size
         await sendMessage(connection, 'game', 'room-full', {
             roomId: room.id
         });

@@ -43,5 +43,5 @@ function shouldUpdateGame(room) {
 
 async function updateGameState(room, connection) {
     await updateBall(room, connection);
-    await stateGame({ roomId: room.id }, Array.from(room.players)[0]);
+    await stateGame({ roomId: room.id }, room.players[0]); // Already an array, get first player
 }

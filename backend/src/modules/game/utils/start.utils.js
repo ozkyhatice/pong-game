@@ -16,10 +16,12 @@ const WINNING_SCORE = 5;
 
 export async function updateBall(room, connection) {
     const ball = room.state.ball;
-    const playerIds = Array.from(room.players).sort((a, b) => a - b); // Consistent sorting by ID
-    const [player1Id, player2Id] = playerIds;
-    const paddle1 = room.state.paddles[player1Id]; // Left paddle (lowest ID)
-    const paddle2 = room.state.paddles[player2Id]; // Right paddle (highest ID)
+    // Use room players order (join order) instead of ID sorting for consistency
+    if (room.players.length < 2) return;
+    
+    const [player1Id, player2Id] = room.players; // First player = left, second player = right
+    const paddle1 = room.state.paddles[player1Id]; // Left paddle (first player in room)
+    const paddle2 = room.state.paddles[player2Id]; // Right paddle (second player in room)
     
     if (!paddle1 || !paddle2) {
         return;

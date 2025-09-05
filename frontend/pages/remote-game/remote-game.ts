@@ -257,6 +257,7 @@ export async function init() {
         winner: data.winner,
         finalScore: data.finalScore,
         message: data.message,
+        playerOrder: currentRoom?.players || [], // Add room players order for consistent display
         timestamp: Date.now()
       }));
       appState.clearCurrentRoom();
@@ -719,12 +720,10 @@ export async function init() {
     ball.position.z = ballZ;
     ball.position.y = PONG_3D_CONFIG.BALL.radius;
 
-    // Update paddle positions - proper coordinate mapping
-    const playerIds = Object.keys(gameState.paddles).map(id => parseInt(id)).sort();
-
-    if (playerIds.length >= 2) {
-      // Left paddle (Player 1)
-      const paddle1Data = gameState.paddles[playerIds[0]];
+    // Update paddle positions - using room players order instead of ID sorting
+    if (currentRoom?.players && currentRoom.players.length >= 2) {
+      // Left paddle (Player 1) - First player in room
+      const paddle1Data = gameState.paddles[currentRoom.players[0]];
       if (paddle1Data) {
         const paddleZ = ((paddle1Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9;
         const paddleOffset = PONG_3D_CONFIG.PADDLE.depth / 2;
@@ -733,8 +732,8 @@ export async function init() {
         paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5;
       }
 
-      // Right paddle (Player 2)
-      const paddle2Data = gameState.paddles[playerIds[1]];
+      // Right paddle (Player 2) - Second player in room
+      const paddle2Data = gameState.paddles[currentRoom.players[1]];
       if (paddle2Data) {
         const paddleZ = ((paddle2Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9;
         const paddleOffset = PONG_3D_CONFIG.PADDLE.depth / 2;
@@ -749,7 +748,7 @@ export async function init() {
   }
 
   function checkCollisionEffects() {
-    if (!gameState) return;
+    if (!gameState || !currentRoom?.players || currentRoom.players.length < 2) return;
 
     if (gameState.ball.y <= 30 || gameState.ball.y >= 770) {
       gameState.ball.dy = -gameState.ball.dy;
@@ -757,8 +756,9 @@ export async function init() {
     }
 
     const ball = gameState.ball;
-    const paddle1 = gameState.paddles[1];
-    const paddle2 = gameState.paddles[2];
+    // Use room players order for consistent paddle assignment
+    const paddle1 = gameState.paddles[currentRoom.players[0]]; // Left paddle (blue)
+    const paddle2 = gameState.paddles[currentRoom.players[1]]; // Right paddle (red)
 
     const paddleMargin = 8;
     const paddleLengthMargin = 5;
@@ -1028,29 +1028,32 @@ export async function init() {
   async function initPlayerInfo() {
     const currentUser = await userService.getCurrentUser();
     myPlayerId = currentUser?.id || null;
+    
+    if (myPlayerId && currentRoom?.players) {
+      const myPosition = currentRoom.players.indexOf(myPlayerId);
+      const side = myPosition === 0 ? 'LEFT (BLUE)' : myPosition === 1 ? 'RIGHT (RED)' : 'UNKNOWN';
+      console.log(`🎮 My player ID: ${myPlayerId}, Position: ${side}, Room players:`, currentRoom.players);
+    }
   }
 
   async function updatePlayerNames() {
-    if (!gameState?.score) return;
-
-    const playerIds = Object.keys(gameState.score).map(id => parseInt(id)).sort();
-    if (playerIds.length < 2) return;
+    if (!gameState?.score || !currentRoom?.players || currentRoom.players.length < 2) return;
 
     try {
       const [player1, player2] = await Promise.all([
-        userService.getUserById(playerIds[0]),
-        userService.getUserById(playerIds[1])
+        userService.getUserById(currentRoom.players[0]), // First player in room (left)
+        userService.getUserById(currentRoom.players[1])  // Second player in room (right)
       ]);
 
       // Update desktop elements
-      if (player1NameEl) player1NameEl.textContent = player1?.username || `WARRIOR ${playerIds[0]}`;
-      if (player2NameEl) player2NameEl.textContent = player2?.username || `WARRIOR ${playerIds[1]}`;
+      if (player1NameEl) player1NameEl.textContent = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
+      if (player2NameEl) player2NameEl.textContent = player2?.username || `WARRIOR ${currentRoom.players[1]}`;
       if (player1InitialEl) player1InitialEl.textContent = player1?.username?.[0]?.toUpperCase() || 'W1';
       if (player2InitialEl) player2InitialEl.textContent = player2?.username?.[0]?.toUpperCase() || 'W2';
 
       // Update mobile elements
-      if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1?.username || `WARRIOR ${playerIds[0]}`;
-      if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2?.username || `WARRIOR ${playerIds[1]}`;
+      if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
+      if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2?.username || `WARRIOR ${currentRoom.players[1]}`;
       if (mobilePlayer1InitialEl) mobilePlayer1InitialEl.textContent = player1?.username?.[0]?.toUpperCase() || 'W1';
       if (mobilePlayer2InitialEl) mobilePlayer2InitialEl.textContent = player2?.username?.[0]?.toUpperCase() || 'W2';
     } catch (e) {
@@ -1059,21 +1062,18 @@ export async function init() {
   }
 
   function updateScores() {
-    if (!gameState?.score) return;
+    if (!gameState?.score || !currentRoom?.players || currentRoom.players.length < 2) return;
 
-    const playerIds = Object.keys(gameState.score).map(id => parseInt(id)).sort();
-    if (playerIds.length >= 2) {
-      const score1 = gameState.score[playerIds[0]] || 0;
-      const score2 = gameState.score[playerIds[1]] || 0;
+    const score1 = gameState.score[currentRoom.players[0]] || 0; // First player in room (left)
+    const score2 = gameState.score[currentRoom.players[1]] || 0; // Second player in room (right)
 
-      // Update desktop scores
-      if (player1ScoreEl) player1ScoreEl.textContent = score1.toString();
-      if (player2ScoreEl) player2ScoreEl.textContent = score2.toString();
+    // Update desktop scores
+    if (player1ScoreEl) player1ScoreEl.textContent = score1.toString();
+    if (player2ScoreEl) player2ScoreEl.textContent = score2.toString();
 
-      // Update mobile scores
-      if (mobilePlayer1ScoreEl) mobilePlayer1ScoreEl.textContent = score1.toString();
-      if (mobilePlayer2ScoreEl) mobilePlayer2ScoreEl.textContent = score2.toString();
-    }
+    // Update mobile scores
+    if (mobilePlayer1ScoreEl) mobilePlayer1ScoreEl.textContent = score1.toString();
+    if (mobilePlayer2ScoreEl) mobilePlayer2ScoreEl.textContent = score2.toString();
   }
 
   async function initRoomPlayerNames() {

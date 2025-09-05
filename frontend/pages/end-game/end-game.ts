@@ -29,14 +29,23 @@ export function init() {
 
 		try {
 			const gameResult = JSON.parse(gameResultString);
-			const playerIds = Object.keys(gameResult.finalScore || {});
+			
+			// Use playerOrder if available (from room), otherwise fall back to finalScore keys
+			let playerIds;
+			if (gameResult.playerOrder && gameResult.playerOrder.length >= 2) {
+				playerIds = gameResult.playerOrder.map((id: number) => id.toString());
+				console.log('🎮 Using room player order for end-game:', playerIds);
+			} else {
+				playerIds = Object.keys(gameResult.finalScore || {});
+				console.log('🎮 Falling back to finalScore keys:', playerIds);
+			}
 
 			if (playerIds.length < 2) return;
 
 			const [currentUser, player1, player2] = await Promise.all([
 				userService.getCurrentUser(),
-				userService.getUserById(parseInt(playerIds[0])),
-				userService.getUserById(parseInt(playerIds[1]))
+				userService.getUserById(parseInt(playerIds[0])), // Left player (blue)
+				userService.getUserById(parseInt(playerIds[1]))  // Right player (red)
 			]);
 
 			const winnerId = gameResult.winner;

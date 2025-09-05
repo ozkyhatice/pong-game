@@ -10,7 +10,7 @@ export async function saveGametoDbServices(room) {
         return;
     }
     
-    const players = Array.from(room.players);
+    const players = room.players; // Already an array
     const player1Id = players[0];
     const player2Id = players[1];
     

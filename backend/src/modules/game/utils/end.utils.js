@@ -39,7 +39,7 @@ export async function broadcastLeft(room, userId) {
     if (!room) {
         return;
     }
-    const userId2 = room.players.size === 2 ? Array.from(room.players).filter(id => id !== userId) : [];
+    const userId2 = room.players.length === 2 ? room.players.filter(id => id !== userId) : []; // Array operations instead of Set
     let winId = null;
     if (userId2) 
         winId = userId2[0];
@@ -151,13 +151,13 @@ export async function clearAll(userId, message) {
                     for (const playerId of currentRoom.players) {
                         userRoom.delete(playerId);
                     }
-                    currentRoom.players.clear();
+                    currentRoom.players.length = 0; // Clear array instead of Set.clear()
                     currentRoom.sockets.clear();
                 }
             }, 30000); // 30 seconds
           } else if (message === 'leave') {
             if (room.started && !room.state.gameOver) {
-                const players = Array.from(room.players);
+                const players = room.players; // Already an array
                 if (players.length === 2) {
                     room.winnerId = user2;
                     await saveGametoDbServices(room);
@@ -184,13 +184,19 @@ export async function clearAll(userId, message) {
             
             // Remove the user who left
             userRoom.delete(userId);
-            room.players.delete(userId);
+            const playerIndex = room.players.indexOf(userId); // Find index in array
+            if (playerIndex > -1) {
+                room.players.splice(playerIndex, 1); // Remove from array
+            }
             room.sockets.delete(userId);
             
             // Also remove the other user from the room since the game is over
             if (user2) {
                 userRoom.delete(user2);
-                room.players.delete(user2);
+                const player2Index = room.players.indexOf(user2); // Find index in array
+                if (player2Index > -1) {
+                    room.players.splice(player2Index, 1); // Remove from array
+                }
                 room.sockets.delete(user2);
             }
           }

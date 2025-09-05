@@ -44,10 +44,15 @@ export class WebSocketManager {
     };
     console.log('WebSocket connection established');
     this.ws.onmessage = (event) => {
+      let message: any;
       try {
-        const message: any = JSON.parse(event.data);
-        console.log('🔹 WS: Raw message received:', message);
-        
+        message = JSON.parse(event.data);
+      } catch (parseError) {
+        console.error('❌ WS: JSON parse error:', event.data, parseError);
+        return;
+      }
+      
+      try {
         if (message.type === 'message') {
           console.log('📨 WS: Chat received ->', {
             from: message.from,
@@ -96,8 +101,8 @@ export class WebSocketManager {
           console.log('📡 WS: Other message type ->', message.type, 'content:', message);
           this.emit(message.type, message);
         }
-      } catch (error) {
-        console.error('❌ WS: Parse error:', event.data);
+      } catch (handlerError) {
+        console.error('❌ WS: Event handler error:', handlerError, 'for message:', message);
       }
     };
 

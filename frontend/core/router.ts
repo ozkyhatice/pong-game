@@ -5,6 +5,7 @@ import { WebSocketManager } from './WebSocketManager.js';
 class Router {
   private container: HTMLElement;
   public currentPage: string = '';
+  private isNavigating: boolean = false;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -17,8 +18,16 @@ class Router {
   navigate(pageName: string): void {
     console.log(`Navigating to: ${pageName}`);
     
-    // Sayfa değişikliği gerekli mi?
-    if (pageName === this.currentPage) return;
+    // Sayfa değişikliği gerekli mi veya zaten navigating mi?
+    if (pageName === this.currentPage) {
+      console.log(`Already on page: ${pageName}, skipping navigation`);
+      return;
+    }
+    
+    if (this.isNavigating) {
+      console.log(`Navigation already in progress, ignoring navigation to: ${pageName}`);
+      return;
+    }
     
     // Auth kontrolü ve yönlendirme
     const redirectPage = AuthGuard.getRedirectPage(pageName);
@@ -30,6 +39,9 @@ class Router {
       return this.navigate(redirectPage);
     }
     
+    // Set navigation flag to prevent concurrent navigations
+    this.isNavigating = true;
+    
     // History state güncelle (URL değişmeden)
     window.history.pushState({ page: pageName }, '', window.location.href);
     this.loadPage(pageName);
@@ -40,6 +52,13 @@ class Router {
     console.log(`Direct loading page: ${pageName}`);
     
     if (pageName === this.currentPage) return;
+    
+    if (this.isNavigating) {
+      console.log(`Navigation already in progress, ignoring direct load: ${pageName}`);
+      return;
+    }
+    
+    this.isNavigating = true;
     
     window.history.replaceState({ page: pageName }, '', window.location.href);
     this.loadPage(pageName);
@@ -114,8 +133,12 @@ class Router {
 
       this.currentPage = pageName;
       
+      // Reset navigation flag
+      this.isNavigating = false;
+      
     } catch (error) {
       console.error('Page Load Error:', error);
+      this.isNavigating = false; // Reset flag on error too
       this.showError(pageName, error);
     }
   }
@@ -139,8 +162,21 @@ class Router {
     if (this.currentPage === 'home') {
       // Call home page cleanup if available
       import('../pages/home/home.js').then(module => {
-        if (module.cleanup) {
-          module.cleanup();
+        if ((module as any).cleanup) {
+          console.log('🧹 Calling home page cleanup before navigation...');
+          (module as any).cleanup();
+        }
+      }).catch(() => {
+        // Cleanup method might not exist, that's ok
+      });
+    }
+
+    if (this.currentPage === 'remote-game') {
+      // Call remote-game cleanup if available
+      import('../pages/remote-game/remote-game.js').then(module => {
+        if ((module as any).cleanup) {
+          console.log('🧹 Calling remote-game cleanup before navigation...');
+          (module as any).cleanup();
         }
       }).catch(() => {
         // Cleanup method might not exist, that's ok

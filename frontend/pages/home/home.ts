@@ -67,52 +67,61 @@ function setupHeaderButtons() {
 }
 
 export async function init() {
-  // Prevent multiple initializations
+  console.log('🔄 Initializing home page...');
+  
+  // Prevent multiple simultaneous initializations
   if (isInitialized) {
-    console.log('Home page already initialized, skipping...');
+    console.log('⚠️ Home page already initialized, skipping...');
     return;
   }
-
-  const authToken = localStorage.getItem('authToken');
-  const profileContainer = document.getElementById('profile-container');
-  const gameAreaContainer = document.getElementById('game-area-container');
-
-  if (!profileContainer || !gameAreaContainer) {
-    console.error('Required containers not found');
-    return;
-  }
-
-  // Setup header buttons
-  setupHeaderButtons();
-
-  // Clean up existing components only if they exist
-  if (currentProfileComponent) {
-    const existingProfileElement = currentProfileComponent.getElement();
-    if (existingProfileElement && existingProfileElement.parentNode) {
-      existingProfileElement.parentNode.removeChild(existingProfileElement);
-    }
-    currentProfileComponent = null;
-  }
-
-  if (currentGameAreaComponent) {
-    const existingGameAreaElement = currentGameAreaComponent.getElement();
-    if (existingGameAreaElement && existingGameAreaElement.parentNode) {
-      existingGameAreaElement.parentNode.removeChild(existingGameAreaElement);
-    }
-    currentGameAreaComponent = null;
-  }
-
-  // Force clear containers
-  while (profileContainer.firstChild) {
-    profileContainer.removeChild(profileContainer.firstChild);
-  }
-  while (gameAreaContainer.firstChild) {
-    gameAreaContainer.removeChild(gameAreaContainer.firstChild);
-  }
-
-  // Game Area component'ini olustur
+  
+  // Set flag immediately to prevent concurrent calls
+  isInitialized = true;
   
   try {
+    // Her init çağrısında önce cleanup yap
+    cleanup();
+
+    const authToken = localStorage.getItem('authToken');
+    const profileContainer = document.getElementById('profile-container');
+    const gameAreaContainer = document.getElementById('game-area-container');
+
+    if (!profileContainer || !gameAreaContainer) {
+      console.error('Required containers not found');
+      isInitialized = false; // Reset on error
+      return;
+    }
+
+    // Setup header buttons
+    setupHeaderButtons();
+
+    // Clean up existing components only if they exist
+    if (currentProfileComponent) {
+      const existingProfileElement = currentProfileComponent.getElement();
+      if (existingProfileElement && existingProfileElement.parentNode) {
+        existingProfileElement.parentNode.removeChild(existingProfileElement);
+      }
+      currentProfileComponent = null;
+    }
+
+    if (currentGameAreaComponent) {
+      const existingGameAreaElement = currentGameAreaComponent.getElement();
+      if (existingGameAreaElement && existingGameAreaElement.parentNode) {
+        existingGameAreaElement.parentNode.removeChild(existingGameAreaElement);
+      }
+      currentGameAreaComponent = null;
+    }
+
+    // Force clear containers
+    while (profileContainer.firstChild) {
+      profileContainer.removeChild(profileContainer.firstChild);
+    }
+    while (gameAreaContainer.firstChild) {
+      gameAreaContainer.removeChild(gameAreaContainer.firstChild);
+    }
+
+    // Game Area component'ini olustur
+    
     // User profile verisini al
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
       method: 'GET',
@@ -201,32 +210,109 @@ export async function init() {
 }
 
 function cleanup() {
-  console.log('🧹 Cleaning up home page components...');
+  console.log('🧹 Starting comprehensive home page cleanup...');
   
-  // Clear containers
-  const profileContainer = document.getElementById('profile-container');
-  const gameAreaContainer = document.getElementById('game-area-container');
-  
-  if (profileContainer) {
-    while (profileContainer.firstChild) {
-      profileContainer.removeChild(profileContainer.firstChild);
+  try {
+    // Clean up components first
+    if (currentProfileComponent) {
+      console.log('🧹 Cleaning up ProfileComponent...');
+      // If ProfileComponent has a cleanup method, call it
+      if ((currentProfileComponent as any).cleanup && typeof (currentProfileComponent as any).cleanup === 'function') {
+        (currentProfileComponent as any).cleanup();
+      }
+      
+      const existingProfileElement = currentProfileComponent.getElement();
+      if (existingProfileElement && existingProfileElement.parentNode) {
+        existingProfileElement.parentNode.removeChild(existingProfileElement);
+      }
+      currentProfileComponent = null;
     }
-  }
-  
-  if (gameAreaContainer) {
-    while (gameAreaContainer.firstChild) {
-      gameAreaContainer.removeChild(gameAreaContainer.firstChild);
+
+    if (currentGameAreaComponent) {
+      console.log('🧹 Cleaning up GameAreaComponent...');
+      // If GameAreaComponent has a cleanup method, call it
+      if ((currentGameAreaComponent as any).cleanup && typeof (currentGameAreaComponent as any).cleanup === 'function') {
+        (currentGameAreaComponent as any).cleanup();
+      }
+      
+      const existingGameAreaElement = currentGameAreaComponent.getElement();
+      if (existingGameAreaElement && existingGameAreaElement.parentNode) {
+        existingGameAreaElement.parentNode.removeChild(existingGameAreaElement);
+      }
+      currentGameAreaComponent = null;
     }
+
+    // Clean up services
+    if (currentChatService) {
+      console.log('🧹 Cleaning up ChatService...');
+      if ((currentChatService as any).cleanup && typeof (currentChatService as any).cleanup === 'function') {
+        (currentChatService as any).cleanup();
+      }
+      currentChatService = null;
+    }
+
+    if (currentGameService) {
+      console.log('🧹 Cleaning up GameService...');
+      // GameService'te cleanup() metodu var, onu çağır
+      currentGameService.cleanup();
+      currentGameService = null;
+    }
+
+    // Force clear containers
+    const profileContainer = document.getElementById('profile-container');
+    const gameAreaContainer = document.getElementById('game-area-container');
+    
+    if (profileContainer) {
+      while (profileContainer.firstChild) {
+        profileContainer.removeChild(profileContainer.firstChild);
+      }
+    }
+    
+    if (gameAreaContainer) {
+      while (gameAreaContainer.firstChild) {
+        gameAreaContainer.removeChild(gameAreaContainer.firstChild);
+      }
+    }
+
+    // Remove any existing event listeners from header buttons
+    const logoutBtn = document.getElementById('logout-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const profileBtn = document.getElementById('profile-btn');
+
+    if (logoutBtn) {
+      const newLogoutBtn = logoutBtn.cloneNode(true);
+      logoutBtn.parentNode?.replaceChild(newLogoutBtn, logoutBtn);
+    }
+    if (settingsBtn) {
+      const newSettingsBtn = settingsBtn.cloneNode(true);
+      settingsBtn.parentNode?.replaceChild(newSettingsBtn, settingsBtn);
+    }
+    if (profileBtn) {
+      const newProfileBtn = profileBtn.cloneNode(true);
+      profileBtn.parentNode?.replaceChild(newProfileBtn, profileBtn);
+    }
+
+    // Reset initialization flag
+    isInitialized = false;
+    
+    console.log('✅ Home page cleanup completed successfully');
+    
+  } catch (error) {
+    console.error('❌ Error during home page cleanup:', error);
+    // Force reset even if cleanup failed
+    currentProfileComponent = null;
+    currentGameAreaComponent = null;
+    currentChatService = null;
+    currentGameService = null;
+    isInitialized = false;
   }
-  
-  // Reset component instances
-  currentProfileComponent = null;
-  currentGameAreaComponent = null;
-  currentChatService = null;
-  currentGameService = null;
-  
-  isInitialized = false;
 }
 
 // Export cleanup function for external use
 export { cleanup };
+
+// Cleanup when window unloads
+window.addEventListener('beforeunload', cleanup);
+
+// Store cleanup function globally for easy access
+(window as any).homePageCleanup = cleanup;

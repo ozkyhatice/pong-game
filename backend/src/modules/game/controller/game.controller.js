@@ -106,10 +106,10 @@ export async function joinGame(data, userId, connection) {
     // Notify the user that they have joined the room
     await sendMessage(connection, 'game', 'joined', {
         roomId: room.id,
-        players: Array.from(room.players),
+        players: room.players, // Already an array, no conversion needed
         message: `User ${userId} joined the game`
     });
-    if (room.players.size === 2 && !room.started) {
+    if (room.players.length === 2 && !room.started) { // Array length instead of Set size
     }
     // Display the current state of the room for debugging
     await displayRoomState(room);
@@ -138,14 +138,14 @@ export async function startGame(data, userId, connection) {
         // Don't send error to user, just broadcast current state
         await sendMessage(connection, 'game', 'game-started', {
             roomId: room.id,
-            players: Array.from(room.players),
+            players: room.players, // Already an array
             message: `Game already in progress`
         });
         return;
     }
     
     // Check player count
-    if (room.players.size < 2) {
+    if (room.players.length < 2) { // Array length instead of Set size
         await sendMessage(connection, 'game', 'error', {
             message: `Cannot start game: not enough players`
         });
@@ -153,7 +153,7 @@ export async function startGame(data, userId, connection) {
     }
     
     // Check if user is in the room
-    if (!room.players.has(userId)) {
+    if (!room.players.includes(userId)) { // Array includes instead of Set has
         await sendMessage(connection, 'game', 'error', {
             message: `Cannot start game: you are not in this room`
         });
@@ -169,7 +169,7 @@ export async function startGame(data, userId, connection) {
     for (const [playerId, socket] of room.sockets) {
         await sendMessage(socket, 'game', 'game-started', {
             roomId: room.id,
-            players: Array.from(room.players),
+            players: room.players, // Already an array
             message: `Game started by user ${userId}`
         });
     }
@@ -267,12 +267,12 @@ export async function handlePlayerReady(data, userId, connection) {
             roomId: room.id,
             readyPlayerId: userId,
             readyPlayers: Array.from(room.readyPlayers),
-            totalPlayers: room.players.size
+            totalPlayers: room.players.length // Array length instead of Set size
         });
     }
 
     // Check if all players are ready (and we have 2 players)
-    if (room.readyPlayers.size === 2 && room.players.size === 2) {
+    if (room.readyPlayers.size === 2 && room.players.length === 2) { // Array length instead of Set size
         
         // Broadcast that game can start
         for (const [playerId, socket] of room.sockets) {
@@ -337,7 +337,7 @@ export async function handleReconnection(connection, userId) {
             sendMessage(connection, 'game', "room-state", {
                 roomId: room.id,
                 state: room.state,
-                players: Array.from(room.players)
+                players: room.players // Already an array
             });
             
             // Notify all users about reconnection
@@ -472,14 +472,14 @@ export async function handleInviteAccepted(data, userId, connection) {
     // Notify both users
     await sendMessage(connection, 'game', 'room-created', {
         roomId: room.id,
-        players: Array.from(room.players),
+        players: room.players, // Already an array
         message: 'Game room created! You can now start the game.'
     });
     
     await sendMessage(senderClient, 'game', 'invite-accepted', {
         roomId: room.id,
         acceptedBy: userId,
-        players: Array.from(room.players),
+        players: room.players, // Already an array
         message: 'Your game invitation was accepted! Room created.'
     });
     
