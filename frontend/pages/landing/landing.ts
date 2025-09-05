@@ -128,18 +128,13 @@ export function init() {
   BABYLON.Effect.ShadersStore["crtFragmentShader"] = crtFragmentShader;
 
   const crtPostProcess = new BABYLON.PostProcess(
-    "CRTShaderPostProcess", "crt", ["curvature", "screenResolution", "scanLineOpacity", "vignetteOpacity", "brightness", "vignetteRoundness"],
+    "CRTShaderPostProcess", "crt", ["displayResolution"],
     null,
     1.0,
     camera
   );
   crtPostProcess.onApply = function (effect: any) {
-    effect.setFloat2("curvature", 2.5, 2.5);
-    effect.setFloat2("screenResolution", realCanvas.width, realCanvas.height);
-    effect.setFloat2("scanLineOpacity", 1, 1);
-    effect.setFloat("vignetteOpacity", 1);
-    effect.setFloat("brightness", 1.2);
-    effect.setFloat("vignetteRoundness", 1.5);
+    effect.setFloat2("displayResolution", realCanvas.width, realCanvas.height);
   };
 
   const glowLayer = new BABYLON.GlowLayer("glow", scene);
