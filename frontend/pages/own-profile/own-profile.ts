@@ -137,7 +137,6 @@ async function loadUserStats(userId: number): Promise<void> {
 }
 
 function updateStatsDisplay(user: User): void {
-    // Main stats
     const winsEl = document.getElementById('wins-count');
     const lossesEl = document.getElementById('losses-count');
     const winRateEl = document.getElementById('win-rate');
@@ -185,7 +184,6 @@ async function displayMatchHistory(matches: Match[]): Promise<void> {
     const matchHistoryContainer = document.getElementById('match-history');
     if (!matchHistoryContainer) return;
 
-    // Remove loading state
     const loadingEl = document.getElementById('loading-matches');
     if (loadingEl) loadingEl.remove();
 
@@ -194,7 +192,6 @@ async function displayMatchHistory(matches: Match[]): Promise<void> {
         return;
     }
 
-    // Get all opponent usernames
     const matchesWithUsernames = await Promise.all(matches.map(async (match) => {
         if (!currentUser) return { match, opponentUsername: 'Unknown' };
 
@@ -244,7 +241,6 @@ function displayEmptyMatchHistory(): void {
     const matchHistoryContainer = document.getElementById('match-history');
     if (!matchHistoryContainer) return;
 
-    // Remove loading state
     const loadingEl = document.getElementById('loading-matches');
     if (loadingEl) loadingEl.remove();
 
@@ -259,13 +255,11 @@ function displayEmptyMatchHistory(): void {
 function setActiveFilter(filter: string): void {
     currentFilter = filter;
 
-    // Update filter button styles
     const filterBtns = document.querySelectorAll('.filter-btn');
     filterBtns.forEach(btn => {
         const btnElement = btn as HTMLElement;
         const btnFilter = btnElement.dataset.filter;
 
-        // Remove all active classes first
         btn.classList.remove('active', 'bg-neon-purple', 'bg-neon-green', 'bg-neon-red', 'bg-opacity-20');
         btn.classList.add('bg-transparent');
 
@@ -273,7 +267,6 @@ function setActiveFilter(filter: string): void {
             btn.classList.add('active');
             btn.classList.remove('bg-transparent');
 
-            // Set specific background color based on filter type
             if (filter === 'all') {
                 btn.classList.add('bg-neon-purple', 'bg-opacity-20');
             } else if (filter === 'wins') {
@@ -299,7 +292,6 @@ function filterMatches(filter: string): void {
         }
     });
 
-    // Show empty state if no matches are visible
     const matchHistoryContainer = document.getElementById('match-history');
     if (matchHistoryContainer && visibleCount === 0 && filter !== 'all') {
         const wrapper = matchHistoryContainer.querySelector('div');
@@ -311,14 +303,12 @@ function filterMatches(filter: string): void {
                 <div class="text-neon-white/30 text-xs mt-1">TRY A DIFFERENT FILTER</div>
             `;
 
-            // Remove existing empty state
             const existingEmpty = wrapper.querySelector('.filter-empty-state');
             if (existingEmpty) existingEmpty.remove();
 
             wrapper.appendChild(emptyState);
         }
     } else {
-        // Remove empty state if matches are visible
         const existingEmpty = matchHistoryContainer?.querySelector('.filter-empty-state');
         if (existingEmpty) existingEmpty.remove();
     }
@@ -334,10 +324,8 @@ function formatFullDate(date: Date): string {
     return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
-// Export cleanup function for use by router
 export function cleanup() {
     console.log('🧹 OWN-PROFILE: Cleaning up own-profile page...');
-    // Reset global variables
     currentUser = null;
     matchHistory = [];
     currentFilter = 'all';

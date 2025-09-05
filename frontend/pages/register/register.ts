@@ -4,13 +4,9 @@ import { notify } from '../../core/notify.js';
 export async function init() {
   console.log('Register page loaded');
 
-  // Regular register form
   const form = document.getElementById('registerForm') as HTMLFormElement;
-
-  // Google register button
   const googleRegisterBtn = document.getElementById('googleRegisterBtn') as HTMLButtonElement;
 
-  // Username input - gerçek zamanlı temizlik
   const usernameInput = document.getElementById('username') as HTMLInputElement;
   usernameInput?.addEventListener('input', (e) => {
     const target = e.target as HTMLInputElement;
@@ -20,7 +16,6 @@ export async function init() {
     }
   });
 
-  // Google register handler
   googleRegisterBtn?.addEventListener('click', () => {
     const googleAuthUrl = getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE);
     window.location.href = googleAuthUrl;
@@ -38,7 +33,6 @@ export async function init() {
       return;
     }
 
-    // Username validasyonu
     const cleanUsername = username.replace(/[^a-zA-Z0-9_]/g, '');
     if (cleanUsername.length < 3) {
       notify('Username must be at least 3 characters and contain only letters, numbers, and underscores!');

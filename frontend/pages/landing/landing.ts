@@ -148,7 +148,7 @@ export function init() {
     }
   }
   resizeCanvas();
-  
+
   const crtFragmentShader = (window as any).crtFragmentShader;
   BABYLON.Effect.ShadersStore["crtFragmentShader"] = crtFragmentShader;
 
@@ -233,17 +233,15 @@ export function init() {
   paddle2Mat.specularColor = new BABYLON.Color3(0, 0, 0);
   paddle2Mat.alpha = 0.7;
   paddle2.material = paddle2Mat;
-  // Add paddles to glow layer
   glowLayer.addIncludedOnlyMesh(paddle1);
   glowLayer.addIncludedOnlyMesh(paddle2);
   paddle1.position.x = -3.6;
   paddle2.position.x = 3.6;
   paddle1.position.y = paddle2.position.y = paddleHeight/2 + 0.02;
 
-  // Compute safe Z clamp so paddles don't overlap with top/bottom borders
-  const fieldHalfDepth = 2; // half of table depth is 2
+  const fieldHalfDepth = 2;
   const borderHalf = borderThickness / 2;
-  const safetyGap = 0.02; // small visual gap from border
+  const safetyGap = 0.02;
   const paddleHalfDepth = paddleDepth / 2;
   const paddleZClamp = fieldHalfDepth - borderHalf - paddleHalfDepth - safetyGap; // e.g., ~1.43
 
@@ -275,21 +273,17 @@ export function init() {
   ball.position.y = paddleHeight/2;
   glowLayer.addIncludedOnlyMesh(ball);
 
-  // Colors are initialized from a single neon palette. No theme switching.
-
   let BALLSPEEDX = BALLSPEEDXDEFAULT;
   let BALLSPEEDZ = BALLSPEEDZDEFAULT;
   let ballDirX = BALLSPEEDX, ballDirZ = BALLSPEEDZ;
   let paddle1ToCorner: number | null = null;
   let paddle2ToCorner: number | null = null;
 
-  // Border flash animation tracking
   let leftBorderFlashTime = 0;
   let rightBorderFlashTime = 0;
   let topBorderFlashTime = 0;
   let bottomBorderFlashTime = 0;
 
-  // Paddle flash animation tracking
   let paddle1FlashTime = 0;
   let paddle2FlashTime = 0;
 
@@ -351,13 +345,12 @@ export function init() {
   engine.runRenderLoop(() => {
     const deltaTime = engine.getDeltaTime() / 1000; // Convert to seconds
 
-    // Handle border flash animations
     if (leftBorderFlashTime > 0) {
       leftBorderFlashTime -= deltaTime;
-      const flashIntensity = leftBorderFlashTime / 2.0; // 2 second duration
+      const flashIntensity = leftBorderFlashTime / 2.0;
       if (flashIntensity > 0) {
         leftMat.emissiveColor = toColor3(lerpColor(COLORS.BORDER, COLORS.BORDER_FLASH, flashIntensity));
-        leftBorderLight.intensity = 0.8 + 3.0 * flashIntensity; // Brighter flash
+        leftBorderLight.intensity = 0.8 + 3.0 * flashIntensity;
         leftBorderLight.diffuse = toColor3(lerpColor(COLORS.BORDER, COLORS.BORDER_FLASH, flashIntensity));
       } else {
         leftMat.emissiveColor = toColor3(COLORS.BORDER);
@@ -371,10 +364,10 @@ export function init() {
 
     if (rightBorderFlashTime > 0) {
       rightBorderFlashTime -= deltaTime;
-      const flashIntensity = rightBorderFlashTime / 2.0; // 2 second duration
+      const flashIntensity = rightBorderFlashTime / 2.0;
       if (flashIntensity > 0) {
         rightMat.emissiveColor = toColor3(lerpColor(COLORS.BORDER, COLORS.BORDER_FLASH, flashIntensity));
-        rightBorderLight.intensity = 0.8 + 3.0 * flashIntensity; // Brighter flash
+        rightBorderLight.intensity = 0.8 + 3.0 * flashIntensity;
         rightBorderLight.diffuse = toColor3(lerpColor(COLORS.BORDER, COLORS.BORDER_FLASH, flashIntensity));
       } else {
         rightMat.emissiveColor = toColor3(COLORS.BORDER);
@@ -386,10 +379,9 @@ export function init() {
       rightBorderLight.intensity = 0.8;
     }
 
-    // Handle paddle flash animations
     if (paddle1FlashTime > 0) {
       paddle1FlashTime -= deltaTime;
-      const flashIntensity = paddle1FlashTime / 1.0; // 1 second duration
+      const flashIntensity = paddle1FlashTime / 1.0;
       if (flashIntensity > 0) {
         paddle1Mat.emissiveColor = toColor3(lerpColor(COLORS.LEFT_PADDLE, COLORS.PADDLE_FLASH, flashIntensity));
         paddle1Light.intensity = 1.2 + 2.0 * flashIntensity;
@@ -407,7 +399,7 @@ export function init() {
 
     if (paddle2FlashTime > 0) {
       paddle2FlashTime -= deltaTime;
-      const flashIntensity = paddle2FlashTime / 1.0; // 1 second duration
+      const flashIntensity = paddle2FlashTime / 1.0;
       if (flashIntensity > 0) {
         paddle2Mat.emissiveColor = toColor3(lerpColor(COLORS.RIGHT_PADDLE, COLORS.PADDLE_FLASH, flashIntensity));
         paddle2Light.intensity = 1.2 + 2.0 * flashIntensity;
@@ -464,13 +456,11 @@ export function init() {
     if (ball.position.z > 1.85) {
       ball.position.z = 1.85;
       ballDirZ *= -1;
-      // Trigger top border flash
       topBorderFlashTime = 1.0;
     }
     if (ball.position.z < -1.85) {
       ball.position.z = -1.85;
       ballDirZ *= -1;
-      // Trigger bottom border flash
       bottomBorderFlashTime = 1.0;
     }
 
@@ -489,7 +479,7 @@ export function init() {
       ballDirX = Math.abs(ballDirX / norm) * BALLSPEEDX;
       ballDirZ = (ballDirZ / Math.abs(ballDirZ)) * Math.abs(ballDirZ / norm) * BALLSPEEDZ;
       paddleHit = true;
-      paddle1FlashTime = 1.0; // Trigger 1 second yellow flash
+      paddle1FlashTime = 1.0;
       if (!userControlling) {
         paddle1ToCorner = -paddleZClamp;
       }
@@ -506,21 +496,19 @@ export function init() {
       ballDirX = -Math.abs(ballDirX / norm) * BALLSPEEDX;
       ballDirZ = (ballDirZ / Math.abs(ballDirZ)) * Math.abs(ballDirZ / norm) * BALLSPEEDZ;
       paddleHit = true;
-      paddle2FlashTime = 1.0; // Trigger 1 second yellow flash
-  paddle2ToCorner = paddleZClamp;
+      paddle2FlashTime = 1.0;
+      paddle2ToCorner = paddleZClamp;
     }
 
     const leftOut = ball.position.x < -3.85 && !(ball.position.x > paddle1.position.x - paddleMargin && ball.position.x < paddle1.position.x + paddleWidth/2 + paddleMargin && Math.abs(ball.position.z - paddle1.position.z) < paddleDepth/2 + paddleLengthMargin);
     const rightOut = ball.position.x > 3.85 && !(ball.position.x > paddle2.position.x - paddleWidth/2 - paddleMargin && ball.position.x < paddle2.position.x + paddleMargin && Math.abs(ball.position.z - paddle2.position.z) < paddleDepth/2 + paddleLengthMargin);
     if (!paddleHit && (leftOut || rightOut)) {
-      // Trigger border flash for left or right border
       if (leftOut) {
-        leftBorderFlashTime = 2.0; // 2 second flash
+        leftBorderFlashTime = 2.0;
       } else {
-        rightBorderFlashTime = 2.0; // 2 second flash
+        rightBorderFlashTime = 2.0;
       }
 
-      // Cycle through ball colors
       currentBallColorIndex = (currentBallColorIndex + 1) % COLORS.BALL_COLORS.length;
 
       ball.position.x = 0;
@@ -530,7 +518,6 @@ export function init() {
       ballDirX = (Math.random() > 0.5 ? 1 : -1) * BALLSPEEDX;
       ballDirZ = (Math.random() > 0.5 ? 1 : -1) * BALLSPEEDZ;
 
-      // Update ball color
       ballMat.diffuseColor = toColor3(COLORS.BALL_COLORS[currentBallColorIndex]);
       ballMat.emissiveColor = toColor3(COLORS.BALL_COLORS[currentBallColorIndex]);
 
