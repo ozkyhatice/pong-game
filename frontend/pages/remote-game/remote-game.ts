@@ -118,6 +118,7 @@ let pauseCountdownTimer: number | null = null;
 let mobileControlDirection: 'up' | 'down' | null = null;
 let mobileControlInterval: number | null = null;
 let keyboardControlInterval: number | null = null; // Add this for keyboard controls
+let lastPaddlePosition: number | null = null; // Track last sent position to prevent spam
 
 // Global resize handler
 let resizeHandler: (() => void) | null = null;
@@ -1046,15 +1047,23 @@ export async function init() {
     let newY: number | null = null;
     const paddleHeight = 100;
     const gameHeight = 400;
-
-    if (keysPressed['KeyW'] || keysPressed['ArrowUp']) {
+    
+    // Check if any movement keys are pressed
+    const isMovingUp = keysPressed['KeyW'] || keysPressed['ArrowUp'];
+    const isMovingDown = keysPressed['KeyS'] || keysPressed['ArrowDown'];
+    
+    // Only calculate new position if exactly one direction is pressed
+    if (isMovingUp && !isMovingDown) {
       newY = Math.min(gameHeight - paddleHeight - 1, myPaddle.y + PADDLE_MOVE_SPEED);
-    } else if (keysPressed['KeyS'] || keysPressed['ArrowDown']) {
+    } else if (isMovingDown && !isMovingUp) {
       newY = Math.max(1, myPaddle.y - PADDLE_MOVE_SPEED);
     }
 
-    if (newY !== null) {
+    // Only send move message if position actually changed and is different from last sent position
+    if (newY !== null && newY !== myPaddle.y && newY !== lastPaddlePosition) {
+      lastPaddlePosition = newY;
       gameService.movePlayer(currentRoom.roomId, newY);
+      console.log(`🎮 PADDLE: Moving player ${myPlayerId} to Y: ${newY} (prev: ${myPaddle.y})`);
     }
   }
 
@@ -1067,24 +1076,59 @@ export async function init() {
   function setupKeyboardControls() {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
+    
+    // Handle window blur to prevent stuck keys
+    const handleWindowBlur = () => {
+      console.log('🎮 WINDOW: Focus lost, clearing keys');
+      keysPressed = {};
+      lastPaddlePosition = null;
+    };
+    
+    const handleWindowFocus = () => {
+      console.log('🎮 WINDOW: Focus regained');
+      keysPressed = {};
+      lastPaddlePosition = null;
+    };
+    
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
 
-    // Continuous keyboard movement - store interval for cleanup
+    // Continuous keyboard movement with throttling - reduced frequency to prevent spam
     keyboardControlInterval = setInterval(() => {
       if (Object.keys(keysPressed).some(key => keysPressed[key])) {
         handleKeyPress();
       }
-    }, 16) as any; // 60 FPS
+    }, 32) as any; // 30 FPS instead of 60 to reduce message spam
   }
 
   function handleKeyDown(e: KeyboardEvent) {
+    // Prevent default behavior for game keys
+    if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
+      e.preventDefault();
+    }
+    
     if (!keysPressed[e.code]) {
       keysPressed[e.code] = true;
+      console.log(`🎮 KEY: ${e.code} pressed`);
       handleKeyPress();
     }
   }
 
   function handleKeyUp(e: KeyboardEvent) {
-    keysPressed[e.code] = false;
+    // Prevent default behavior for game keys
+    if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
+      e.preventDefault();
+    }
+    
+    if (keysPressed[e.code]) {
+      keysPressed[e.code] = false;
+      console.log(`🎮 KEY: ${e.code} released`);
+      
+      // Reset last position when key is released to allow immediate re-movement
+      if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
+        lastPaddlePosition = null;
+      }
+    }
   }
 
   function setupMobileControls() {
@@ -1126,7 +1170,8 @@ export async function init() {
       if (mobileControlInterval) return;
 
       handleMobileMovement();
-      mobileControlInterval = setInterval(handleMobileMovement, 16) as any;
+      // Reduce mobile control frequency to match keyboard
+      mobileControlInterval = setInterval(handleMobileMovement, 32) as any; // 30 FPS
     }
 
     function stopMobileMovement() {
@@ -1135,6 +1180,7 @@ export async function init() {
         mobileControlInterval = null;
       }
       mobileControlDirection = null;
+      lastPaddlePosition = null; // Reset position tracking for mobile too
     }
 
     function handleMobileMovement() {
@@ -1144,15 +1190,20 @@ export async function init() {
       if (!myPaddle) return;
 
       let newY = myPaddle.y;
+      const paddleHeight = 100;
+      const gameHeight = 400;
 
       if (mobileControlDirection === 'down') {
-        newY = Math.max(0, myPaddle.y - PADDLE_MOVE_SPEED);
+        newY = Math.max(1, myPaddle.y - PADDLE_MOVE_SPEED);
       } else if (mobileControlDirection === 'up') {
-        newY = Math.min(400 - 100, myPaddle.y + PADDLE_MOVE_SPEED);
+        newY = Math.min(gameHeight - paddleHeight - 1, myPaddle.y + PADDLE_MOVE_SPEED);
       }
 
-      if (newY !== myPaddle.y) {
+      // Only send move message if position actually changed and is different from last sent position
+      if (newY !== myPaddle.y && newY !== lastPaddlePosition) {
+        lastPaddlePosition = newY;
         gameService.movePlayer(currentRoom.roomId, newY);
+        console.log(`🎮 MOBILE: Moving player ${myPlayerId} to Y: ${newY} (prev: ${myPaddle.y})`);
       }
     }
 
@@ -1376,8 +1427,9 @@ export async function init() {
       document.removeEventListener('visibilitychange', () => {});
       window.removeEventListener('blur', () => {});
 
-      // Clear keys pressed state
+      // Clear keys pressed state and paddle position tracking
       keysPressed = {};
+      lastPaddlePosition = null;
 
       // Clean up 3D scene
       if (ballTrailParticles) {
