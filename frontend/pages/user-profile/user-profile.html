@@ -8,7 +8,7 @@
         </svg>
         <span class="hidden sm:inline">BACK</span>
       </button>
-      
+
       <!-- User Tab - Clickable to show sidebar -->
       <button id="user-info-tab" class="flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2 text-neon-green rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-neon-green/30">
         <div id="header-user-avatar" class="w-6 md:w-8 h-6 md:h-8 rounded-full bg-transparent flex items-center justify-center text-neon-white text-xs md:text-sm font-bold transition-colors">
@@ -19,13 +19,13 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
         </svg>
       </button>
-      
+
       <div class="w-8 md:w-20"></div> <!-- Spacer for centering -->
     </div>
   </div>
 
   <div class="max-w-2xl mx-auto relative px-4">
-    
+
     <!-- Main Chat Area (Fixed Width) -->
     <div id="main-chat-area" class="">
       <div class="bg-console-bg border-2 shadow-terminal border-neon-green rounded-lg text-white ">
@@ -59,10 +59,10 @@
         <!-- Chat Input -->
         <div class="p-3 md:p-4 rounded-lg bg-header-gradient">
           <div class="flex gap-2 md:gap-3 items-center">
-            <input 
-              type="text" 
-              id="chat-input" 
-              placeholder="TYPE SOMETHING..." 
+            <input
+              type="text"
+              id="chat-input"
+              placeholder="TYPE SOMETHING..."
               class="flex-1 min-w-0 px-3 md:px-4 py-2 md:py-3 bg-terminal-border border border-neon-green rounded-lg focus:ring-2 focus:ring-neon-blue focus:border-neon-blue text-neon-white placeholder-neon-white/50 text-sm md:text-base"
             >
             <button id="send-message-btn" class="flex-shrink-0 bg-transparent border border-neon-blue text-neon-blue hover:bg-neon-blue hover:text-terminal-border px-3 md:px-6 py-2 md:py-3 rounded-lg font-medium transition-colors tracking-wide text-sm md:text-base whitespace-nowrap">
@@ -79,7 +79,7 @@
 
     <!-- User Info Sidebar (Hidden Initially) -->
     <div id="user-sidebar" class="fixed top-0 right-0 h-full w-80 md:w-80 sm:w-full bg-terminal-border border-l-2 border-neon-green transform translate-x-full transition-transform duration-300 ease-in-out z-50 overflow-y-auto">
-      
+
       <!-- Sidebar Header -->
       <div class="p-4 border-b border-neon-green bg-console-bg">
         <div class="flex items-center justify-between">
@@ -94,7 +94,7 @@
 
       <!-- Sidebar Content -->
       <div class="p-4 md:p-6 space-y-4 md:space-y-6">
-        
+
         <!-- Profile Card -->
         <div class="text-center bg-radial-bg border border-neon-green border-opacity-30 rounded-lg p-4">
           <div class="relative inline-block mb-4">
@@ -102,12 +102,12 @@
 				<img id="sidebar-user-avatar-img" src="https://placehold.co/400x400?text=Player" alt="User Avatar" class="w-full h-full object-cover rounded-full">
             </div>
           </div>
-          
+
           <h2 id="username" class="text-2xl font-bold text-neon-white mb-2">Loading...</h2>
           <div class="flex items-center justify-center gap-2 mb-4">
             <div class="w-2 h-2 bg-neon-green rounded-full animate-pulse"></div>
           </div>
-          
+
           <div class="flex flex-col gap-3">
             <button id="remove-friend-btn" class="bg-transparent border border-neon-yellow text-neon-yellow hover:bg-neon-yellow hover:text-terminal-border px-6 py-2 rounded-lg font-medium transition-colors tracking-wide mb-2">
               REMOVE FRIEND
@@ -123,7 +123,7 @@
         <!-- Stats Card -->
         <div class="bg-console-bg border border-neon-green border-opacity-30 rounded-lg p-6">
           <h3 class="text-lg font-bold text-neon-green mb-4 tracking-wide">GAME STATISTICS</h3>
-          
+
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div class="text-center p-3 bg-terminal-border border border-neon-green border-opacity-50 rounded-lg">
               <div id="wins-count" class="text-2xl font-bold text-neon-green">0</div>
@@ -134,12 +134,12 @@
               <div class="text-sm text-neon-white">LOSSES</div>
             </div>
           </div>
-          
+
           <div class="text-center p-3 bg-terminal-border border border-neon-blue border-opacity-50 rounded-lg mb-4">
             <div id="win-rate" class="text-2xl font-bold text-neon-blue">-%</div>
             <div class="text-sm text-neon-white">WIN RATE</div>
           </div>
-          
+
           <div class="space-y-2 text-sm">
             <div class="flex justify-between">
               <span class="text-neon-white">TOTAL GAMES:</span>
@@ -151,9 +151,9 @@
         <!-- Recent Matches -->
         <div class="bg-console-bg border border-neon-green border-opacity-30 rounded-lg p-6">
           <h3 class="text-lg font-bold text-neon-green mb-4 tracking-wide">RECENT MATCHES</h3>
-          
+
           <div class="space-y-3" id="match-history">
-            
+
             <!-- Match Item 1 - Win -->
             <div class="flex items-center justify-between p-3 bg-terminal-border border border-neon-green border-opacity-50 rounded-lg">
               <div class="flex items-center gap-2">
@@ -164,7 +164,7 @@
                 </div>
               </div>
               <div class="text-right">
-                <div class="font-bold text-neon-green text-sm">7 - 5</div>
+                <div class="font-bold text-neon-green text-sm whitespace-nowrap">7 - 5</div>
               </div>
             </div>
 
@@ -178,7 +178,7 @@
                 </div>
               </div>
               <div class="text-right">
-                <div class="font-bold text-neon-red text-sm">3 - 7</div>
+                <div class="font-bold text-neon-red text-sm whitespace-nowrap">3 - 7</div>
               </div>
             </div>
 
@@ -192,7 +192,7 @@
                 </div>
               </div>
               <div class="text-right">
-                <div class="font-bold text-neon-green text-sm">7 - 2</div>
+                <div class="font-bold text-neon-green text-sm whitespace-nowrap">7 - 2</div>
               </div>
             </div>
 

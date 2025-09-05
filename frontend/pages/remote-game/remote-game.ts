@@ -9,6 +9,8 @@ declare global {
   var router: Router;
 }
 
+const PADDLE_MOVE_SPEED = 15;
+
 interface GameState {
   ball: { x: number; y: number; dx: number; dy: number };
   paddles: { [userId: number]: { x: number; y: number; width: number; height: number } };
@@ -47,8 +49,6 @@ const PONG_3D_CONFIG = {
     }
   }
 };
-
-const PADDLE_MOVE_SPEED = 8;
 
 interface Player {
   id: number;
@@ -163,7 +163,7 @@ export async function init() {
   if (!wsManager.isConnected()) {
     const currentRoom = currentAppState.getCurrentRoom();
     const userToken = localStorage.getItem('authToken'); // Use 'authToken' not 'token'
-    
+
     if (currentRoom && userToken) {
       console.log('🔄 Remote-game: Page reloaded, attempting to reconnect and rejoin room...');
 
@@ -173,7 +173,7 @@ export async function init() {
         // Wait for connection to establish with timeout
         await new Promise((resolve, reject) => {
           const timeout = setTimeout(() => reject(new Error('Connection timeout')), 10000); // Increased to 10s
-          
+
           const onConnected = () => {
             clearTimeout(timeout);
             wsManager.off('connected', onConnected);
@@ -302,12 +302,12 @@ export async function init() {
   gameService.onGameStarted((data) => {
     if (gameStatusEl) gameStatusEl.textContent = ' BATTLE ';
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' BATTLE ';
-    
+
     // CRITICAL: Update room players order from server to ensure consistency
     if (data.players && currentRoom) {
       console.log('🎮 Updating room players order from game-started event:', data.players);
       console.log('🎮 Previous room players order:', currentRoom.players);
-      
+
       // Update the room with the authoritative player order from server
       const updatedRoom = {
         ...currentRoom,
@@ -315,11 +315,11 @@ export async function init() {
       };
       currentAppState.setCurrentRoom(updatedRoom);
       currentRoom = updatedRoom; // Update local reference
-      
+
       console.log('🎮 Room players order updated to:', currentRoom.players);
       console.log('🎮 CONSISTENT ORDER - LEFT (BLUE):', currentRoom.players[0], ', RIGHT (RED):', currentRoom.players[1]);
     }
-    
+
     players = data.players || [];
     setTimeout(() => updatePlayerNames(), 100);
   });
@@ -351,7 +351,7 @@ export async function init() {
       notify(data.message + ' Returning to tournament...');
       currentAppState.updateTournamentStatus('active', data.round);
       currentAppState.clearCurrentRoom();
-      
+
       // Store minimal tournament match result for potential display
       localStorage.setItem('lastTournamentMatchResult', JSON.stringify({
         winner: data.winner,
@@ -360,7 +360,7 @@ export async function init() {
         round: data.round,
         timestamp: Date.now()
       }));
-      
+
       cleanup3D();
       router.navigate('tournament');
     } else {
@@ -1047,11 +1047,11 @@ export async function init() {
     let newY: number | null = null;
     const paddleHeight = 100;
     const gameHeight = 400;
-    
+
     // Check if any movement keys are pressed
     const isMovingUp = keysPressed['KeyW'] || keysPressed['ArrowUp'];
     const isMovingDown = keysPressed['KeyS'] || keysPressed['ArrowDown'];
-    
+
     // Only calculate new position if exactly one direction is pressed
     if (isMovingUp && !isMovingDown) {
       newY = Math.min(gameHeight - paddleHeight - 1, myPaddle.y + PADDLE_MOVE_SPEED);
@@ -1076,20 +1076,20 @@ export async function init() {
   function setupKeyboardControls() {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
-    
+
     // Handle window blur to prevent stuck keys
     const handleWindowBlur = () => {
       console.log('🎮 WINDOW: Focus lost, clearing keys');
       keysPressed = {};
       lastPaddlePosition = null;
     };
-    
+
     const handleWindowFocus = () => {
       console.log('🎮 WINDOW: Focus regained');
       keysPressed = {};
       lastPaddlePosition = null;
     };
-    
+
     window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('focus', handleWindowFocus);
 
@@ -1106,7 +1106,7 @@ export async function init() {
     if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
       e.preventDefault();
     }
-    
+
     if (!keysPressed[e.code]) {
       keysPressed[e.code] = true;
       console.log(`🎮 KEY: ${e.code} pressed`);
@@ -1119,11 +1119,11 @@ export async function init() {
     if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
       e.preventDefault();
     }
-    
+
     if (keysPressed[e.code]) {
       keysPressed[e.code] = false;
       console.log(`🎮 KEY: ${e.code} released`);
-      
+
       // Reset last position when key is released to allow immediate re-movement
       if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
         lastPaddlePosition = null;
@@ -1353,7 +1353,7 @@ export async function init() {
 
     try {
       // CONSISTENT PLAYER ORDER: Always use room.players order
-      // Player 1 (index 0) = LEFT side = BLUE paddle  
+      // Player 1 (index 0) = LEFT side = BLUE paddle
       // Player 2 (index 1) = RIGHT side = RED paddle
       const [player1, player2] = await Promise.all([
         userService.getUserById(currentRoom.players[0]), // LEFT player (BLUE)
