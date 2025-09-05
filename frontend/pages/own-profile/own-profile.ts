@@ -1,5 +1,6 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
+import { UserService } from '../../services/UserService.js';
 
 interface User {
     id: number;
@@ -26,6 +27,7 @@ interface Match {
 let currentUser: User | null = null;
 let matchHistory: Match[] = [];
 let currentFilter = 'all';
+let userService: UserService = new UserService();
 
 export function init() {
     console.log('Own Profile page initialized');
@@ -172,14 +174,14 @@ async function loadMatchHistory(userId: number): Promise<void> {
 
         const data = await response.json();
         matchHistory = data.matches || [];
-        displayMatchHistory(matchHistory);
+        await displayMatchHistory(matchHistory);
     } catch (error) {
         console.error('Error loading match history:', error);
         displayEmptyMatchHistory();
     }
 }
 
-function displayMatchHistory(matches: Match[]): void {
+async function displayMatchHistory(matches: Match[]): Promise<void> {
     const matchHistoryContainer = document.getElementById('match-history');
     if (!matchHistoryContainer) return;
 
@@ -192,7 +194,18 @@ function displayMatchHistory(matches: Match[]): void {
         return;
     }
 
-    const matchesHTML = matches.map(match => {
+    // Get all opponent usernames
+    const matchesWithUsernames = await Promise.all(matches.map(async (match) => {
+        if (!currentUser) return { match, opponentUsername: 'Unknown' };
+        
+        const opponentId = match.player1Id === currentUser.id ? match.player2Id : match.player1Id;
+        const opponentInfo = await userService.getUserById(opponentId);
+        const opponentUsername = opponentInfo?.username || `Player ${opponentId}`;
+        
+        return { match, opponentUsername };
+    }));
+
+    const matchesHTML = matchesWithUsernames.map(({ match, opponentUsername }) => {
         if (!currentUser) return '';
         
         const isWin = match.winnerId === currentUser.id;
@@ -202,7 +215,6 @@ function displayMatchHistory(matches: Match[]): void {
         const textColor = isWin ? 'text-neon-green' : 'text-neon-red';
         const resultLetter = isWin ? 'W' : 'L';
 
-        const opponentId = match.player1Id === currentUser.id ? match.player2Id : match.player1Id;
         const playerScore = match.player1Id === currentUser.id ? match.player1Score : match.player2Score;
         const opponentScore = match.player1Id === currentUser.id ? match.player2Score : match.player1Score;
 
@@ -212,8 +224,8 @@ function displayMatchHistory(matches: Match[]): void {
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 ${bgColor} rounded-sm flex items-center justify-center text-terminal-border text-xs font-bold">${resultLetter}</div>
                         <div>
-                            <div class="font-medium text-neon-white text-sm">vs. Player ${opponentId}</div>
-                            <div class="text-xs text-neon-white/70">${formatTimeAgo(new Date(match.startedAt))}</div>
+                            <div class="font-medium text-neon-white text-sm">vs. ${opponentUsername}</div>
+                            <div class="text-xs text-neon-white/70">${formatFullDate(new Date(match.startedAt))}</div>
                         </div>
                     </div>
                     <div class="text-right">
@@ -285,22 +297,12 @@ function filterMatches(filter: string): void {
     });
 }
 
-function formatTimeAgo(date: Date): string {
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) {
-        return 'Just now';
-    } else if (diffInSeconds < 3600) {
-        const minutes = Math.floor(diffInSeconds / 60);
-        return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-    } else if (diffInSeconds < 86400) {
-        const hours = Math.floor(diffInSeconds / 3600);
-        return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    } else if (diffInSeconds < 604800) {
-        const days = Math.floor(diffInSeconds / 86400);
-        return `${days} day${days !== 1 ? 's' : ''} ago`;
-    } else {
-        return date.toLocaleDateString();
-    }
+function formatFullDate(date: Date): string {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
 }

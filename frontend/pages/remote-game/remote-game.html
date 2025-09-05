@@ -1,5 +1,5 @@
-<!-- Mobile Layout -->
-<div class="block lg:hidden h-screen bg-gradient-to-br from-terminal-bg via-black to-terminal-bg relative overflow-hidden">
+<!-- Mobile Layout - Only show on actual mobile devices -->
+<div id="mobile-layout" class="mobile-only h-screen bg-gradient-to-br from-terminal-bg via-black to-terminal-bg relative overflow-hidden" style="display: none;">
   <!-- Animated background -->
   <div class="absolute inset-0 opacity-20">
     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-green to-transparent animate-pulse"></div>
@@ -111,8 +111,8 @@
   </div>
 </div>
 
-<!-- Desktop Layout -->
-<div class="hidden lg:flex min-h-screen bg-gradient-to-br from-terminal-bg via-black to-terminal-bg relative overflow-hidden">
+<!-- Desktop Layout - Only show on desktop browsers -->
+<div id="desktop-layout" class="desktop-only min-h-screen bg-gradient-to-br from-terminal-bg via-black to-terminal-bg relative overflow-hidden" style="display: flex;">
   <!-- Animated background grid -->
   <div class="absolute inset-0 opacity-10">
     <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25px 25px, #39FF14 2px, transparent 0), radial-gradient(circle at 75px 75px, #39FF14 2px, transparent 0); background-size: 100px 100px; background-position: 0 0, 50px 50px;"></div>

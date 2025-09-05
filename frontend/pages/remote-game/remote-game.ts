@@ -120,13 +120,95 @@ let keyboardControlInterval: number | null = null; // Add this for keyboard cont
 // Global resize handler
 let resizeHandler: (() => void) | null = null;
 
+function initResponsiveLayout() {
+  // Improved mobile detection - check for actual mobile devices, not just screen size
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                  (window.innerWidth <= 768 && 'ontouchstart' in window);
+
+  console.log('📱 Initializing responsive layout:', { 
+    userAgent: navigator.userAgent,
+    screenWidth: window.innerWidth,
+    hasTouchSupport: 'ontouchstart' in window,
+    isMobile 
+  });
+
+  const mobileLayout = document.getElementById('mobile-layout');
+  const desktopLayout = document.getElementById('desktop-layout');
+
+  if (isMobile) {
+    // Show mobile layout
+    if (mobileLayout) mobileLayout.style.display = 'block';
+    if (desktopLayout) desktopLayout.style.display = 'none';
+    console.log('📱 Mobile layout activated');
+  } else {
+    // Show desktop layout
+    if (mobileLayout) mobileLayout.style.display = 'none';
+    if (desktopLayout) desktopLayout.style.display = 'flex';
+    console.log('🖥️ Desktop layout activated');
+  }
+}
+
 export async function init() {
+  // Initialize proper layout based on device detection
+  initResponsiveLayout();
+  
   // Check if this is a page reload (no WebSocket connection)
   const wsManager = WebSocketManager.getInstance();
+  const currentAppState = AppState.getInstance();
+  
+  // If WebSocket is not connected but we have room data in state, try to reconnect
   if (!wsManager.isConnected()) {
-    console.log('🔄 Remote-game: Page reloaded, redirecting to home for proper initialization');
-    window.router.navigate('home');
-    return;
+    const currentRoom = currentAppState.getCurrentRoom();
+    const userToken = localStorage.getItem('token');
+    
+    if (currentRoom && userToken) {
+      console.log('🔄 Remote-game: Page reloaded, attempting to reconnect and rejoin room...');
+      
+      try {
+        // Reconnect WebSocket
+        wsManager.connect(userToken);
+        
+        // Wait for connection to establish
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('Connection timeout')), 5000);
+          
+          const onConnected = () => {
+            clearTimeout(timeout);
+            wsManager.off('connected', onConnected);
+            wsManager.off('error', onError);
+            resolve(true);
+          };
+          
+          const onError = (error: any) => {
+            clearTimeout(timeout);
+            wsManager.off('connected', onConnected);
+            wsManager.off('error', onError);
+            reject(error);
+          };
+          
+          wsManager.on('connected', onConnected);
+          wsManager.on('error', onError);
+        });
+        
+        // Try to rejoin the room using reconnectToGame
+        const gameService = new GameService();
+        gameService.reconnectToGame();
+        
+        console.log('✅ Remote-game: Successfully reconnected to WebSocket');
+        notify('Reconnecting to game...');
+        
+      } catch (error) {
+        console.error('❌ Remote-game: Failed to reconnect:', error);
+        notify('Failed to reconnect. Returning to home...');
+        currentAppState.clearCurrentRoom();
+        window.router.navigate('home');
+        return;
+      }
+    } else {
+      console.log('🔄 Remote-game: No room data or token, redirecting to home');
+      window.router.navigate('home');
+      return;
+    }
   }
 
   // Check for BabylonJS
@@ -180,10 +262,9 @@ export async function init() {
   const mobilePauseTextEl = document.getElementById('mobile-pause-text');
   const mobilePauseCountdownEl = document.getElementById('mobile-pause-countdown');
 
-  const appState = AppState.getInstance();
   const gameService = new GameService();
   const userService = new UserService();
-  const currentRoom = appState.getCurrentRoom();
+  const currentRoom = currentAppState.getCurrentRoom();
 
   if (!currentRoom) {
     notify('No room found!');
@@ -207,8 +288,8 @@ export async function init() {
 
   // Game Service Events
   gameService.onStateUpdate((data) => {
-    if (gameStatusEl) gameStatusEl.textContent = '⚔️ CYBER BATTLE ⚔️';
-    if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚔️ BATTLE ⚔️';
+    if (gameStatusEl) gameStatusEl.textContent = ' CYBER BATTLE ';
+    if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' BATTLE ';
 
     gameState = data.state;
     update3DGameState();
@@ -217,8 +298,8 @@ export async function init() {
   });
 
   gameService.onGameStarted((data) => {
-    if (gameStatusEl) gameStatusEl.textContent = '⚔️ CYBER BATTLE ⚔️';
-    if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚔️ BATTLE ⚔️';
+    if (gameStatusEl) gameStatusEl.textContent = ' CYBER BATTLE ';
+    if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' BATTLE ';
     players = data.players || [];
     setTimeout(() => updatePlayerNames(), 100);
   });
@@ -232,13 +313,13 @@ export async function init() {
     if (data.isTournamentMatch && data.tournamentId) {
       console.log('🏆 Tournament player left:', data);
       notify(`Player ${data.leftPlayer} left the match. You win! Returning to tournament...`);
-      appState.updateTournamentStatus('active', data.round);
-      appState.clearCurrentRoom();
+      currentAppState.updateTournamentStatus('active', data.round);
+      currentAppState.clearCurrentRoom();
       cleanup3D();
       router.navigate('tournament');
     } else {
       notify(`Player ${data.leftPlayer} left the game.`);
-      appState.clearCurrentRoom();
+      currentAppState.clearCurrentRoom();
       cleanup3D();
       router.navigate('home');
     }
@@ -248,8 +329,8 @@ export async function init() {
     if (data.isTournamentMatch && data.tournamentId) {
       console.log('🏆 Tournament match completed:', data);
       notify(data.message + ' Returning to tournament...');
-      appState.updateTournamentStatus('active', data.round);
-      appState.clearCurrentRoom();
+      currentAppState.updateTournamentStatus('active', data.round);
+      currentAppState.clearCurrentRoom();
       cleanup3D();
       router.navigate('tournament');
     } else {
@@ -260,7 +341,7 @@ export async function init() {
         playerOrder: currentRoom?.players || [], // Add room players order for consistent display
         timestamp: Date.now()
       }));
-      appState.clearCurrentRoom();
+      currentAppState.clearCurrentRoom();
       cleanup3D();
       router.navigate('end-game');
     }
@@ -306,8 +387,8 @@ export async function init() {
 
     // Show tournament end result
     setTimeout(() => {
-      appState.clearCurrentRoom();
-      appState.clearCurrentTournament();
+      currentAppState.clearCurrentRoom();
+      currentAppState.clearCurrentTournament();
       cleanup3D();
 
       // Store tournament result for end-game page
@@ -339,8 +420,12 @@ export async function init() {
       cleanup3D();
     }
 
-    const isMobile = window.innerWidth < 1024;
+    // Improved mobile detection - check for actual mobile devices, not just screen size
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                    (window.innerWidth <= 768 && 'ontouchstart' in window);
     const targetCanvas = (isMobile && mobileCanvas) ? mobileCanvas : desktopCanvas;
+
+    console.log('🎮 Canvas selection:', { isMobile, targetCanvas: targetCanvas?.id });
 
     if (!targetCanvas) {
       console.error('No target canvas available');
@@ -410,6 +495,8 @@ export async function init() {
         engine.resize();
         setupResponsiveCanvas(targetCanvas);
       }
+      // Re-evaluate layout on resize for better responsiveness
+      initResponsiveLayout();
     };
 
     window.addEventListener('resize', resizeHandler);
@@ -592,19 +679,52 @@ export async function init() {
   }
 
   function setupResponsiveCanvas(targetCanvas: HTMLCanvasElement) {
-    const isMobile = window.innerWidth < 1024;
+    // Improved mobile detection - check for actual mobile devices, not just screen size
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                    (window.innerWidth <= 768 && 'ontouchstart' in window);
+
+    console.log('📱 Device detection:', { 
+      userAgent: navigator.userAgent,
+      screenWidth: window.innerWidth,
+      hasTouchSupport: 'ontouchstart' in window,
+      isMobile 
+    });
 
     if (isMobile && mobileCanvas) {
+      // Mobile layout
       const maxWidth = Math.min(window.innerWidth - 32, 400);
       const aspectRatio = 0.75; // Better aspect ratio for 3D view
       mobileCanvas.width = maxWidth;
       mobileCanvas.height = maxWidth * aspectRatio;
-
+      
+      // Ensure mobile layout is visible
+      const mobileLayout = document.getElementById('mobile-layout');
+      const desktopLayout = document.getElementById('desktop-layout');
+      
+      if (mobileLayout) {
+        mobileLayout.style.display = 'block';
+      }
+      if (desktopLayout) {
+        desktopLayout.style.display = 'none';
+      }
+      
       console.log(`📱 Enhanced 3D Mobile canvas: ${mobileCanvas.width}x${mobileCanvas.height}`);
     } else if (desktopCanvas) {
+      // Desktop layout
       desktopCanvas.width = 1000;
       desktopCanvas.height = 600; // Enhanced resolution for desktop
-
+      
+      // Ensure desktop layout is visible
+      const mobileLayout = document.getElementById('mobile-layout');
+      const desktopLayout = document.getElementById('desktop-layout');
+      
+      if (mobileLayout) {
+        mobileLayout.style.display = 'none';
+      }
+      if (desktopLayout) {
+        desktopLayout.style.display = 'flex';
+      }
+      
       console.log(`🖥️ Enhanced 3D Desktop canvas: ${desktopCanvas.width}x${desktopCanvas.height}`);
     }
 
@@ -973,7 +1093,7 @@ export async function init() {
   function handleLeaveGame() {
     if (currentRoom) {
       gameService.leaveGame(currentRoom.roomId);
-      appState.clearCurrentRoom();
+      currentAppState.clearCurrentRoom();
       cleanup3D();
       router.navigate('home');
     }

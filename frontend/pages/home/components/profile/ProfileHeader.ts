@@ -43,7 +43,7 @@ export class ProfileHeader {
           <div class="w-1 h-1 bg-neon-green rounded-full animate-pulse"></div>
           <span>PLAYER STATUS: ONLINE</span>
         </div>
-        <div class="text-neon-blue font-bold">
+        <div class="text-neon-blue">
           > START YOUR GAME...</span>
         </div>
       </div>
@@ -54,7 +54,7 @@ export class ProfileHeader {
         <div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
           <img src="${avatar}" alt="Avatar" class="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-neon-blue shadow-[0_0_8px_#62a6fa]">
           <div>
-            <div class="text-neon-white text-sm md:text-md font-bold uppercase">${username}</div>
+            <div class="text-neon-white text-sm md:text-md font-bold">${username}</div>
           </div>
         </div>
 

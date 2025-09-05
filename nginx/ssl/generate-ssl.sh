@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DOMAIN="pong.com"
+DOMAIN="pong.42.fr"
 COUNTRY="TR"
 STATE="Istanbul"
 CITY="Istanbul"

@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
-  // BASE_URL: 'https://pong.com',
-  // WS_URL: 'wss://pong.com/ws',
+  // BASE_URL: 'https://pong.42.fr',
+  // WS_URL: 'wss://pong.42.fr/ws',
 
   BASE_URL: 'http://localhost:3000',
   WS_URL: 'ws://localhost:3000/ws',

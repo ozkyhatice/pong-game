@@ -1,4 +1,20 @@
 <div class="h-screen bg-radial-bg flex items-center justify-center p-2 sm:p-4 font-orbitron text-neon-green overflow-hidden">
+    <style>
+        #match-history::-webkit-scrollbar {
+            width: 6px;
+        }
+        #match-history::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 3px;
+        }
+        #match-history::-webkit-scrollbar-thumb {
+            background: #62A6FA;
+            border-radius: 3px;
+        }
+        #match-history::-webkit-scrollbar-thumb:hover {
+            background: #4A9EFF;
+        }
+    </style>
     <div class="bg-console-bg border-2 border-neon-green shadow-terminal rounded-lg w-full max-w-6xl mx-auto h-full max-h-[95vh] flex flex-col">
         
         <!-- Profile Header -->
@@ -78,7 +94,7 @@
                     </div>
 
                     <!-- Match List -->
-                    <div class="space-y-2 overflow-y-auto flex-1" id="match-history">
+                    <div class="space-y-2 overflow-y-auto flex-1 max-h-96 pr-2" id="match-history" style="scrollbar-width: thin; scrollbar-color: #62A6FA #1a1a1a;">
                         
                         <!-- Loading State -->
                         <div class="text-center py-6" id="loading-matches">
