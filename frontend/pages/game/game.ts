@@ -128,8 +128,7 @@ let resizeHandler: (() => void) | null = null;
 export async function init() {
   const BABYLON = (window as any).BABYLON;
   if (!BABYLON) {
-    console.error('BABYLON is not loaded. Please include Babylon.js via CDN in your index.html.');
-    notify('3D engine not available. Please refresh the page.');
+    notify('3D engine not available. Please refresh the page.', 'red');
     return;
   }
 
@@ -137,7 +136,6 @@ export async function init() {
   const mobileCanvas = document.getElementById('mobile-game-canvas') as HTMLCanvasElement | null;
 
   if (!desktopCanvas && !mobileCanvas) {
-    console.error('No canvas found');
     notify('Game canvas not found!');
     return;
   }
@@ -184,9 +182,6 @@ export async function init() {
   startLocalGame();
 
   function initLocalPlayerNames() {
-    // CONSISTENT PLAYER ORDER for local game too
-    // Player 1 = LEFT side = BLUE paddle
-    // Player 2 = RIGHT side = RED paddle
     if (player1NameEl) player1NameEl.textContent = 'PLAYER 1 (BLUE)';
     if (player2NameEl) player2NameEl.textContent = 'PLAYER 2 (RED)';
     if (player1InitialEl) player1InitialEl.textContent = 'P1';
@@ -197,7 +192,6 @@ export async function init() {
     if (mobilePlayer1InitialEl) mobilePlayer1InitialEl.textContent = 'P1';
     if (mobilePlayer2InitialEl) mobilePlayer2InitialEl.textContent = 'P2';
 
-    console.log('🎮 Local player names initialized - LEFT (BLUE): PLAYER 1, RIGHT (RED): PLAYER 2');
   }
 
   function updateLocalScores() {
@@ -216,7 +210,6 @@ export async function init() {
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = 'BATTLE';
 
     gameLoopInterval = setInterval(updateLocalGame, 16) as any;
-    console.log('🎮 Local game started');
   }
 
   function updateLocalGame() {
@@ -355,7 +348,6 @@ export async function init() {
   function setupLocalKeyboardControls() {
     document.addEventListener('keydown', handleLocalKeyDown);
     document.addEventListener('keyup', handleLocalKeyUp);
-    console.log('🎮 Local keyboard controls set up');
   }
 
   function setupMobileControls() {
@@ -377,7 +369,6 @@ export async function init() {
       });
     }
 
-    // Player 1 Down Button
     if (mobileDownBtnP1) {
       ['touchstart', 'mousedown'].forEach(event => {
         mobileDownBtnP1!.addEventListener(event, (e: any) => {
@@ -395,7 +386,6 @@ export async function init() {
       });
     }
 
-    // Player 2 Up Button
     if (mobileUpBtnP2) {
       ['touchstart', 'mousedown'].forEach(event => {
         mobileUpBtnP2!.addEventListener(event, (e: any) => {
@@ -413,7 +403,6 @@ export async function init() {
       });
     }
 
-    // Player 2 Down Button
     if (mobileDownBtnP2) {
       ['touchstart', 'mousedown'].forEach(event => {
         mobileDownBtnP2!.addEventListener(event, (e: any) => {
@@ -444,7 +433,6 @@ export async function init() {
         mobileControlP1Interval = null;
       }
       mobileControlP1Direction = null;
-      // Reset Player 1 keys when stopping mobile movement
       player1Keys.up = false;
       player1Keys.down = false;
     }
@@ -462,7 +450,6 @@ export async function init() {
         mobileControlP2Interval = null;
       }
       mobileControlP2Direction = null;
-      // Reset Player 2 keys when stopping mobile movement
       player2Keys.up = false;
       player2Keys.down = false;
     }
@@ -470,7 +457,6 @@ export async function init() {
     function handleMobileMovementP1() {
       if (!mobileControlP1Direction || localGameState.gameOver) return;
 
-      // Reset all Player 1 keys first
       player1Keys.up = false;
       player1Keys.down = false;
 
@@ -484,7 +470,6 @@ export async function init() {
     function handleMobileMovementP2() {
       if (!mobileControlP2Direction || localGameState.gameOver) return;
 
-      // Reset all Player 2 keys first
       player2Keys.up = false;
       player2Keys.down = false;
 
@@ -495,7 +480,6 @@ export async function init() {
       }
     }
 
-    // Prevent scrolling when touching game controls
     document.addEventListener('touchmove', (e) => {
       if (e.target === mobileUpBtnP1 || e.target === mobileDownBtnP1 ||
           e.target === mobileUpBtnP2 || e.target === mobileDownBtnP2) {
@@ -514,8 +498,6 @@ export async function init() {
       stopMobileMovementP1();
       stopMobileMovementP2();
     });
-
-    console.log('🎮 Mobile controls set up for both players');
   }
 
   function setupPauseOnTabSwitch() {
@@ -525,18 +507,15 @@ export async function init() {
         if (gameStatusEl) gameStatusEl.textContent = '⏸️ GAME PAUSED ⏸️';
         if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⏸️ PAUSED ⏸️';
         if (ballTrailParticles) ballTrailParticles.stop();
-        console.log('🎮 Game paused - tab hidden');
       } else {
         if (!localGameState.gameOver) {
           gamePaused = false;
           if (gameStatusEl) gameStatusEl.textContent = 'LOCAL BATTLE';
           if (mobileGameStatusEl) mobileGameStatusEl.textContent = 'BATTLE';
           if (ballTrailParticles) ballTrailParticles.start();
-          console.log('🎮 Game resumed - tab visible');
         }
       }
     });
-    console.log('🎮 Pause on tab switch set up');
   }
 
   function handleLocalKeyDown(e: KeyboardEvent) {
@@ -587,10 +566,8 @@ export async function init() {
   }
 
   function init3DScene() {
-    console.log('🎮 Initializing Enhanced 3D Pong Arena...');
 
     if (engine) {
-      console.log('🧹 Cleaning up existing engine...');
       cleanup3D();
     }
 
@@ -598,7 +575,6 @@ export async function init() {
     const targetCanvas = (isMobile && mobileCanvas) ? mobileCanvas : desktopCanvas;
 
     if (!targetCanvas) {
-      console.error('No target canvas available');
       return;
     }
 
@@ -623,8 +599,6 @@ export async function init() {
     camera.inputs.clear();
 
     camera.setTarget(BABYLON.Vector3.Zero());
-
-    console.log('🎮 Fixed camera setup: 45° view from opposite side');
 
     glowLayer = new BABYLON.GlowLayer("glow", scene);
     glowLayer.intensity = 0.8;
@@ -656,8 +630,6 @@ export async function init() {
     };
 
     window.addEventListener('resize', resizeHandler);
-
-    console.log('✅ Enhanced 3D Pong Arena initialized successfully');
   }
 
   function createEnhancedTable() {
@@ -807,7 +779,6 @@ export async function init() {
 
   function createParticleSystems() {
     if (!ball) {
-      console.error('Ball not created yet, cannot create particle system');
       return;
     }
 
@@ -832,7 +803,6 @@ export async function init() {
     ballTrailParticles.updateSpeed = 0.005;
 
     ballTrailParticles.start();
-    console.log('✅ Ball trail particles created and started');
   }
 
   function setupResponsiveCanvas(targetCanvas: HTMLCanvasElement) {
@@ -844,12 +814,10 @@ export async function init() {
       mobileCanvas.width = maxWidth;
       mobileCanvas.height = maxWidth * aspectRatio;
 
-      console.log(`📱 Enhanced 3D Mobile canvas: ${mobileCanvas.width}x${mobileCanvas.height}`);
     } else if (desktopCanvas) {
       desktopCanvas.width = 1000;
       desktopCanvas.height = 600;
 
-      console.log(`🖥️ Enhanced 3D Desktop canvas: ${desktopCanvas.width}x${desktopCanvas.height}`);
     }
 
     if (engine) {
@@ -970,12 +938,10 @@ export async function init() {
 
   function cleanup3D() {
     try {
-      console.log('🧹 Starting complete cleanup of local game page...');
 
       if (gameLoopInterval) {
         clearInterval(gameLoopInterval);
         gameLoopInterval = null;
-        console.log('✅ Game loop interval cleared');
       }
 
       // Clear mobile control intervals
@@ -987,12 +953,9 @@ export async function init() {
         clearInterval(mobileControlP2Interval);
         mobileControlP2Interval = null;
       }
-      console.log('✅ Mobile control intervals cleared');
 
       document.removeEventListener('keydown', handleLocalKeyDown);
       document.removeEventListener('keyup', handleLocalKeyUp);
-      console.log('✅ Keyboard event listeners removed');
-
       document.removeEventListener('visibilitychange', setupPauseOnTabSwitch);
 
       player1Keys = { up: false, down: false };
@@ -1050,10 +1013,7 @@ export async function init() {
         gameOver: false
       };
 
-      console.log('🧹 Local game cleanup completed');
-    } catch (e) {
-      console.error('Error cleaning up local game:', e);
-    }
+    } catch (e) {}
   }
 
   window.addEventListener('beforeunload', cleanup3D);

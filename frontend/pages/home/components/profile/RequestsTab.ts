@@ -84,7 +84,6 @@ export class RequestsTab {
         this.render();
       }
     } catch (error) {
-      console.error('Error loading requests:', error);
       notify('Failed to load requests', 'red');
     }
   }
@@ -106,7 +105,6 @@ export class RequestsTab {
         notify('Failed to accept request', 'red');
       }
     } catch (error) {
-      console.error('Error accepting friend:', error);
       notify('Error accepting request', 'red');
     }
   }
@@ -128,7 +126,6 @@ export class RequestsTab {
         notify('Failed to decline request', 'red');
       }
     } catch (error) {
-      console.error('Error declining friend:', error);
       notify('Error declining request', 'red');
     }
   }

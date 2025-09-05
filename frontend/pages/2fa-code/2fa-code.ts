@@ -2,9 +2,7 @@ import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
 
 export async function init() {
-  console.log('2FA code page loaded');
 
-  // Check if we have a userId from login or OAuth
   const tempUserId = sessionStorage.getItem('tempUserId');
   const pendingOAuthUserId = sessionStorage.getItem('pendingOAuthUserId');
   const userId = tempUserId || pendingOAuthUserId;
@@ -41,14 +39,11 @@ export async function init() {
       });
 
       const data = await response.json();
-      console.log('2FA verification response:', data);
 
       if (response.ok && data.success && data.token) {
-        // Clear temporary userId
         sessionStorage.removeItem('tempUserId');
         sessionStorage.removeItem('pendingOAuthUserId');
 
-        // Store auth token and user data
         localStorage.setItem('authToken', data.token);
 
         notify(`2FA verification successful! Welcome ${data.user.username}!`, 'green');
@@ -60,7 +55,6 @@ export async function init() {
       const errorMessage = error instanceof Error ? error.message : '2FA verification failed';
       notify(`${errorMessage}`, 'red');
 
-      // Clear the code input for retry
       if (codeInput) {
         codeInput.value = '';
       }
@@ -69,7 +63,7 @@ export async function init() {
 
   backBtn?.addEventListener('click', () => {
     router.navigate('login');
-	sessionStorage.removeItem('tempUserId');
+	  sessionStorage.removeItem('tempUserId');
     sessionStorage.removeItem('pendingOAuthUserId');
   });
 

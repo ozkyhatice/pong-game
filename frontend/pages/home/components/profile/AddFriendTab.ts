@@ -42,7 +42,6 @@ export class AddFriendTab {
       }
     };
 
-    // Enter key support
     const input = this.element.querySelector('#friend-search') as HTMLInputElement;
     input?.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
@@ -68,7 +67,6 @@ export class AddFriendTab {
       const token = localStorage.getItem('authToken');
       if (!token) return;
 
-      // Find user by username
       const userResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.BY_USERNAME(username)), {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -81,7 +79,6 @@ export class AddFriendTab {
       const userData = await userResponse.json();
       const user = userData.user || userData;
 
-      // Send friend request
       const addResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.ADD(user.id)), {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
@@ -96,7 +93,6 @@ export class AddFriendTab {
         notify(errorMsg, 'red');
       }
     } catch (error) {
-      console.error('Error sending friend request:', error);
       notify('Error sending friend request', 'red');
     } finally {
       button.disabled = false;

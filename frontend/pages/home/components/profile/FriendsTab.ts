@@ -27,12 +27,11 @@ export class FriendsTab {
     try {
       this.me = await this.userService.getCurrentUser();
     } catch (error) {
-      console.error('Error loading current user:', error);
+      notify('Failed to load user info', 'red');
     }
   }
 
   private setupOnlineStatusListener(): void {
-    // Subscribe to online status changes to update friend list in real-time
     this.unsubscribeStatusChange = this.onlineUsersService.onStatusChange(() => {
       if (this.friends.length > 0) {
         this.render();
@@ -48,27 +47,6 @@ export class FriendsTab {
     };
   }
 
-  private formatLastSeen(date: Date): string {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (seconds < 60) {
-      return 'Just now';
-    } else if (minutes < 60) {
-      return `${minutes}m ago`;
-    } else if (hours < 24) {
-      return `${hours}h ago`;
-    } else if (days < 7) {
-      return `${days}d ago`;
-    } else {
-      return date.toLocaleDateString();
-    }
-  }
-
   private render(): void {
     if (this.friends.length === 0) {
       this.element.innerHTML = `
@@ -79,7 +57,6 @@ export class FriendsTab {
       return;
     }
 
-    // Sort friends by online status (online first)
     const sortedFriends = [...this.friends].sort((a, b) => {
       const aStatus = this.getFriendOnlineStatus(a.friendInfo.id);
       const bStatus = this.getFriendOnlineStatus(b.friendInfo.id);
@@ -105,8 +82,6 @@ export class FriendsTab {
         <div class="space-y-3 overflow-y-auto h-full max-h-full">
           ${sortedFriends.map(friend => {
             const status = this.getFriendOnlineStatus(friend.friendInfo.id);
-            const lastSeenText = !status.isOnline && status.lastSeen ? 
-              this.formatLastSeen(status.lastSeen) : '';
             
             return `
               <div class="flex items-start p-3 bg-radial-bg border border-neon-blue rounded-lg transition-colors ${status.isOnline ? 'border-l-3 border-neon-green/50' : ''}">
@@ -176,7 +151,6 @@ export class FriendsTab {
         this.render();
       }
     } catch (error) {
-      console.error('Error loading friends:', error);
       notify('Failed to load friends', 'red');
     }
   }
@@ -188,7 +162,6 @@ export class FriendsTab {
       const friendUsername = btn?.getAttribute('data-username');
 
       if (friendUserId && this.me && friendUsername) {
-        // Check if friend is online before sending invitation
         const friendId = parseInt(friendUserId);
         const status = this.getFriendOnlineStatus(friendId);
         
@@ -203,7 +176,6 @@ export class FriendsTab {
         notify('Unable to send invitation', 'red');
       }
     } catch (error) {
-      console.error('Error sending game invitation:', error);
       notify('Failed to send game invitation', 'red');
     }
   }
@@ -223,7 +195,6 @@ export class FriendsTab {
     return this.element;
   }
 
-  // Cleanup method to unsubscribe from online status changes
   destroy(): void {
     if (this.unsubscribeStatusChange) {
       this.unsubscribeStatusChange();

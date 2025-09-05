@@ -21,7 +21,6 @@ export class SocialTabs {
     this.render();
     this.setupEvents();
 
-    // Load initial tab data
     this.friendsTab.loadFriends();
   }
 
@@ -110,7 +109,6 @@ export class SocialTabs {
     this.activeTab = tab;
     this.render();
 
-    // Always load fresh data when switching tabs
     if (tab === 'friends') {
       this.friendsTab.loadFriends();
     } else if (tab === 'requests') {

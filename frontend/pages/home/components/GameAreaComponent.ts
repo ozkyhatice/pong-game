@@ -28,22 +28,16 @@ export class GameAreaComponent extends Component {
 
   private render(): void {
     this.setHTML(`
-      <!-- Game Content -->
       <div class="w-full h-full flex flex-col rounded bg-console-bg border-2 border-neon-green shadow-terminal">
-        <!-- Terminal Header -->
         <div class="bg-terminal-border border-b border-neon-green/30 flex-shrink-0">
           <div class="flex items-center justify-center p-3 bg-header-gradient">
-            <!-- Center: Title -->
             <div class="flex items-center space-x-2">
               <span class="text-neon-green text-sm font-bold tracking-wider" style="text-shadow: 0 0 5px #39FF14;">GAME_ARENA.exe</span>
             </div>
           </div>
         </div>
-
-        <!-- Content Area - Flex-1 to fill space -->
         <div class="flex-1 h-full">
           <div class="bg-radial-bg rounded border border-green-400/30 h-full flex flex-col">
-            <!-- Player Status Section -->
             <div class="bg-console-bg text-left border-b border-neon-green border-opacity-30 flex-shrink-0">
               <div class="text-[10px] leading-relaxed text-neon-green space-y-1 px-3 py-2">
                 <div class="flex items-center gap-1">
@@ -55,22 +49,15 @@ export class GameAreaComponent extends Component {
                 </div>
               </div>
             </div>
-
-            <!-- Game Modes Section -->
             <div class="bg-radial-bg p-6">
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- LEFT COLUMN: Quick Match + Invites -->
             <div class="space-y-6">
-              <!-- Matchmaking Section -->
               <div class="p-6 bg-gradient-to-r from-yellow-900/50 to-yellow-800/50 rounded border border-neon-yellow/50 shadow-lg">
                 <h3 class="text-xl font-semibold text-neon-yellow mb-4">
                   QUICK MATCH
                 </h3>
-
                 <div class="mb-4">
                   <p class="text-neon-yellow/80 text-sm mb-4">Find an opponent automatically and start playing immediately!</p>
-
                   <div id="matchmaking-status" class="mb-4 p-3 bg-black/30 rounded border border-neon-yellow/30 hidden">
                     <div class="flex items-center">
                       <span class="inline-block animate-spin w-4 h-4 border-2 border-neon-yellow border-t-transparent rounded-full mr-3"></span>
@@ -78,7 +65,6 @@ export class GameAreaComponent extends Component {
                     </div>
                   </div>
                 </div>
-
                 <div class="flex space-x-4">
                   <button id="join-matchmaking-btn" class="flex-1 bg-gradient-to-r from-neon-yellow to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-terminal-border font-bold py-3 px-6 rounded transition-all border border-neon-yellow shadow-lg hover:shadow-neon-yellow/25">
                     FIND MATCH
@@ -88,8 +74,6 @@ export class GameAreaComponent extends Component {
                   </button>
                 </div>
               </div>
-
-              <!-- Game Invites -->
               <div class="p-6 bg-gradient-to-r from-red-900/50 to-red-800/50 rounded border border-neon-red/50 shadow-lg">
                 <h3 class="text-xl font-semibold text-neon-red mb-4">
                   BATTLE INVITATIONS
@@ -101,16 +85,11 @@ export class GameAreaComponent extends Component {
                 </div>
               </div>
             </div>
-
-            <!-- RIGHT COLUMN: Tournament -->
             <div>
-              <!-- Tournament Section -->
               <div class="p-6 bg-gradient-to-r from-purple-900/50 to-purple-800/50 rounded border border-purple-400/50 shadow-lg">
                 <h3 class="text-xl font-semibold text-purple-300 mb-4">
                   TOURNAMENT ARENA
                 </h3>
-
-                <!-- Return to Tournament Button (shown when user is in active tournament) -->
                 <div id="tournament-return" class="mb-4 p-4 bg-gradient-to-r from-purple-600/20 to-purple-500/20 border border-purple-400 rounded hidden">
                   <div class="flex items-center justify-between">
                     <div>
@@ -122,7 +101,6 @@ export class GameAreaComponent extends Component {
                     </button>
                   </div>
                 </div>
-
                 <div id="tournament-info" class="mb-4">
                   <div id="no-tournament" class="text-purple-400 text-sm text-center animate-pulse">
                     SCANNING FOR TOURNAMENTS...
@@ -132,22 +110,16 @@ export class GameAreaComponent extends Component {
                       <span class="font-medium text-purple-200">PLAYERS: <span class="text-purple-400" id="tournament-players">0</span>/4</span>
                       <span class="text-sm bg-purple-600/20 px-3 py-1 rounded-full border border-purple-400/50 text-purple-300" id="tournament-status">pending</span>
                     </div>
-
-                    <!-- Participants List -->
                     <div id="tournament-participants" class="mb-4">
                       <h4 class="font-medium text-sm text-purple-300 mb-3">
                         WARRIORS IN ARENA:
                       </h4>
                       <div id="participants-list" class="grid grid-cols-1 gap-2">
-                        <!-- Participants will be populated here -->
                       </div>
                     </div>
-
                     <div class="text-xs text-purple-400 mt-3 text-center animate-pulse" id="tournament-waiting">
                       AWAITING MORE WARRIORS...
                     </div>
-
-                    <!-- Tournament Bracket Preview -->
                     <div id="tournament-bracket-preview" class="mt-6 hidden">
                       <h4 class="font-medium mb-3 text-green-300 font-mono flex items-center">
                         <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
@@ -157,8 +129,6 @@ export class GameAreaComponent extends Component {
                         <div class="text-center text-green-400 font-mono">BRACKET GENERATING...</div>
                       </div>
                     </div>
-
-                    <!-- Match Pairings -->
                     <div id="tournament-matches" class="mt-6 hidden">
                       <h4 class="font-medium mb-3 text-green-300 font-mono flex items-center">
                         <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
@@ -168,7 +138,6 @@ export class GameAreaComponent extends Component {
                     </div>
                   </div>
                 </div>
-
                 <div class="flex space-x-4">
                   <button id="join-tournament-btn" class="flex-1 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold py-3 px-6 rounded transition-all border border-purple-400 shadow-lg hover:shadow-purple-500/25">
                     JOIN TOURNAMENT
@@ -181,8 +150,6 @@ export class GameAreaComponent extends Component {
             </div>
           </div>
         </div>
-
-        <!-- System Information Section - Fixed at bottom -->
         <div class="bottom-0 bg-console-bg text-left border-t border-neon-green border-opacity-30 p-3 mt-auto">
           <div class="text-[10px] leading-relaxed text-neon-green space-y-1">
             <div>> SYSTEM: PONG.exe v4.1.0</div>
@@ -190,13 +157,11 @@ export class GameAreaComponent extends Component {
             <div>> MEMORY: 384MB / 1.2GB | CPU: 26% | STATUS: OPTIMAL</div>
           </div>
         </div>
-
       </div>
     `);
   }
 
   private setupEvents(): void {
-    // Tournament buttons
     const joinTournamentBtn = this.element.querySelector(
       "#join-tournament-btn"
     );
@@ -220,7 +185,6 @@ export class GameAreaComponent extends Component {
       this.handleReturnToTournament.bind(this)
     );
 
-    // Matchmaking buttons
     const joinMatchmakingBtn = this.element.querySelector(
       "#join-matchmaking-btn"
     );
@@ -250,7 +214,6 @@ export class GameAreaComponent extends Component {
     });
 
     this.gameService.onInviteAccepted((data) => {
-      console.log("Invite accepted data:", data);
       if (data.roomId) {
         const appState = AppState.getInstance();
         appState.setCurrentRoom({
@@ -264,7 +227,6 @@ export class GameAreaComponent extends Component {
     });
 
     this.gameService.onRoomCreated((data) => {
-      console.log("Room created data:", data);
       if (data.roomId) {
         const appState = AppState.getInstance();
         appState.setCurrentRoom({
@@ -281,12 +243,10 @@ export class GameAreaComponent extends Component {
   private addInvite(invite: any): void {
     const invites = JSON.parse(localStorage.getItem("gameInvites") || "[]");
 
-    // Remove old invite from same sender
     const filteredInvites = invites.filter(
       (inv: any) => inv.senderId !== invite.senderId
     );
 
-    // Add new invite with timestamp
     const inviteWithTimestamp = {
       ...invite,
       timestamp: Date.now(),
@@ -303,7 +263,6 @@ export class GameAreaComponent extends Component {
 
     if (!container) return;
 
-    // Mevcut davetleri temizle (no-invites hariç)
     container.querySelectorAll(".invite-item").forEach((item) => item.remove());
 
     if (invites.length === 0) {
@@ -322,7 +281,7 @@ export class GameAreaComponent extends Component {
           senderAvatar = userInfo.avatar;
         }
       } catch (error) {
-        console.error('Failed to fetch sender avatar:', error);
+        notify("Failed to load sender avatar");
       }
 
       const inviteEl = document.createElement("div");
@@ -347,7 +306,6 @@ export class GameAreaComponent extends Component {
         </div>
       `;
 
-      // Event listeners
       inviteEl
         .querySelector(".accept-btn")
         ?.addEventListener("click", () => this.acceptInvite(invite));
@@ -363,8 +321,6 @@ export class GameAreaComponent extends Component {
     this.gameService.acceptGameInvite(invite.senderId);
     this.removeInvite(invite.senderId);
     notify("Game invite accepted! Waiting for room...");
-
-    // Room bilgisi invite-accepted event'inde gelecek, orada yönlendirme yapacağız
   }
 
   private rejectInvite(invite: any): void {
@@ -379,7 +335,6 @@ export class GameAreaComponent extends Component {
     this.displayInvites(filtered);
   }
 
-  // Tournament Methods
   private async handleJoinTournament(): Promise<void> {
     try {
       const currentUser = await this.userService.getCurrentUser();
@@ -391,14 +346,11 @@ export class GameAreaComponent extends Component {
       this.tournamentService.joinTournament();
       notify("Joining tournament...");
 
-      // Store tournament state and navigate to tournament page after joining
       const appState = AppState.getInstance();
       setTimeout(() => {
-        // Navigate to tournament page - we'll know we're in a tournament from the state
         (window as any).router.navigate("tournament");
-      }, 500); // Wait a bit for join confirmation
+      }, 500);
     } catch (error) {
-      console.error("Error joining tournament:", error);
       notify("Failed to join tournament");
     }
   }
@@ -412,7 +364,6 @@ export class GameAreaComponent extends Component {
     (window as any).router.navigate("tournament");
   }
 
-  // Check if user is in an active tournament
   private async checkUserTournamentStatus(): Promise<void> {
     const returnSection = this.element.querySelector("#tournament-return");
 
@@ -423,7 +374,6 @@ export class GameAreaComponent extends Component {
         return;
       }
 
-      // Check if user has currentTournamentId in database
       const response = await fetch(
         getApiUrl(
           API_CONFIG.ENDPOINTS.USER.TOURNAMENT_STATUS(currentUser.id.toString())
@@ -437,22 +387,14 @@ export class GameAreaComponent extends Component {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(
-          `🔍 USER TOURNAMENT STATUS: User ${currentUser.id} status:`,
-          data
-        );
 
         if (
           data.isInTournament &&
           !data.isEliminated &&
           data.tournamentStatus !== "completed"
         ) {
-          console.log(
-            `✅ USER TOURNAMENT STATUS: Showing return button for user in active tournament`
-          );
           returnSection?.classList.remove("hidden");
 
-          // Store in app state
           const appState = AppState.getInstance();
           appState.setCurrentTournament({
             tournamentId: data.tournamentId,
@@ -461,67 +403,48 @@ export class GameAreaComponent extends Component {
             joinedAt: Date.now(),
           });
         } else {
-          console.log(
-            `❌ USER TOURNAMENT STATUS: Hiding return button (not in tournament, eliminated, or tournament completed)`
-          );
           returnSection?.classList.add("hidden");
         }
       } else {
-        console.log(
-          `❌ USER TOURNAMENT STATUS: API call failed, hiding return button`
-        );
         returnSection?.classList.add("hidden");
       }
     } catch (error) {
-      console.error("Error checking tournament status:", error);
       returnSection?.classList.add("hidden");
     }
   }
 
-  // Tournament data loading
   private loadTournamentData(): void {
-    // Sayfa yüklendiğinde turnuva detaylarını al
     setTimeout(() => {
       this.tournamentService.getTournamentDetails();
-    }, 1000); // WebSocket connection'ın hazır olması için kısa bekle
+    }, 1000);
   }
 
-  // Tournament event listeners
   private setupTournamentListeners(): void {
-    // Oyuncu katıldığında
     this.tournamentService.onTournamentPlayerJoined((data) => {
-      console.log("🎯 Tournament player joined event received:", data);
       this.updateTournamentInfo(data);
-      this.loadTournamentData(); // Participant listesini güncelle
+      this.loadTournamentData(); 
       notify(`Player joined tournament (${data.currentPlayers}/4)`);
     });
 
-    // Oyuncu ayrıldığında
     this.tournamentService.onTournamentPlayerLeft((data) => {
       this.updateTournamentInfo(data);
-      this.loadTournamentData(); // Participant listesini güncelle
+      this.loadTournamentData(); 
       notify(`Player left tournament (${data.currentPlayers}/4)`);
     });
 
-    // Turnuva başladığında
     this.tournamentService.onTournamentStarted((data) => {
       this.currentTournament = data;
       this.tournamentBracket = data.bracket;
       this.displayTournamentStarted(data);
-      this.loadTournamentData(); // Güncel tournament details yükle
+      this.loadTournamentData();
       notify(data.message || "Tournament started!");
 
-      // Eğer kullanıcı turnuvada ise tournament sayfasına yönlendir
       this.userService.getCurrentUser().then((currentUser) => {
         if (
           currentUser &&
           data.participants &&
           data.participants.some((p: any) => p.id === currentUser.id)
         ) {
-          console.log(
-            "🏆 User is in tournament, staying on current page or going to tournament page"
-          );
-          // Tournament sayfasında değilsek yönlendir
           if (window.location.pathname !== "/tournament") {
             (window as any).router.navigate("tournament");
           }
@@ -529,11 +452,8 @@ export class GameAreaComponent extends Component {
       });
     });
 
-    // Maç başladığında
     this.tournamentService.onTournamentMatchStarted((data) => {
-      console.log("🎮 Tournament match starting from home:", data);
       notify(`Your match started against ${data.opponent}`);
-      // Navigate directly to remote-game for tournaments (skip lobby)
       const appState = AppState.getInstance();
       appState.setCurrentRoom({
         roomId: data.roomId,
@@ -543,52 +463,42 @@ export class GameAreaComponent extends Component {
       (window as any).router.navigate("remote-game");
     });
 
-    // Sonraki round başladığında
     this.tournamentService.onTournamentNextRound((data) => {
       notify(`Round ${data.round} started!`);
       this.updateTournamentBracket(data);
-      this.loadTournamentData(); // Bracket'i güncelle
+      this.loadTournamentData();
     });
 
-    // Maç tamamlandığında
     this.tournamentService.onTournamentMatchCompleted((data) => {
-      console.log("🏆 Tournament match completed:", data);
       notify(
         `Match completed! Winner: ${data.winnerUsername || data.winnerId}`
       );
-      this.loadTournamentData(); // Bracket'i güncelle
+      this.loadTournamentData();
     });
 
-    // Round tamamlandığında
     this.tournamentService.onTournamentRoundCompleted((data) => {
-      console.log("🏆 Tournament round completed:", data);
       notify(
         `${data.roundName} completed! ${data.winners.length} players advancing.`
       );
-      this.loadTournamentData(); // Bracket'i güncelle
+      this.loadTournamentData(); 
     });
 
-    // Turnuva bittiğinde
     this.tournamentService.onTournamentEnded((data) => {
       notify(data.message || "Tournament ended!");
       this.resetTournamentDisplay();
-      this.loadTournamentData(); // Yeni turnuva yüklenir
-      this.checkUserTournamentStatus(); // Return button'u güncelle
+      this.loadTournamentData();
+      this.checkUserTournamentStatus();
     });
 
-    // Yeni turnuva oluşturulduğunda
     this.tournamentService.onNewTournamentCreated((data) => {
       notify(data.message || "New tournament created!");
       this.loadTournamentData();
     });
 
-    // Turnuva detayları geldiğinde
     this.tournamentService.onTournamentDetails(async (data) => {
-      console.log("🎯 Tournament details received:", data);
       this.currentTournament = data.tournament;
       await this.displayTournamentDetails(data.tournament);
 
-      // Store tournament state if user is participant
       const currentUser = await this.userService.getCurrentUser();
       if (
         currentUser &&
@@ -606,14 +516,12 @@ export class GameAreaComponent extends Component {
       }
     });
 
-    // Bracket geldiğinde
     this.tournamentService.onTournamentBracket((data) => {
       this.tournamentBracket = data.bracket;
       this.displayTournamentBracket(data.bracket);
     });
   }
 
-  // Tournament UI update methods
   private updateTournamentInfo(data: any): void {
     const playersElement = this.element.querySelector("#tournament-players");
     const waitingElement = this.element.querySelector("#tournament-waiting");
@@ -643,7 +551,6 @@ export class GameAreaComponent extends Component {
     const leaveBtn = this.element.querySelector("#leave-tournament-btn");
 
     if (!tournament) {
-      // Aktif turnuva yok
       if (noTournament) noTournament.textContent = "No active tournament";
       noTournament?.classList.remove("hidden");
       tournamentDetails?.classList.add("hidden");
@@ -652,7 +559,6 @@ export class GameAreaComponent extends Component {
       return;
     }
 
-    // Turnuva var, bilgileri göster
     noTournament?.classList.add("hidden");
     tournamentDetails?.classList.remove("hidden");
 
@@ -660,7 +566,6 @@ export class GameAreaComponent extends Component {
       playersElement.textContent = tournament.currentPlayers.toString();
     if (statusElement) statusElement.textContent = tournament.status;
 
-    // Waiting message güncelle
     const waitingElement = this.element.querySelector("#tournament-waiting");
     if (waitingElement) {
       if (tournament.status === "pending") {
@@ -679,7 +584,6 @@ export class GameAreaComponent extends Component {
       }
     }
 
-    // Buton durumlarını ayarla
     const currentUser = await this.userService.getCurrentUser();
     const isUserInTournament =
       currentUser &&
@@ -697,10 +601,9 @@ export class GameAreaComponent extends Component {
       leaveBtn?.classList.add("hidden");
     }
 
-    // Katılımcı listesini göster
     this.displayTournamentParticipants(tournament.participants || []);
 
-    // Home ekranında bracket hiç gösterilmesin
+
     const bracketPreview = this.element.querySelector(
       "#tournament-bracket-preview"
     );
@@ -715,7 +618,6 @@ export class GameAreaComponent extends Component {
 
   private displayTournamentBracket(bracket: any): void {
     if (!bracket) {
-      // Bracket yoksa tournament data'dan pairings'i kullan
       if (this.currentTournament?.pairings) {
         this.displayTournamentBracketFromPairings(
           this.currentTournament.pairings
@@ -771,7 +673,6 @@ export class GameAreaComponent extends Component {
     const container = this.element.querySelector("#bracket-container");
     if (!container || !pairings) return;
 
-    // Group by round
     const rounds: { [key: number]: any[] } = {};
     pairings.forEach((pairing) => {
       if (!rounds[pairing.round]) {
@@ -839,7 +740,6 @@ export class GameAreaComponent extends Component {
 
     const rounds: { [key: number]: any[] } = {};
 
-    // Maçları round'lara göre grupla
     matches.forEach((match) => {
       if (!rounds[match.round]) {
         rounds[match.round] = [];
@@ -893,8 +793,7 @@ export class GameAreaComponent extends Component {
   }
 
   private updateTournamentBracket(data: any): void {
-    // Round güncellemelerini işle
-    this.loadTournamentData(); // Güncel verileri yeniden yükle
+    this.loadTournamentData();
   }
 
   private resetTournamentDisplay(): void {
@@ -912,7 +811,6 @@ export class GameAreaComponent extends Component {
     matchesElement?.classList.add("hidden");
   }
 
-  // Katılımcı listesini gösterme
   private async displayTournamentParticipants(
     participants: any[]
   ): Promise<void> {
@@ -921,15 +819,13 @@ export class GameAreaComponent extends Component {
 
     let html = "";
 
-    // Mevcut katılımcıları göster
     for (const participant of participants) {
-      // Fetch user details for avatar
       let avatarUrl = "";
       try {
         const userDetails = await this.userService.getUserById(participant.id);
         avatarUrl = userDetails?.avatar || "";
       } catch (error) {
-        console.log("Could not fetch user details for avatar");
+        notify("Failed to load participant avatar");
       }
 
       html += `
@@ -951,7 +847,6 @@ export class GameAreaComponent extends Component {
       `;
     }
 
-    // Boş slotları göster
     const emptySlots = 4 - participants.length;
     for (let i = 0; i < emptySlots; i++) {
       html += `
@@ -971,13 +866,11 @@ export class GameAreaComponent extends Component {
     container.innerHTML = html;
   }
 
-  // Aktif round maçlarını gösterme
   private displayCurrentRoundMatches(matches: any[]): void {
     const container = this.element.querySelector("#matches-container");
     const matchesSection = this.element.querySelector("#tournament-matches");
     if (!container || !matchesSection) return;
 
-    // En yüksek round'u bul (aktif round)
     const currentRound = Math.max(...matches.map((m) => m.round));
     const currentRoundMatches = matches.filter(
       (m) => m.round === currentRound && !m.winnerId
@@ -993,7 +886,7 @@ export class GameAreaComponent extends Component {
     let html = "";
 
     currentRoundMatches.forEach((match, index) => {
-      const isUserInMatch = false; // TODO: Current user match kontrolü
+      const isUserInMatch = false;
       const highlightClass = isUserInMatch
         ? "bg-yellow-100 border-yellow-400"
         : "bg-white border-gray-200";
@@ -1025,7 +918,7 @@ export class GameAreaComponent extends Component {
     container.innerHTML = html;
   }
 
-  // Tournament bracket preview'i gösterme (4 kişi dolduğunda)
+
   private displayTournamentBracketPreview(tournament: any): void {
     const container = this.element.querySelector("#bracket-preview-container");
     if (!container) return;
@@ -1033,7 +926,6 @@ export class GameAreaComponent extends Component {
     const participants = tournament.participants || [];
     if (participants.length < 4) return;
 
-    // Shuffle edilmiş görünüm için basic bracket template
     let html = `
       <div class="space-y-3">
         <div class="text-center font-medium text-purple-800 mb-2">Semifinals</div>
@@ -1066,49 +958,38 @@ export class GameAreaComponent extends Component {
     container.innerHTML = html;
   }
 
-  // Matchmaking Methods
   private setupMatchmakingListeners(): void {
     this.gameService.onMatchmakingJoined((data) => {
-      console.log("🔍 Joined matchmaking queue:", data);
       this.showMatchmakingStatus();
       notify(`Joined matchmaking queue (position: ${data.position})`);
     });
 
     this.gameService.onMatchmakingLeft((data) => {
-      console.log("❌ Left matchmaking queue:", data);
       this.hideMatchmakingStatus();
       notify("Left matchmaking queue");
     });
 
     this.gameService.onMatchFound(async (data) => {
-      console.log("🎮 Match found:", data);
-      console.log("🎮 Match found players order from server:", data.players);
       this.hideMatchmakingStatus();
       notify(`Match found! Opponent: ${data.opponent}`);
 
-      // Set room info and navigate to game
       if (data.roomId) {
         const appState = AppState.getInstance();
 
-        // CRITICAL: Use server's players order instead of manually creating array
         const playersOrder = data.players || [];
-        console.log("🎮 MATCHMAKING: Using server players order:", playersOrder);
-        console.log("🎮 MATCHMAKING POSITIONS - LEFT (BLUE):", playersOrder[0], ", RIGHT (RED):", playersOrder[1]);
 
         appState.setCurrentRoom({
           roomId: data.roomId,
-          players: playersOrder, // Use server's authoritative order
+          players: playersOrder,
           createdAt: Date.now(),
           isMatchmaking: true,
         });
 
-        // Navigate to remote-game directly for matchmaking
         (window as any).router.navigate("remote-game");
       }
     });
 
     this.gameService.onMatchmakingStatus((data) => {
-      console.log("📊 Matchmaking status:", data);
       if (data.inQueue) {
         this.showMatchmakingStatus();
       } else {
@@ -1137,28 +1018,20 @@ export class GameAreaComponent extends Component {
     leaveBtn?.classList.add("hidden");
   }
 
-  // Matchmaking Methods
   private handleJoinMatchmaking(): void {
-    console.log(
-      "🔍 MATCHMAKING: Button clicked - Joining matchmaking queue..."
-    );
 
-    // Check if WebSocket is connected
     const wsManager = (this.gameService as any).wsManager;
     if (!wsManager || !wsManager.isConnected()) {
-      console.error("❌ MATCHMAKING: WebSocket not connected!");
       notify("Connection error. Please refresh the page.");
       return;
     }
 
-    console.log("✅ MATCHMAKING: WebSocket connected, sending join request...");
     this.gameService.joinMatchmakingQueue();
     this.showMatchmakingStatus();
     notify("Searching for opponent...");
   }
 
   private handleLeaveMatchmaking(): void {
-    console.log("❌ Leaving matchmaking queue...");
     this.gameService.leaveMatchmakingQueue();
     this.hideMatchmakingStatus();
     notify("Matchmaking cancelled");

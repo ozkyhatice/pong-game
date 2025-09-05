@@ -1,3 +1,4 @@
+import { notify } from "../../core/notify.js";
 import { Router } from "../../core/router.js";
 import { UserService } from "../../services/UserService.js";
 
@@ -30,22 +31,19 @@ export function init() {
 		try {
 			const gameResult = JSON.parse(gameResultString);
 			
-			// CONSISTENT PLAYER ORDER: Always use playerOrder if available (from room), otherwise fall back to finalScore keys
 			let playerIds;
 			if (gameResult.playerOrder && gameResult.playerOrder.length >= 2) {
 				playerIds = gameResult.playerOrder.map((id: number) => id.toString());
-				console.log('🎮 Using room player order for end-game - LEFT (BLUE):', playerIds[0], ', RIGHT (RED):', playerIds[1]);
 			} else {
 				playerIds = Object.keys(gameResult.finalScore || {});
-				console.log('🎮 Falling back to finalScore keys:', playerIds);
 			}
 
 			if (playerIds.length < 2) return;
 
 			const [currentUser, player1, player2] = await Promise.all([
 				userService.getCurrentUser(),
-				userService.getUserById(parseInt(playerIds[0])), // LEFT player (BLUE)
-				userService.getUserById(parseInt(playerIds[1]))  // RIGHT player (RED)
+				userService.getUserById(parseInt(playerIds[0])),
+				userService.getUserById(parseInt(playerIds[1]))
 			]);
 
 			const winnerId = gameResult.winner;
@@ -67,25 +65,20 @@ export function init() {
 			}
 
 			if (scoreText) {
-				const score1 = gameResult.finalScore[playerIds[0]] || 0; // LEFT score (BLUE)
-				const score2 = gameResult.finalScore[playerIds[1]] || 0; // RIGHT score (RED)
+				const score1 = gameResult.finalScore[playerIds[0]] || 0;
+				const score2 = gameResult.finalScore[playerIds[1]] || 0;
 				scoreText.textContent = `${score1} - ${score2}`;
-				console.log(`🎮 Final scores - LEFT (BLUE): ${score1}, RIGHT (RED): ${score2}`);
 			}
 
-			// LEFT player (BLUE) - Player 1
 			if (player1Name) player1Name.textContent = player1?.username || `Player ${playerIds[0]}`;
-			// RIGHT player (RED) - Player 2
 			if (player2Name) player2Name.textContent = player2?.username || `Player ${playerIds[1]}`;
 
 			if (player1Avatar && player1?.avatar) player1Avatar.src = player1.avatar;
 			if (player2Avatar && player2?.avatar) player2Avatar.src = player2.avatar;
 
-			console.log('🎮 End-game positions - LEFT (BLUE):', player1?.username, ', RIGHT (RED):', player2?.username);
-
 			localStorage.removeItem('gameResult');
 		} catch (e) {
-			console.error('Error displaying game results:', e);
+			notify('Error displaying game results. Please refresh page.', 'red');
 		}
 	}
 }
