@@ -67,10 +67,10 @@ export class GameAreaComponent extends Component {
                 <h3 class="text-xl font-semibold text-neon-yellow mb-4">
                   QUICK MATCH
                 </h3>
-                
+
                 <div class="mb-4">
                   <p class="text-neon-yellow/80 text-sm mb-4">Find an opponent automatically and start playing immediately!</p>
-                  
+
                   <div id="matchmaking-status" class="mb-4 p-3 bg-black/30 rounded border border-neon-yellow/30 hidden">
                     <div class="flex items-center">
                       <span class="inline-block animate-spin w-4 h-4 border-2 border-neon-yellow border-t-transparent rounded-full mr-3"></span>
@@ -78,7 +78,7 @@ export class GameAreaComponent extends Component {
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="flex space-x-4">
                   <button id="join-matchmaking-btn" class="flex-1 bg-gradient-to-r from-neon-yellow to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-terminal-border font-bold py-3 px-6 rounded transition-all border border-neon-yellow shadow-lg hover:shadow-neon-yellow/25">
                     FIND MATCH
@@ -109,7 +109,7 @@ export class GameAreaComponent extends Component {
                 <h3 class="text-xl font-semibold text-purple-300 mb-4">
                   TOURNAMENT ARENA
                 </h3>
-                
+
                 <!-- Return to Tournament Button (shown when user is in active tournament) -->
                 <div id="tournament-return" class="mb-4 p-4 bg-gradient-to-r from-purple-600/20 to-purple-500/20 border border-purple-400 rounded hidden">
                   <div class="flex items-center justify-between">
@@ -122,7 +122,7 @@ export class GameAreaComponent extends Component {
                     </button>
                   </div>
                 </div>
-                
+
                 <div id="tournament-info" class="mb-4">
                   <div id="no-tournament" class="text-purple-400 text-sm text-center animate-pulse">
                     SCANNING FOR TOURNAMENTS...
@@ -132,7 +132,7 @@ export class GameAreaComponent extends Component {
                       <span class="font-medium text-purple-200">PLAYERS: <span class="text-purple-400" id="tournament-players">0</span>/4</span>
                       <span class="text-sm bg-purple-600/20 px-3 py-1 rounded-full border border-purple-400/50 text-purple-300" id="tournament-status">pending</span>
                     </div>
-                    
+
                     <!-- Participants List -->
                     <div id="tournament-participants" class="mb-4">
                       <h4 class="font-medium text-sm text-purple-300 mb-3">
@@ -142,11 +142,11 @@ export class GameAreaComponent extends Component {
                         <!-- Participants will be populated here -->
                       </div>
                     </div>
-                    
+
                     <div class="text-xs text-purple-400 mt-3 text-center animate-pulse" id="tournament-waiting">
                       AWAITING MORE WARRIORS...
                     </div>
-                    
+
                     <!-- Tournament Bracket Preview -->
                     <div id="tournament-bracket-preview" class="mt-6 hidden">
                       <h4 class="font-medium mb-3 text-green-300 font-mono flex items-center">
@@ -157,7 +157,7 @@ export class GameAreaComponent extends Component {
                         <div class="text-center text-green-400 font-mono">BRACKET GENERATING...</div>
                       </div>
                     </div>
-                    
+
                     <!-- Match Pairings -->
                     <div id="tournament-matches" class="mt-6 hidden">
                       <h4 class="font-medium mb-3 text-green-300 font-mono flex items-center">
@@ -168,7 +168,7 @@ export class GameAreaComponent extends Component {
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="flex space-x-4">
                   <button id="join-tournament-btn" class="flex-1 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold py-3 px-6 rounded transition-all border border-purple-400 shadow-lg hover:shadow-purple-500/25">
                     JOIN TOURNAMENT
@@ -297,7 +297,7 @@ export class GameAreaComponent extends Component {
     this.displayInvites(filteredInvites);
   }
 
-  private displayInvites(invites: any[]): void {
+  private async displayInvites(invites: any[]): Promise<void> {
     const container = this.element.querySelector("#invites-container");
     const noInvites = this.element.querySelector("#no-invites");
 
@@ -313,24 +313,37 @@ export class GameAreaComponent extends Component {
 
     if (noInvites) noInvites.classList.add("hidden");
 
-    invites.forEach((invite) => {
+    for (const invite of invites) {
+      let senderAvatar = `https://placehold.co/400x400?text=${invite.senderUsername?.[0]?.toUpperCase() || 'U'}`;
+
+      try {
+        const userInfo = await this.userService.getUserById(invite.senderId);
+        if (userInfo && userInfo.avatar) {
+          senderAvatar = userInfo.avatar;
+        }
+      } catch (error) {
+        console.error('Failed to fetch sender avatar:', error);
+      }
+
       const inviteEl = document.createElement("div");
       inviteEl.className =
-        "invite-item flex items-center justify-between p-4 bg-gradient-to-r from-green-800/20 to-green-700/20 rounded-lg border border-green-400/50 shadow-lg";
+        "invite-item p-4 bg-gradient-to-r from-green-800/20 to-green-700/20 rounded-lg border border-green-400/50 shadow-lg";
       inviteEl.innerHTML = `
-        <div class="flex items-center space-x-4">
-          <div class="w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-green-400 flex items-center justify-center text-white font-bold text-lg border-2 border-green-400 shadow-lg">
-            ${invite.senderUsername?.[0]?.toUpperCase() || "U"}
+        <div class="flex flex-col space-y-4">
+          <div class="flex items-center space-x-4">
+            <div class="relative flex-shrink-0">
+              <img src="${senderAvatar}" alt="Avatar" class="w-12 h-12 rounded-full">
+            </div>
+            <div class="flex-1 min-w-0">
+              <span class="text-sm text-neon-white font-medium truncate" title="${invite.senderUsername || 'Unknown'}">${
+                invite.senderUsername || "Unknown"
+              }</span>
+            </div>
           </div>
-          <div>
-            <span class="font-medium text-green-200 font-mono text-lg">${
-              invite.senderUsername || "Unknown"
-            }</span>
+          <div class="flex space-x-3">
+            <button class="accept-btn px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-lg font-orbitron font-medium transition-all border border-green-400 shadow-lg hover:shadow-green-500/25">ACCEPT</button>
+            <button class="reject-btn px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-lg font-orbitron font-medium transition-all border border-red-400 shadow-lg hover:shadow-red-500/25">DECLINE</button>
           </div>
-        </div>
-        <div class="flex space-x-3">
-          <button class="accept-btn px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-lg font-mono font-medium transition-all border border-green-400 shadow-lg hover:shadow-green-500/25">ACCEPT</button>
-          <button class="reject-btn px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-lg font-mono font-medium transition-all border border-red-400 shadow-lg hover:shadow-red-500/25">DECLINE</button>
         </div>
       `;
 
@@ -343,7 +356,7 @@ export class GameAreaComponent extends Component {
         ?.addEventListener("click", () => this.rejectInvite(invite));
 
       container.appendChild(inviteEl);
-    });
+    }
   }
 
   private acceptInvite(invite: any): void {
@@ -993,12 +1006,12 @@ export class GameAreaComponent extends Component {
             </div>
             <span class="font-medium">${match.player1Username}</span>
           </div>
-          
+
           <div class="text-center">
             <div class="text-xs text-gray-500 mb-1">Round ${match.round}</div>
             <div class="font-bold text-purple-600">VS</div>
           </div>
-          
+
           <div class="flex items-center space-x-3">
             <span class="font-medium">${match.player2Username}</span>
             <div class="w-8 h-8 rounded-full bg-red-400 flex items-center justify-center text-white font-bold text-sm">
@@ -1036,14 +1049,14 @@ export class GameAreaComponent extends Component {
             <span class="text-sm">Player 4</span>
           </div>
         </div>
-        
+
         <div class="text-center font-medium text-purple-800 mt-3 mb-2">Final</div>
         <div class="flex items-center justify-between p-2 bg-gray-100 rounded border border-dashed">
           <span class="text-sm text-gray-500">Winner 1</span>
           <span class="text-xs text-gray-400">vs</span>
           <span class="text-sm text-gray-500">Winner 2</span>
         </div>
-        
+
         <div class="text-center text-xs text-purple-600 mt-2">
           🏆 Tournament will start soon! Players will be randomly matched.
         </div>
@@ -1076,7 +1089,7 @@ export class GameAreaComponent extends Component {
       // Set room info and navigate to game
       if (data.roomId) {
         const appState = AppState.getInstance();
-        
+
         // CRITICAL: Use server's players order instead of manually creating array
         const playersOrder = data.players || [];
         console.log("🎮 MATCHMAKING: Using server players order:", playersOrder);
