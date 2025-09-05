@@ -76,35 +76,54 @@
           <div class="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-neon-green rounded-br"></div>
         </div>
 
-        <!-- Fixed Camera View -->
-        <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-neon-green text-xs font-mono opacity-70">
-          Fixed 45° View
-        </div>
       </div>
     </div>
 
-    <!-- Touch Controls - Enhanced -->
+    <!-- Touch Controls - Two Players -->
     <div class="bg-gradient-to-t from-terminal-bg/95 to-transparent backdrop-blur-sm border-t border-neon-green/30 p-6">
-      <div class="flex justify-center space-x-16">
-        <!-- Up Button -->
-        <button id="mobile-up-btn" class="relative group">
-          <div class="w-24 h-24 bg-gradient-to-br from-neon-green to-green-700 rounded-2xl border-2 border-neon-green flex items-center justify-center text-terminal-bg font-bold text-4xl shadow-2xl shadow-neon-green/30 transition-all duration-200 group-active:scale-95 group-active:shadow-neon-green/50">
-            ↑
-          </div>
-          <div class="absolute inset-0 bg-gradient-to-br from-neon-green/20 to-transparent rounded-2xl opacity-0 group-active:opacity-100 transition-opacity"></div>
-        </button>
+      <!-- Player 1 (Blue) and Player 2 (Red) Controls -->
+      <div class="grid grid-cols-2 gap-8">
+        <!-- Player 1 Controls (Blue) -->
+        <div class="flex flex-col items-center space-y-4">
+          <div class="text-blue-400 font-mono text-sm font-bold">PLAYER 1</div>
 
-        <!-- Down Button -->
-        <button id="mobile-down-btn" class="relative group">
-          <div class="w-24 h-24 bg-gradient-to-br from-neon-green to-green-700 rounded-2xl border-2 border-neon-green flex items-center justify-center text-terminal-bg font-bold text-4xl shadow-2xl shadow-neon-green/30 transition-all duration-200 group-active:scale-95 group-active:shadow-neon-green/50">
-            ↓
-          </div>
-          <div class="absolute inset-0 bg-gradient-to-br from-neon-green/20 to-transparent rounded-2xl opacity-0 group-active:opacity-100 transition-opacity"></div>
-        </button>
-      </div>
+          <!-- P1 Up Button -->
+          <button id="mobile-up-btn-p1" class="relative group">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl border-2 border-blue-400 flex items-center justify-center text-white font-bold text-3xl shadow-2xl shadow-blue-500/30 transition-all duration-200 group-active:scale-95 group-active:shadow-blue-500/50">
+              ↑
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-transparent rounded-2xl opacity-0 group-active:opacity-100 transition-opacity"></div>
+          </button>
 
-      <div class="text-center mt-4">
-        <span class="text-neon-green font-mono text-sm font-bold">HOLD TO MOVE PADDLE</span>
+          <!-- P1 Down Button -->
+          <button id="mobile-down-btn-p1" class="relative group">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl border-2 border-blue-400 flex items-center justify-center text-white font-bold text-3xl shadow-2xl shadow-blue-500/30 transition-all duration-200 group-active:scale-95 group-active:shadow-blue-500/50">
+              ↓
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-transparent rounded-2xl opacity-0 group-active:opacity-100 transition-opacity"></div>
+          </button>
+        </div>
+
+        <!-- Player 2 Controls (Red) -->
+        <div class="flex flex-col items-center space-y-4">
+          <div class="text-red-400 font-mono text-sm font-bold">PLAYER 2</div>
+
+          <!-- P2 Up Button -->
+          <button id="mobile-up-btn-p2" class="relative group">
+            <div class="w-20 h-20 bg-gradient-to-br from-red-500 to-red-700 rounded-2xl border-2 border-red-400 flex items-center justify-center text-white font-bold text-3xl shadow-2xl shadow-red-500/30 transition-all duration-200 group-active:scale-95 group-active:shadow-red-500/50">
+              ↑
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-br from-red-400/20 to-transparent rounded-2xl opacity-0 group-active:opacity-100 transition-opacity"></div>
+          </button>
+
+          <!-- P2 Down Button -->
+          <button id="mobile-down-btn-p2" class="relative group">
+            <div class="w-20 h-20 bg-gradient-to-br from-red-500 to-red-700 rounded-2xl border-2 border-red-400 flex items-center justify-center text-white font-bold text-3xl shadow-2xl shadow-red-500/30 transition-all duration-200 group-active:scale-95 group-active:shadow-red-500/50">
+              ↓
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-br from-red-400/20 to-transparent rounded-2xl opacity-0 group-active:opacity-100 transition-opacity"></div>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -200,19 +219,19 @@
         <div class="flex justify-center space-x-8">
           <div class="flex items-center space-x-2">
             <div class="flex space-x-1">
-              <div class="w-8 h-8 bg-gradient-to-br from-neon-green to-green-700 rounded border-2 border-neon-green flex items-center justify-center text-white font-bold text-xs shadow-lg">W</div>
-              <div class="w-8 h-8 bg-gradient-to-br from-neon-green to-green-700 rounded border-2 border-neon-green flex items-center justify-center text-white font-bold text-xs shadow-lg">S</div>
+              <div class="w-8 h-8 bg-gradient-to-br from-neon-blue to-blue-700 rounded border-2 border-neon-blue flex items-center justify-center text-white font-bold text-xs shadow-lg">W</div>
+              <div class="w-8 h-8 bg-gradient-to-br from-neon-blue to-blue-700 rounded border-2 border-neon-blue flex items-center justify-center text-white font-bold text-xs shadow-lg">S</div>
             </div>
-            <span class="text-neon-green font-mono text-sm">MOVE PADDLE</span>
+            <span class="text-neon-blue font-mono text-sm">MOVE BLUE PADDLE WITH W/S BUTTONS</span>
           </div>
 
           <div class="text-neon-green font-mono text-lg">⚡</div>
 
           <div class="flex items-center space-x-2">
-            <span class="text-neon-green font-mono text-sm">OR USE ARROWS</span>
+            <span class="text-neon-red font-mono text-sm">MOVE RED PADDLE WITH ARROWS</span>
             <div class="flex space-x-1">
-              <div class="w-8 h-8 bg-gradient-to-br from-neon-green to-green-700 rounded border-2 border-neon-green flex items-center justify-center text-white font-bold text-xs shadow-lg">↑</div>
-              <div class="w-8 h-8 bg-gradient-to-br from-neon-green to-green-700 rounded border-2 border-neon-green flex items-center justify-center text-white font-bold text-xs shadow-lg">↓</div>
+              <div class="w-8 h-8 bg-gradient-to-br from-neon-red to-red-700 rounded border-2 border-neon-red flex items-center justify-center text-white font-bold text-xs shadow-lg">↑</div>
+              <div class="w-8 h-8 bg-gradient-to-br from-neon-red to-red-700 rounded border-2 border-neon-red flex items-center justify-center text-white font-bold text-xs shadow-lg">↓</div>
             </div>
           </div>
         </div>

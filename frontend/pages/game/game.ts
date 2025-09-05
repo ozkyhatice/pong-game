@@ -118,6 +118,10 @@ let player2Keys = { up: false, down: false };
 
 let gameLoopInterval: number | null = null;
 let gamePaused = false;
+let mobileControlP1Direction: 'up' | 'down' | null = null;
+let mobileControlP2Direction: 'up' | 'down' | null = null;
+let mobileControlP1Interval: number | null = null;
+let mobileControlP2Interval: number | null = null;
 
 let resizeHandler: (() => void) | null = null;
 
@@ -156,6 +160,10 @@ export async function init() {
   const mobilePlayer2ScoreEl = document.getElementById('mobile-player2-score');
   const mobileGameStatusEl = document.getElementById('mobile-game-status');
   const mobileLeaveBtn = document.getElementById('mobile-leave-btn');
+  const mobileUpBtnP1 = document.getElementById('mobile-up-btn-p1');
+  const mobileDownBtnP1 = document.getElementById('mobile-down-btn-p1');
+  const mobileUpBtnP2 = document.getElementById('mobile-up-btn-p2');
+  const mobileDownBtnP2 = document.getElementById('mobile-down-btn-p2');
 
   if (roomIdEl) roomIdEl.textContent = 'LOCAL GAME';
   if (leaveGameBtn) leaveGameBtn.addEventListener('click', handleLeaveGame);
@@ -164,6 +172,8 @@ export async function init() {
   init3DScene();
 
   setupLocalKeyboardControls();
+  
+  setupMobileControls();
 
   setupPauseOnTabSwitch();
 
@@ -343,6 +353,166 @@ export async function init() {
     document.addEventListener('keydown', handleLocalKeyDown);
     document.addEventListener('keyup', handleLocalKeyUp);
     console.log('🎮 Local keyboard controls set up');
+  }
+
+  function setupMobileControls() {
+    // Player 1 Up Button
+    if (mobileUpBtnP1) {
+      ['touchstart', 'mousedown'].forEach(event => {
+        mobileUpBtnP1!.addEventListener(event, (e: any) => {
+          e.preventDefault();
+          mobileControlP1Direction = 'up';
+          startMobileMovementP1();
+        });
+      });
+
+      ['touchend', 'touchcancel', 'touchleave', 'mouseup', 'mouseleave'].forEach(event => {
+        mobileUpBtnP1!.addEventListener(event, (e: any) => {
+          e.preventDefault();
+          stopMobileMovementP1();
+        });
+      });
+    }
+
+    // Player 1 Down Button
+    if (mobileDownBtnP1) {
+      ['touchstart', 'mousedown'].forEach(event => {
+        mobileDownBtnP1!.addEventListener(event, (e: any) => {
+          e.preventDefault();
+          mobileControlP1Direction = 'down';
+          startMobileMovementP1();
+        });
+      });
+
+      ['touchend', 'touchcancel', 'touchleave', 'mouseup', 'mouseleave'].forEach(event => {
+        mobileDownBtnP1!.addEventListener(event, (e: any) => {
+          e.preventDefault();
+          stopMobileMovementP1();
+        });
+      });
+    }
+
+    // Player 2 Up Button
+    if (mobileUpBtnP2) {
+      ['touchstart', 'mousedown'].forEach(event => {
+        mobileUpBtnP2!.addEventListener(event, (e: any) => {
+          e.preventDefault();
+          mobileControlP2Direction = 'up';
+          startMobileMovementP2();
+        });
+      });
+
+      ['touchend', 'touchcancel', 'touchleave', 'mouseup', 'mouseleave'].forEach(event => {
+        mobileUpBtnP2!.addEventListener(event, (e: any) => {
+          e.preventDefault();
+          stopMobileMovementP2();
+        });
+      });
+    }
+
+    // Player 2 Down Button
+    if (mobileDownBtnP2) {
+      ['touchstart', 'mousedown'].forEach(event => {
+        mobileDownBtnP2!.addEventListener(event, (e: any) => {
+          e.preventDefault();
+          mobileControlP2Direction = 'down';
+          startMobileMovementP2();
+        });
+      });
+
+      ['touchend', 'touchcancel', 'touchleave', 'mouseup', 'mouseleave'].forEach(event => {
+        mobileDownBtnP2!.addEventListener(event, (e: any) => {
+          e.preventDefault();
+          stopMobileMovementP2();
+        });
+      });
+    }
+
+    function startMobileMovementP1() {
+      if (mobileControlP1Interval) return;
+
+      handleMobileMovementP1();
+      mobileControlP1Interval = setInterval(handleMobileMovementP1, 16) as any;
+    }
+
+    function stopMobileMovementP1() {
+      if (mobileControlP1Interval) {
+        clearInterval(mobileControlP1Interval);
+        mobileControlP1Interval = null;
+      }
+      mobileControlP1Direction = null;
+      // Reset Player 1 keys when stopping mobile movement
+      player1Keys.up = false;
+      player1Keys.down = false;
+    }
+
+    function startMobileMovementP2() {
+      if (mobileControlP2Interval) return;
+
+      handleMobileMovementP2();
+      mobileControlP2Interval = setInterval(handleMobileMovementP2, 16) as any;
+    }
+
+    function stopMobileMovementP2() {
+      if (mobileControlP2Interval) {
+        clearInterval(mobileControlP2Interval);
+        mobileControlP2Interval = null;
+      }
+      mobileControlP2Direction = null;
+      // Reset Player 2 keys when stopping mobile movement
+      player2Keys.up = false;
+      player2Keys.down = false;
+    }
+
+    function handleMobileMovementP1() {
+      if (!mobileControlP1Direction || localGameState.gameOver) return;
+
+      // Reset all Player 1 keys first
+      player1Keys.up = false;
+      player1Keys.down = false;
+
+      if (mobileControlP1Direction === 'up') {
+        player1Keys.up = true;
+      } else if (mobileControlP1Direction === 'down') {
+        player1Keys.down = true;
+      }
+    }
+
+    function handleMobileMovementP2() {
+      if (!mobileControlP2Direction || localGameState.gameOver) return;
+
+      // Reset all Player 2 keys first
+      player2Keys.up = false;
+      player2Keys.down = false;
+
+      if (mobileControlP2Direction === 'up') {
+        player2Keys.up = true;
+      } else if (mobileControlP2Direction === 'down') {
+        player2Keys.down = true;
+      }
+    }
+
+    // Prevent scrolling when touching game controls
+    document.addEventListener('touchmove', (e) => {
+      if (e.target === mobileUpBtnP1 || e.target === mobileDownBtnP1 ||
+          e.target === mobileUpBtnP2 || e.target === mobileDownBtnP2) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopMobileMovementP1();
+        stopMobileMovementP2();
+      }
+    });
+
+    window.addEventListener('blur', () => {
+      stopMobileMovementP1();
+      stopMobileMovementP2();
+    });
+
+    console.log('🎮 Mobile controls set up for both players');
   }
 
   function setupPauseOnTabSwitch() {
@@ -805,6 +975,17 @@ export async function init() {
         console.log('✅ Game loop interval cleared');
       }
 
+      // Clear mobile control intervals
+      if (mobileControlP1Interval) {
+        clearInterval(mobileControlP1Interval);
+        mobileControlP1Interval = null;
+      }
+      if (mobileControlP2Interval) {
+        clearInterval(mobileControlP2Interval);
+        mobileControlP2Interval = null;
+      }
+      console.log('✅ Mobile control intervals cleared');
+
       document.removeEventListener('keydown', handleLocalKeyDown);
       document.removeEventListener('keyup', handleLocalKeyUp);
       console.log('✅ Keyboard event listeners removed');
@@ -813,6 +994,8 @@ export async function init() {
 
       player1Keys = { up: false, down: false };
       player2Keys = { up: false, down: false };
+      mobileControlP1Direction = null;
+      mobileControlP2Direction = null;
 
       if (ballTrailParticles) {
         ballTrailParticles.dispose();
