@@ -32,6 +32,10 @@ const COLORS = {
 
 let currentBallColorIndex = 0;
 
+function isMobile(): boolean {
+  return window.innerWidth <= 768;
+}
+
 function startTypingEffect() {
   const typingElement = document.querySelector('.typing-text') as HTMLElement;
   if (!typingElement) return;
@@ -111,19 +115,40 @@ export function init() {
 
   const toColor3 = (c: RGB) => new BABYLON.Color3(c.r, c.g, c.b);
 
+  const camera = new BABYLON.ArcRotateCamera('camera', Math.PI / 2, 0, 8, BABYLON.Vector3.Zero(), scene);
+
+  if (isMobile()) {
+    camera.setPosition(new BABYLON.Vector3(0, 12, 0));
+    camera.setTarget(BABYLON.Vector3.Zero());
+    camera.alpha = 0; // No horizontal rotation
+    camera.beta = 0; // Look down from above
+
+  } else {
+    camera.setPosition(new BABYLON.Vector3(0, 6, 0));
+    camera.setTarget(BABYLON.Vector3.Zero());
+    camera.alpha = Math.PI / 2; // Rotate 90 degrees horizontally
+    camera.beta = 0; // Look down from above
+  }
+
   function resizeCanvas() {
     realCanvas.width = window.innerWidth;
     realCanvas.height = window.innerHeight;
     realCanvas.style.width = '100vw';
     realCanvas.style.height = '100vh';
     engine.resize();
+
+    if (isMobile()) {
+      camera.setPosition(new BABYLON.Vector3(0, 12, 0));
+      camera.alpha = 0; // No horizontal rotation
+      camera.beta = 0; // Look down from above
+    } else {
+      camera.setPosition(new BABYLON.Vector3(0, 6, 0));
+      camera.alpha = Math.PI / 2; // 90 degree rotation
+      camera.beta = 0; // Look down from above
+    }
   }
   resizeCanvas();
-
-  const camera = new BABYLON.ArcRotateCamera('camera', Math.PI / 2, 0, 8, BABYLON.Vector3.Zero(), scene);
-  camera.setPosition(new BABYLON.Vector3(0, 6, 0));
-  camera.setTarget(BABYLON.Vector3.Zero());
-
+  
   const crtFragmentShader = (window as any).crtFragmentShader;
   BABYLON.Effect.ShadersStore["crtFragmentShader"] = crtFragmentShader;
 
