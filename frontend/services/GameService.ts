@@ -104,7 +104,8 @@ export class GameService {
       'invite-accepted', 'player left', 'player-ready', 'all-ready', 'game-over',
       'paused', 'resumed', 'reconnected', 'matchmaking-joined', 'matchmaking-left',
       'matchmaking-status', 'match-found', 'game', 'room-state', 'move', 'player-move', 
-      'game-update', 'game-end'
+      'game-update', 'game-end', 'player-reconnected', 'score-update', 'game-paused',
+      'game-resumed', 'room-joined', 'room-left', 'game-started'
     ];
     
     gameEvents.forEach(event => {

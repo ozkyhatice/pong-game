@@ -146,12 +146,21 @@ export async function init() {
     const wsManager = WebSocketManager.getInstance();
     const onlineUsersService = OnlineUsersService.getInstance();
     
-    // Initialize OnlineUsersService when WebSocket connects
-    wsManager.on('connected', () => {
+    // Check if already connected to prevent duplicate connections
+    if (!wsManager.isConnected()) {
+      console.log('🔌 HOME: WebSocket not connected, establishing connection...');
+      
+      // Initialize OnlineUsersService when WebSocket connects
+      wsManager.on('connected', () => {
+        console.log('🟢 HOME: WebSocket connected, initializing services...');
+        onlineUsersService.initialize();
+      });
+      
+      wsManager.connect(authToken ?? '');
+    } else {
+      console.log('🟢 HOME: WebSocket already connected, initializing services...');
       onlineUsersService.initialize();
-    });
-    
-    wsManager.connect(authToken ?? '');
+    }
 
     // Create and store chat service globally
     if (!currentChatService) {
@@ -171,25 +180,107 @@ export async function init() {
     if (!currentGameService) {
       currentGameService = new GameService();
 
-      // oyun mesajlarinda oyun ekranina yonlendir
-      currentGameService.onStateUpdate((update) => {
-        console.log('Game state updated:', update);
+      // Handle matchmaking events
+      currentGameService.onMatchmakingJoined((data) => {
+        console.log('🎮 HOME: Joined matchmaking queue:', data);
+        notify('Joined matchmaking queue...', 'green');
+      });
+
+      currentGameService.onMatchFound((data) => {
+        console.log('🎮 HOME: Match found:', data);
+        notify('Match found! Preparing game...', 'green');
+        // Store room info in AppState
+        if (data.roomId) {
+          const appState = AppState.getInstance();
+          appState.setCurrentRoom({
+            roomId: data.roomId,
+            players: data.players || [],
+            createdAt: Date.now(),
+            isMatchmaking: true
+          });
+        }
+        // Navigation is handled by WebSocketManager
+      });
+
+      currentGameService.onRoomCreated((data) => {
+        console.log('🎮 HOME: Room created:', data);
+        notify('Game room created!', 'green');
+        // Store room info in AppState
+        if (data.roomId) {
+          const appState = AppState.getInstance();
+          appState.setCurrentRoom({
+            roomId: data.roomId,
+            players: data.players || [],
+            createdAt: Date.now()
+          });
+        }
+        // Navigation is handled by WebSocketManager
+      });
+
+      currentGameService.onGameStarted((data) => {
+        console.log('🎮 HOME: Game started:', data);
         router.navigate('remote-game');
       });
 
-      currentGameService.onRoomCreated((room) => {
-        console.log('Game room created:', room);
-        router.navigate('game-lobby');
+      currentGameService.onStateUpdate((data) => {
+        console.log('🎮 HOME: Game state update received:', data);
+        // Navigation is handled by WebSocketManager
       });
 
-      currentGameService.onGameResumed((game) => {
-        console.log('Game resumed:', game);
+      currentGameService.onGameResumed((data) => {
+        console.log('🎮 HOME: Game resumed:', data);
         router.navigate('remote-game');
       });
 
-      currentGameService.onGamePaused((game) => {
-        console.log('Game paused:', game);
+      currentGameService.onGamePaused((data) => {
+        console.log('🎮 HOME: Game paused:', data);
         router.navigate('remote-game');
+      });
+
+      currentGameService.onGameOver((data) => {
+        console.log('🎮 HOME: Game over:', data);
+        
+        // Check if it's a tournament match
+        if (data && data.isTournamentMatch && data.tournamentId) {
+          console.log('🏆 HOME: Tournament match ended, storing result');
+          // Store minimal tournament match result
+          localStorage.setItem('lastTournamentMatchResult', JSON.stringify({
+            winner: data.winner,
+            finalScore: data.finalScore,
+            message: data.message,
+            round: data.round,
+            timestamp: Date.now()
+          }));
+          // Navigation will be handled by WebSocketManager
+        } else {
+          // Store game result for regular games
+          if (data) {
+            localStorage.setItem('gameResult', JSON.stringify(data));
+          }
+          // Navigation will be handled by WebSocketManager
+        }
+      });
+
+      currentGameService.onGameInvite((data) => {
+        console.log('🎮 HOME: Game invite received:', data);
+        notify(`Game invite from ${data.senderUsername || 'Unknown player'}`, 'blue');
+      });
+
+      currentGameService.onInviteAccepted((data) => {
+        console.log('🎮 HOME: Game invite accepted:', data);
+        notify('Game invite accepted! Starting game...', 'green');
+      });
+
+      currentGameService.onPlayerLeft((data) => {
+        console.log('🎮 HOME: Player left game:', data);
+        notify('Player left the game', 'red');
+        const appState = AppState.getInstance();
+        appState.clearCurrentRoom();
+      });
+
+      currentGameService.onGameError((data) => {
+        console.log('🎮 HOME: Game error:', data);
+        notify(data.message || 'Game error occurred', 'red');
       });
     }
 

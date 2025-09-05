@@ -184,17 +184,20 @@ export async function init() {
   startLocalGame();
 
   function initLocalPlayerNames() {
-    if (player1NameEl) player1NameEl.textContent = 'PLAYER 1';
-    if (player2NameEl) player2NameEl.textContent = 'PLAYER 2';
+    // CONSISTENT PLAYER ORDER for local game too
+    // Player 1 = LEFT side = BLUE paddle
+    // Player 2 = RIGHT side = RED paddle
+    if (player1NameEl) player1NameEl.textContent = 'PLAYER 1 (BLUE)';
+    if (player2NameEl) player2NameEl.textContent = 'PLAYER 2 (RED)';
     if (player1InitialEl) player1InitialEl.textContent = 'P1';
     if (player2InitialEl) player2InitialEl.textContent = 'P2';
 
-    if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = 'PLAYER 1';
-    if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = 'PLAYER 2';
+    if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = 'PLAYER 1 (BLUE)';
+    if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = 'PLAYER 2 (RED)';
     if (mobilePlayer1InitialEl) mobilePlayer1InitialEl.textContent = 'P1';
     if (mobilePlayer2InitialEl) mobilePlayer2InitialEl.textContent = 'P2';
 
-    console.log('🎮 Local player names initialized');
+    console.log('🎮 Local player names initialized - LEFT (BLUE): PLAYER 1, RIGHT (RED): PLAYER 2');
   }
 
   function updateLocalScores() {
@@ -209,8 +212,8 @@ export async function init() {
   }
 
   function startLocalGame() {
-    if (gameStatusEl) gameStatusEl.textContent = '⚔️ LOCAL BATTLE ⚔️';
-    if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚔️ BATTLE ⚔️';
+    if (gameStatusEl) gameStatusEl.textContent = 'LOCAL BATTLE';
+    if (mobileGameStatusEl) mobileGameStatusEl.textContent = 'BATTLE';
 
     gameLoopInterval = setInterval(updateLocalGame, 16) as any;
     console.log('🎮 Local game started');
@@ -526,8 +529,8 @@ export async function init() {
       } else {
         if (!localGameState.gameOver) {
           gamePaused = false;
-          if (gameStatusEl) gameStatusEl.textContent = '⚔️ LOCAL BATTLE ⚔️';
-          if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚔️ BATTLE ⚔️';
+          if (gameStatusEl) gameStatusEl.textContent = 'LOCAL BATTLE';
+          if (mobileGameStatusEl) mobileGameStatusEl.textContent = 'BATTLE';
           if (ballTrailParticles) ballTrailParticles.start();
           console.log('🎮 Game resumed - tab visible');
         }

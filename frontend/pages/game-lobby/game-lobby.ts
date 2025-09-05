@@ -16,8 +16,8 @@ export function init() {
   if (!currentRoom?.roomId) {
     notify('No room found');
     router.navigate('home');
+    return;
   }
-
 
   const roomStatus = document.getElementById('room-status');
   const roomId = document.getElementById('room-id');
@@ -31,18 +31,23 @@ export function init() {
   const gameService = new GameService();
   const userService = new UserService();
 
+  // Event handlers
   if (readyBtn) readyBtn.addEventListener('click', handleReady);
   if (leaveBtn) leaveBtn.addEventListener('click', handleLeave);
   
+  // Initialize lobby
   initLobby();
 
+  // Game service listeners with improved handling
   gameService.onPlayerLeft((data) => {
+    console.log('🎮 LOBBY: Player left:', data);
     appState.clearCurrentRoom();
     notify(`Player left the game.`);
     router.navigate('home');
   });
 
   gameService.onPlayerReady((data) => {
+    console.log('🎮 LOBBY: Player ready:', data);
     updateLobbyStatus(data);
     // Reload player info when someone joins  
     if (data.newPlayerJoined) {
@@ -51,7 +56,7 @@ export function init() {
   });
 
   gameService.onPlayerJoined((data) => {
-    console.log('Player joined event:', data);
+    console.log('🎮 LOBBY: Player joined:', data);
     // Update room info when someone joins
     if (data.roomInfo) {
       console.log('Updating room info:', data.roomInfo);
@@ -60,9 +65,33 @@ export function init() {
     }
   });
 
-  gameService.onAllReady(() => {
+  gameService.onAllReady((data) => {
+    console.log('🎮 LOBBY: All players ready:', data);
     notify('All players ready! Starting game...');
+    // Navigation is handled by WebSocketManager
+  });
+
+  gameService.onGameStarted((data) => {
+    console.log('🎮 LOBBY: Game started:', data);
+    notify('Game started!', 'green');
     router.navigate('remote-game');
+  });
+
+  gameService.onGameError((data) => {
+    console.log('🎮 LOBBY: Game error:', data);
+    notify(data.message || 'Game error occurred', 'red');
+  });
+
+  gameService.onRoomCreated((data) => {
+    console.log('🎮 LOBBY: Room created while in lobby:', data);
+    if (data.roomId) {
+      appState.setCurrentRoom({
+        roomId: data.roomId,
+        players: data.players || [],
+        createdAt: Date.now()
+      });
+      setTimeout(() => loadPlayerInfo(), 500);
+    }
   });
 
   function handleReady() {
@@ -107,28 +136,30 @@ export function init() {
       if (!currentUser || !currentRoom?.players || currentRoom.players.length < 2) return;
 
       const [playerId1, playerId2] = currentRoom.players;
-      console.log('Player 1 ID:', playerId1);
-      console.log('Player 2 ID:', playerId2);
+      console.log('Player 1 ID (LEFT/BLUE):', playerId1);
+      console.log('Player 2 ID (RIGHT/RED):', playerId2);
 
-      // Load both players based on their position in the array (like end-game)
+      // CONSISTENT PLAYER ORDER: Always use room.players order
+      // Player 1 (index 0) = LEFT side = BLUE (like end-game and remote-game)
+      // Player 2 (index 1) = RIGHT side = RED (like end-game and remote-game)
       const [player1, player2] = await Promise.all([
-        userService.getUserById(playerId1),
-        userService.getUserById(playerId2)
+        userService.getUserById(playerId1), // LEFT player (BLUE)
+        userService.getUserById(playerId2)  // RIGHT player (RED)
       ]);
 
-      // Player 1 (Sol)
+      // Player 1 (LEFT/BLUE)
       if (player1Name) player1Name.textContent = player1?.username || `Player ${playerId1}`;
       if (player1Avatar && player1?.avatar) {
         player1Avatar.src = player1.avatar;
       }
 
-      // Player 2 (Sağ) 
+      // Player 2 (RIGHT/RED) 
       if (player2Name) player2Name.textContent = player2?.username || `Player ${playerId2}`;
       if (player2Avatar && player2?.avatar) {
         player2Avatar.src = player2.avatar;
       }
 
-      console.log('Player positions set - Left:', player1?.username, 'Right:', player2?.username);
+      console.log('🎮 Player positions set - LEFT (BLUE):', player1?.username, 'RIGHT (RED):', player2?.username);
     } catch (e) {
       console.error('Error loading player info:', e);
     }
@@ -142,15 +173,18 @@ export function init() {
       roomStatus.textContent = `> ${readyCount}/${totalPlayers} PLAYERS READY`;
     }
 
-    // Update ready status for each player
+    // Update ready status for each player - CONSISTENT ORDER
     const player1ReadyText = document.getElementById('player1-ready-text');
     const player2ReadyText = document.getElementById('player2-ready-text');
     const readyPlayerIds = data.readyPlayers || [];
     
     if (currentRoom?.players && currentRoom.players.length >= 2) {
+      // CONSISTENT PLAYER ORDER: Always use room.players order
+      // Player 1 (index 0) = LEFT side = BLUE
+      // Player 2 (index 1) = RIGHT side = RED
       const [playerId1, playerId2] = currentRoom.players;
       
-      // Update Player 1 ready status
+      // Update Player 1 ready status (LEFT/BLUE)
       if (player1ReadyText) {
         if (readyPlayerIds.includes(playerId1)) {
           player1ReadyText.textContent = 'READY';
@@ -163,7 +197,7 @@ export function init() {
         }
       }
       
-      // Update Player 2 ready status
+      // Update Player 2 ready status (RIGHT/RED)
       if (player2ReadyText) {
         if (readyPlayerIds.includes(playerId2)) {
           player2ReadyText.textContent = 'READY';
@@ -175,7 +209,17 @@ export function init() {
           player2ReadyText.classList.add('text-neon-red');
         }
       }
+      
+      console.log(`🎮 Ready status - LEFT (BLUE) Player ${playerId1}: ${readyPlayerIds.includes(playerId1) ? 'READY' : 'NOT READY'}, RIGHT (RED) Player ${playerId2}: ${readyPlayerIds.includes(playerId2) ? 'READY' : 'NOT READY'}`);
     }
   }
+}
+
+// Cleanup function for game-lobby
+export function cleanup() {
+  console.log('🧹 LOBBY: Cleaning up game-lobby page...');
+  
+  // GameService cleanup is handled by router's cleanupCurrentPage
+  // since it calls GameService.cleanup() automatically
 }
 

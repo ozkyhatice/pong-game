@@ -161,19 +161,18 @@ export async function init() {
   // If WebSocket is not connected but we have room data in state, try to reconnect
   if (!wsManager.isConnected()) {
     const currentRoom = currentAppState.getCurrentRoom();
-    const userToken = localStorage.getItem('token');
-
+    const userToken = localStorage.getItem('authToken'); // Use 'authToken' not 'token'
+    
     if (currentRoom && userToken) {
       console.log('🔄 Remote-game: Page reloaded, attempting to reconnect and rejoin room...');
 
       try {
         // Reconnect WebSocket
         wsManager.connect(userToken);
-
-        // Wait for connection to establish
+        // Wait for connection to establish with timeout
         await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('Connection timeout')), 5000);
-
+          const timeout = setTimeout(() => reject(new Error('Connection timeout')), 10000); // Increased to 10s
+          
           const onConnected = () => {
             clearTimeout(timeout);
             wsManager.off('connected', onConnected);
@@ -266,7 +265,7 @@ export async function init() {
 
   const gameService = new GameService();
   const userService = new UserService();
-  const currentRoom = currentAppState.getCurrentRoom();
+  let currentRoom = currentAppState.getCurrentRoom(); // Changed to let for updates
 
   if (!currentRoom) {
     notify('No room found!');
@@ -302,6 +301,24 @@ export async function init() {
   gameService.onGameStarted((data) => {
     if (gameStatusEl) gameStatusEl.textContent = ' CYBER BATTLE ';
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' BATTLE ';
+    
+    // CRITICAL: Update room players order from server to ensure consistency
+    if (data.players && currentRoom) {
+      console.log('🎮 Updating room players order from game-started event:', data.players);
+      console.log('🎮 Previous room players order:', currentRoom.players);
+      
+      // Update the room with the authoritative player order from server
+      const updatedRoom = {
+        ...currentRoom,
+        players: data.players
+      };
+      currentAppState.setCurrentRoom(updatedRoom);
+      currentRoom = updatedRoom; // Update local reference
+      
+      console.log('🎮 Room players order updated to:', currentRoom.players);
+      console.log('🎮 CONSISTENT ORDER - LEFT (BLUE):', currentRoom.players[0], ', RIGHT (RED):', currentRoom.players[1]);
+    }
+    
     players = data.players || [];
     setTimeout(() => updatePlayerNames(), 100);
   });
@@ -333,9 +350,20 @@ export async function init() {
       notify(data.message + ' Returning to tournament...');
       currentAppState.updateTournamentStatus('active', data.round);
       currentAppState.clearCurrentRoom();
+      
+      // Store minimal tournament match result for potential display
+      localStorage.setItem('lastTournamentMatchResult', JSON.stringify({
+        winner: data.winner,
+        finalScore: data.finalScore,
+        message: data.message,
+        round: data.round,
+        timestamp: Date.now()
+      }));
+      
       cleanup3D();
       router.navigate('tournament');
     } else {
+      // Regular game - go to end-game page
       localStorage.setItem('gameResult', JSON.stringify({
         winner: data.winner,
         finalScore: data.finalScore,
@@ -357,6 +385,56 @@ export async function init() {
   gameService.onGameResumed((data: any) => {
     console.log('▶️ Game resumed:', data);
     hidePauseMessage();
+  });
+
+  // Listen for room-state messages directly from WebSocket Manager
+  wsManager.on('room-state', (data: any) => {
+    console.log('🎮 REMOTE-GAME: Room state received:', data);
+    if (data.roomId && data.state) {
+      gameState = data.state;
+      update3DGameState();
+      updateScores();
+      updatePlayerNames();
+    }
+  });
+
+  // Listen for player reconnection events
+  gameService.onPlayerReconnected((data: any) => {
+    console.log('🔄 Player reconnected:', data);
+    notify(`Player ${data.playerId} reconnected`, 'green');
+  });
+
+  // Listen for game invites (in case received during game)
+  gameService.onGameInvite((data: any) => {
+    console.log('🎮 REMOTE-GAME: Game invite received during game:', data);
+    // Ignore game invites while in an active game
+  });
+
+  // Listen for move events from other players
+  wsManager.on('player-move', (data: any) => {
+    if (data.userId && data.y !== undefined && gameState) {
+      gameState.paddles[data.userId] = {
+        ...gameState.paddles[data.userId],
+        y: data.y
+      };
+      update3DGameState();
+    }
+  });
+
+  // Listen for general game updates
+  wsManager.on('game-update', (data: any) => {
+    console.log('🎮 REMOTE-GAME: Game update received:', data);
+    if (data.state) {
+      gameState = data.state;
+      update3DGameState();
+      updateScores();
+    }
+  });
+
+  // Listen for game end events
+  wsManager.on('game-end', (data: any) => {
+    console.log('🎮 REMOTE-GAME: Game end received:', data);
+    // This is handled by gameService.onGameOver, but adding as backup
   });
 
   // Tournament ended event listener
@@ -842,26 +920,28 @@ export async function init() {
     ball.position.z = ballZ;
     ball.position.y = PONG_3D_CONFIG.BALL.radius;
 
-    // Update paddle positions - using room players order instead of ID sorting
+    // Update paddle positions - CONSISTENT ORDER using room.players
     if (currentRoom?.players && currentRoom.players.length >= 2) {
-      // Left paddle (Player 1) - First player in room
+      // LEFT paddle (Player 1) - BLUE - First player in room (index 0)
       const paddle1Data = gameState.paddles[currentRoom.players[0]];
       if (paddle1Data) {
         const paddleZ = ((paddle1Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9;
         const paddleOffset = PONG_3D_CONFIG.PADDLE.depth / 2;
         paddle1.position.z = paddleZ + paddleOffset;
         paddle1.position.y = PONG_3D_CONFIG.PADDLE.height/2;
-        paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5;
+        paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5; // LEFT side (BLUE)
+        console.log(`🎮 Left paddle (BLUE) - Player ${currentRoom.players[0]} at Z: ${paddleZ}`);
       }
 
-      // Right paddle (Player 2) - Second player in room
+      // RIGHT paddle (Player 2) - RED - Second player in room (index 1)
       const paddle2Data = gameState.paddles[currentRoom.players[1]];
       if (paddle2Data) {
         const paddleZ = ((paddle2Data.y / 400) - 0.5) * PONG_3D_CONFIG.TABLE.depth * 0.9;
         const paddleOffset = PONG_3D_CONFIG.PADDLE.depth / 2;
         paddle2.position.z = paddleZ + paddleOffset;
         paddle2.position.y = PONG_3D_CONFIG.PADDLE.height/2;
-        paddle2.position.x = PONG_3D_CONFIG.TABLE.width/2 - 0.5;
+        paddle2.position.x = PONG_3D_CONFIG.TABLE.width/2 - 0.5; // RIGHT side (RED)
+        console.log(`🎮 Right paddle (RED) - Player ${currentRoom.players[1]} at Z: ${paddleZ}`);
       }
     }
 
@@ -878,9 +958,11 @@ export async function init() {
     }
 
     const ball = gameState.ball;
-    // Use room players order for consistent paddle assignment
-    const paddle1 = gameState.paddles[currentRoom.players[0]]; // Left paddle (blue)
-    const paddle2 = gameState.paddles[currentRoom.players[1]]; // Right paddle (red)
+    // CONSISTENT PLAYER ORDER: Always use room.players order
+    // Player 1 (index 0) = LEFT side = BLUE paddle
+    // Player 2 (index 1) = RIGHT side = RED paddle
+    const paddle1 = gameState.paddles[currentRoom.players[0]]; // LEFT paddle (BLUE)
+    const paddle2 = gameState.paddles[currentRoom.players[1]]; // RIGHT paddle (RED)
 
     const paddleMargin = 8;
     const paddleLengthMargin = 5;
@@ -896,7 +978,8 @@ export async function init() {
       ball.dx = -ball.dx * 1.10;
       ball.dy = ball.dy * 1.10;
 
-      paddleFlashTimes[0] = 1.0;
+      paddleFlashTimes[0] = 1.0; // Flash LEFT paddle (BLUE)
+      console.log(`🎮 Ball hit LEFT paddle (BLUE) - Player ${currentRoom.players[0]}`);
     }
 
     if (ball.x > paddle2.x - paddleMargin &&
@@ -910,7 +993,8 @@ export async function init() {
       ball.dx = -ball.dx * 1.10;
       ball.dy = ball.dy * 1.10;
 
-      paddleFlashTimes[1] = 1.0;
+      paddleFlashTimes[1] = 1.0; // Flash RIGHT paddle (RED)
+      console.log(`🎮 Ball hit RIGHT paddle (RED) - Player ${currentRoom.players[1]}`);
     }
 
     // Trigger border flash on collision
@@ -935,7 +1019,7 @@ export async function init() {
         clearInterval(countdownInterval);
 
         const isFirstPlayer = currentRoom && currentRoom.players[0] === myPlayerId;
-        if (isFirstPlayer) {
+        if (isFirstPlayer && currentRoom) {
           console.log('🎮 Starting game as first player...');
           if (gameStatusEl) gameStatusEl.textContent = '⚡ INITIALIZING BATTLE... ⚡';
           if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚡ INIT ⚡';
@@ -1152,7 +1236,8 @@ export async function init() {
     if (myPlayerId && currentRoom?.players) {
       const myPosition = currentRoom.players.indexOf(myPlayerId);
       const side = myPosition === 0 ? 'LEFT (BLUE)' : myPosition === 1 ? 'RIGHT (RED)' : 'UNKNOWN';
-      console.log(`🎮 My player ID: ${myPlayerId}, Position: ${side}, Room players:`, currentRoom.players);
+      console.log(`🎮 My player ID: ${myPlayerId}, Position: ${side}, Room players order:`, currentRoom.players);
+      console.log(`🎮 Player positions - Player 1 (LEFT/BLUE): ${currentRoom.players[0]}, Player 2 (RIGHT/RED): ${currentRoom.players[1]}`);
     }
   }
 
@@ -1160,10 +1245,15 @@ export async function init() {
     if (!gameState?.score || !currentRoom?.players || currentRoom.players.length < 2) return;
 
     try {
+      // CONSISTENT PLAYER ORDER: Always use room.players order
+      // Player 1 (index 0) = LEFT side = BLUE paddle
+      // Player 2 (index 1) = RIGHT side = RED paddle
       const [player1, player2] = await Promise.all([
-        userService.getUserById(currentRoom.players[0]), // First player in room (left)
-        userService.getUserById(currentRoom.players[1])  // Second player in room (right)
+        userService.getUserById(currentRoom.players[0]), // LEFT player (BLUE)
+        userService.getUserById(currentRoom.players[1])  // RIGHT player (RED)
       ]);
+
+      console.log(`🎮 Player order from room - LEFT (BLUE): ${player1?.username} (${currentRoom.players[0]}), RIGHT (RED): ${player2?.username} (${currentRoom.players[1]})`);
 
       // Update desktop elements
       if (player1NameEl) player1NameEl.textContent = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
@@ -1184,8 +1274,13 @@ export async function init() {
   function updateScores() {
     if (!gameState?.score || !currentRoom?.players || currentRoom.players.length < 2) return;
 
-    const score1 = gameState.score[currentRoom.players[0]] || 0; // First player in room (left)
-    const score2 = gameState.score[currentRoom.players[1]] || 0; // Second player in room (right)
+    // CONSISTENT PLAYER ORDER: Always use room.players order
+    // Player 1 (index 0) = LEFT side = BLUE paddle
+    // Player 2 (index 1) = RIGHT side = RED paddle
+    const score1 = gameState.score[currentRoom.players[0]] || 0; // LEFT player (BLUE)
+    const score2 = gameState.score[currentRoom.players[1]] || 0; // RIGHT player (RED)
+
+    console.log(`🎮 Score update - LEFT (BLUE): ${score1}, RIGHT (RED): ${score2}`);
 
     // Update desktop scores
     if (player1ScoreEl) player1ScoreEl.textContent = score1.toString();
@@ -1202,12 +1297,16 @@ export async function init() {
       return;
     }
 
-    console.log('🎮 Initializing player names from room data:', currentRoom.players);
+    console.log('🎮 Initializing player names from room data - Player order:', currentRoom.players);
+    console.log('🎮 POSITION ASSIGNMENT - LEFT (BLUE): Player', currentRoom.players[0], ', RIGHT (RED): Player', currentRoom.players[1]);
 
     try {
+      // CONSISTENT PLAYER ORDER: Always use room.players order
+      // Player 1 (index 0) = LEFT side = BLUE paddle  
+      // Player 2 (index 1) = RIGHT side = RED paddle
       const [player1, player2] = await Promise.all([
-        userService.getUserById(currentRoom.players[0]),
-        userService.getUserById(currentRoom.players[1])
+        userService.getUserById(currentRoom.players[0]), // LEFT player (BLUE)
+        userService.getUserById(currentRoom.players[1])  // RIGHT player (RED)
       ]);
 
       // Update all player name elements
@@ -1234,8 +1333,8 @@ export async function init() {
       });
 
       console.log('🎮 Enhanced player names initialized:', {
-        player1: player1Name,
-        player2: player2Name
+        leftBlue: `${player1Name} (ID: ${currentRoom.players[0]})`,
+        rightRed: `${player2Name} (ID: ${currentRoom.players[1]})`
       });
     } catch (e) {
       console.error('Error initializing player names:', e);

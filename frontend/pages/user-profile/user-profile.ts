@@ -54,6 +54,53 @@ export function init() {
 
   setupEventListeners();
   initCurrentUser();
+  setupGameInviteListeners();
+
+  function setupGameInviteListeners(): void {
+    // Listen for game invites
+    gameService.onGameInvite((data: any) => {
+      console.log('🎮 USER-PROFILE: Game invite received:', data);
+      notify(`Game invite from ${data.senderUsername || 'Unknown player'}`, 'blue');
+    });
+
+    gameService.onInviteAccepted((data: any) => {
+      console.log('🎮 USER-PROFILE: Game invite accepted:', data);
+      notify('Game invite accepted! Starting game...', 'green');
+      
+      // Store room info if provided
+      if (data.roomId) {
+        const appState = AppState.getInstance();
+        appState.setCurrentRoom({
+          roomId: data.roomId,
+          players: data.players || [currentUserId, friendUserId],
+          createdAt: Date.now()
+        });
+        
+        // Navigate to game lobby
+        (window as any).router.navigate('game-lobby');
+      }
+    });
+
+    gameService.onRoomCreated((data: any) => {
+      console.log('🎮 USER-PROFILE: Room created for game invite:', data);
+      if (data.roomId) {
+        const appState = AppState.getInstance();
+        appState.setCurrentRoom({
+          roomId: data.roomId,
+          players: data.players || [],
+          createdAt: Date.now()
+        });
+        
+        // Navigate to game lobby
+        (window as any).router.navigate('game-lobby');
+      }
+    });
+
+    gameService.onGameError((data: any) => {
+      console.log('🎮 USER-PROFILE: Game error:', data);
+      notify(data.message || 'Game error occurred', 'red');
+    });
+  }
 
   function setupEventListeners(): void {
     userInfoTab?.addEventListener('click', () => toggleSidebar());
@@ -602,7 +649,22 @@ async function handleBlockFriend() {
       unsubscribeStatusChange();
       unsubscribeStatusChange = null;
     }
-}
+    
+    // ChatManager cleanup is handled automatically
+    if (chatManager) {
+      chatManager = null;
+    }
+    
+    console.log('🧹 USER-PROFILE: Cleanup completed');
+  }
+  
   (window as any).userProfileCleanup = cleanup;
+}
 
+// Export cleanup function for use by router
+export function cleanup() {
+  console.log('🧹 USER-PROFILE: Cleaning up user-profile page...');
+  if ((window as any).userProfileCleanup) {
+    (window as any).userProfileCleanup();
+  }
 }

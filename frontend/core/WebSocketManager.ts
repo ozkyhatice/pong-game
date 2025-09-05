@@ -67,15 +67,74 @@ export class WebSocketManager {
             data: message.data
           });
           
-          // If room-state message, redirect to remote-game
+          // Handle critical game events that require immediate navigation
           if (message.event === 'room-state') {
-            console.log('🎮 WS: Game state received, redirecting to remote-game');
-            const currentPath = window.location.pathname;
-            if (!currentPath.includes('remote-game')) {
-              console.log(`🎮 WS: Current page is ${currentPath}, redirecting to remote-game`);
+            console.log('🎮 WS: Game state received, checking navigation to remote-game');
+            const currentPage = (window as any).router?.currentPage;
+            if (currentPage !== 'remote-game') {
+              console.log(`🎮 WS: Current page is ${currentPage}, redirecting to remote-game`);
               setTimeout(() => {
                 (window as any).router.navigate('remote-game');
               }, 100);
+            }
+          } else if (message.event === 'match-found') {
+            console.log('🎮 WS: Match found, redirecting to game-lobby');
+            const currentPage = (window as any).router?.currentPage;
+            if (currentPage !== 'game-lobby') {
+              setTimeout(() => {
+                (window as any).router.navigate('game-lobby');
+              }, 100);
+            }
+          } else if (message.event === 'room-created') {
+            console.log('🎮 WS: Room created, redirecting to game-lobby');
+            const currentPage = (window as any).router?.currentPage;
+            if (currentPage !== 'game-lobby') {
+              setTimeout(() => {
+                (window as any).router.navigate('game-lobby');
+              }, 100);
+            }
+          } else if (message.event === 'game-over') {
+            console.log('🎮 WS: Game over, checking for tournament match');
+            const currentPage = (window as any).router?.currentPage;
+            
+            // If it's a tournament match, redirect to tournament page instead of end-game
+            if (message.data && message.data.isTournamentMatch && message.data.tournamentId) {
+              console.log('🏆 WS: Tournament match ended, redirecting to tournament page');
+              if (currentPage !== 'tournament') {
+                // Store minimal game result info for potential display in tournament page
+                if (message.data) {
+                  localStorage.setItem('lastTournamentMatchResult', JSON.stringify({
+                    winner: message.data.winner,
+                    finalScore: message.data.finalScore,
+                    message: message.data.message,
+                    round: message.data.round,
+                    timestamp: Date.now()
+                  }));
+                }
+                setTimeout(() => {
+                  (window as any).router.navigate('tournament');
+                }, 100);
+              }
+            } else {
+              // Regular game match - go to end-game page
+              console.log('🎮 WS: Regular game over, redirecting to end-game');
+              if (currentPage !== 'end-game' && currentPage !== 'home') {
+                // Store game result for end-game page
+                if (message.data) {
+                  localStorage.setItem('gameResult', JSON.stringify(message.data));
+                }
+                setTimeout(() => {
+                  (window as any).router.navigate('end-game');
+                }, 100);
+              }
+            }
+          } else if (message.event === 'all-ready') {
+            console.log('🎮 WS: All players ready, redirecting to remote-game');
+            const currentPage = (window as any).router?.currentPage;
+            if (currentPage !== 'remote-game') {
+              setTimeout(() => {
+                (window as any).router.navigate('remote-game');
+              }, 200);
             }
           }
           
@@ -205,6 +264,13 @@ export class WebSocketManager {
     
     if (!page) {
       console.log('❌ WS: Navigation page is undefined, skipping redirect');
+      return;
+    }
+    
+    // Prevent loop redirections - check current page
+    const currentPage = (window as any).router?.currentPage;
+    if (currentPage === page) {
+      console.log(`🧭 WS: Already on page ${page}, skipping navigation`);
       return;
     }
     

@@ -116,10 +116,35 @@ export function init() {
       // WebSocket reconnection handling
       setupWebSocketReconnection();
       
+      // Check for recent tournament match result
+      checkForRecentMatchResult();
+      
     } catch (error) {
       console.error('Error initializing tournament page:', error);
       notify('Failed to load tournament data');
       (window as any).router.navigate('home');
+    }
+  }
+
+  function checkForRecentMatchResult() {
+    const lastMatchResult = localStorage.getItem('lastTournamentMatchResult');
+    if (lastMatchResult) {
+      try {
+        const result = JSON.parse(lastMatchResult);
+        const timeDiff = Date.now() - result.timestamp;
+        
+        // Show result if it's less than 30 seconds old
+        if (timeDiff < 30000) {
+          console.log('🏆 TOURNAMENT: Showing recent match result:', result);
+          notify(result.message || `Match completed! Round ${result.round}`, 'green');
+        }
+        
+        // Clean up the stored result
+        localStorage.removeItem('lastTournamentMatchResult');
+      } catch (error) {
+        console.error('Error parsing last tournament match result:', error);
+        localStorage.removeItem('lastTournamentMatchResult');
+      }
     }
   }
 
@@ -232,6 +257,9 @@ export function init() {
     // Match started
     tournamentService.onTournamentMatchStarted((data) => {
       console.log('🎮 Tournament match starting:', data);
+      console.log('🎮 Tournament match players order from server:', data.players);
+      console.log('🎮 TOURNAMENT POSITION ASSIGNMENT - LEFT (BLUE):', data.players?.[0], ', RIGHT (RED):', data.players?.[1]);
+      
       currentMatch = {
         matchId: data.matchId,
         opponent: data.opponent,
@@ -970,4 +998,25 @@ export function init() {
 
   // Add cleanup on page unload
   window.addEventListener('beforeunload', cleanup);
+}
+
+// Export cleanup function for use by router
+export function cleanup() {
+  console.log('🧹 TOURNAMENT: Cleaning up tournament page...');
+  
+  // Clean up intervals
+  let countdownInterval: number | null = null;
+  let wsReconnectInterval: number | null = null;
+  
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+  if (wsReconnectInterval) {
+    clearInterval(wsReconnectInterval);
+    wsReconnectInterval = null;
+  }
+  
+  // TournamentService cleanup is handled by router's clearAllListeners
+  console.log('✅ TOURNAMENT: Tournament page cleanup completed');
 }

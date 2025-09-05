@@ -174,7 +174,7 @@ export class GameAreaComponent extends Component {
                     JOIN TOURNAMENT
                   </button>
                   <button id="leave-tournament-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded transition-all border border-red-400 shadow-lg hover:shadow-red-500/25 hidden">
-                    RETREAT
+                    LEAVE
                   </button>
                 </div>
               </div>
@@ -326,16 +326,11 @@ export class GameAreaComponent extends Component {
             <span class="font-medium text-green-200 font-mono text-lg">${
               invite.senderUsername || "Unknown"
             }</span>
-            <div class="text-xs text-green-400 font-mono">⚔️ CHALLENGES YOU TO BATTLE</div>
           </div>
         </div>
         <div class="flex space-x-3">
-          <button class="accept-btn px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-lg font-mono font-medium transition-all border border-green-400 shadow-lg hover:shadow-green-500/25">
-            ⚔️ ACCEPT
-          </button>
-          <button class="reject-btn px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-lg font-mono font-medium transition-all border border-red-400 shadow-lg hover:shadow-red-500/25">
-            🚫 DECLINE
-          </button>
+          <button class="accept-btn px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-lg font-mono font-medium transition-all border border-green-400 shadow-lg hover:shadow-green-500/25">ACCEPT</button>
+          <button class="reject-btn px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-lg font-mono font-medium transition-all border border-red-400 shadow-lg hover:shadow-red-500/25">DECLINE</button>
         </div>
       `;
 
@@ -937,7 +932,6 @@ export class GameAreaComponent extends Component {
             <span class="text-green-200 font-medium font-mono">${
               participant.username
             }</span>
-            <div class="text-xs text-green-400 font-mono">⚔️ WARRIOR</div>
           </div>
           <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
         </div>
@@ -1075,18 +1069,22 @@ export class GameAreaComponent extends Component {
 
     this.gameService.onMatchFound(async (data) => {
       console.log("🎮 Match found:", data);
+      console.log("🎮 Match found players order from server:", data.players);
       this.hideMatchmakingStatus();
       notify(`Match found! Opponent: ${data.opponent}`);
 
       // Set room info and navigate to game
       if (data.roomId) {
         const appState = AppState.getInstance();
-        const currentUser = await this.userService.getCurrentUser();
-        const myPlayerId = currentUser?.id;
+        
+        // CRITICAL: Use server's players order instead of manually creating array
+        const playersOrder = data.players || [];
+        console.log("🎮 MATCHMAKING: Using server players order:", playersOrder);
+        console.log("🎮 MATCHMAKING POSITIONS - LEFT (BLUE):", playersOrder[0], ", RIGHT (RED):", playersOrder[1]);
 
         appState.setCurrentRoom({
           roomId: data.roomId,
-          players: myPlayerId ? [myPlayerId, data.opponent] : [data.opponent],
+          players: playersOrder, // Use server's authoritative order
           createdAt: Date.now(),
           isMatchmaking: true,
         });
