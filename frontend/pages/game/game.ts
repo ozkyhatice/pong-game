@@ -18,10 +18,10 @@ interface GameState {
   gameOver: boolean;
 }
 
-const PADSPEED = 8;
+const PADSPEED = 12;
 const BALLSPEEDXDEFAULT = 3;
 const BALLSPEEDZDEFAULT = 2;
-const BALLSPEEDMULTI = 1.10;
+const BALLSPEEDMULTI = 1.25;
 
 function interpolateColors(color1: RGB, color2: RGB, factor: number): RGB {
   return {
@@ -172,7 +172,7 @@ export async function init() {
   init3DScene();
 
   setupLocalKeyboardControls();
-  
+
   setupMobileControls();
 
   setupPauseOnTabSwitch();
