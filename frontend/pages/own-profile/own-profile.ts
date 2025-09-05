@@ -68,11 +68,11 @@ async function loadProfile(): Promise<void> {
     try {
         const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
             headers:
-			{ 
-				'Authorization': `Bearer ${token}` 
-			}
+            {
+                'Authorization': `Bearer ${token}`
+            }
         });
-        
+
         const data = await response.json();
 
         if (response.ok && data.user) {
@@ -113,7 +113,7 @@ async function loadUserStats(userId: number): Promise<void> {
         if (!token) return;
 
         const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.BY_ID(userId.toString())), {
-            headers: { 
+            headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
@@ -125,7 +125,7 @@ async function loadUserStats(userId: number): Promise<void> {
         }
 
         const data = await response.json();
-        
+
         if (data.user) {
             updateStatsDisplay(data.user);
         } else {
@@ -197,17 +197,17 @@ async function displayMatchHistory(matches: Match[]): Promise<void> {
     // Get all opponent usernames
     const matchesWithUsernames = await Promise.all(matches.map(async (match) => {
         if (!currentUser) return { match, opponentUsername: 'Unknown' };
-        
+
         const opponentId = match.player1Id === currentUser.id ? match.player2Id : match.player1Id;
         const opponentInfo = await userService.getUserById(opponentId);
         const opponentUsername = opponentInfo?.username || `Player ${opponentId}`;
-        
+
         return { match, opponentUsername };
     }));
 
     const matchesHTML = matchesWithUsernames.map(({ match, opponentUsername }) => {
         if (!currentUser) return '';
-        
+
         const isWin = match.winnerId === currentUser.id;
         const resultClass = isWin ? 'wins' : 'losses';
         const borderColor = isWin ? 'border-neon-green' : 'border-neon-red';
@@ -219,7 +219,7 @@ async function displayMatchHistory(matches: Match[]): Promise<void> {
         const opponentScore = match.player1Id === currentUser.id ? match.player2Score : match.player1Score;
 
         return `
-            <div class="match-item all ${resultClass}">
+            <div class="match-item all ${resultClass} mb-2">
                 <div class="flex items-center justify-between p-3 bg-terminal-border border ${borderColor} border-opacity-50 rounded-sm">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 ${bgColor} rounded-sm flex items-center justify-center text-terminal-border text-xs font-bold">${resultLetter}</div>
@@ -229,7 +229,7 @@ async function displayMatchHistory(matches: Match[]): Promise<void> {
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="font-bold ${textColor} text-sm">${playerScore} - ${opponentScore}</div>
+                        <div class="font-bold ${textColor} text-sm whitespace-nowrap">${playerScore} - ${opponentScore}</div>
                         <div class="text-xs text-neon-white/70">${match.tournamentId ? 'TOURNAMENT' : 'CASUAL'}</div>
                     </div>
                 </div>
@@ -237,7 +237,7 @@ async function displayMatchHistory(matches: Match[]): Promise<void> {
         `;
     }).join('');
 
-    matchHistoryContainer.innerHTML = matchesHTML;
+    matchHistoryContainer.innerHTML = `<div>${matchesHTML}</div>`;
 }
 
 function displayEmptyMatchHistory(): void {
@@ -258,21 +258,21 @@ function displayEmptyMatchHistory(): void {
 
 function setActiveFilter(filter: string): void {
     currentFilter = filter;
-    
+
     // Update filter button styles
     const filterBtns = document.querySelectorAll('.filter-btn');
     filterBtns.forEach(btn => {
         const btnElement = btn as HTMLElement;
         const btnFilter = btnElement.dataset.filter;
-        
+
         // Remove all active classes first
         btn.classList.remove('active', 'bg-neon-purple', 'bg-neon-green', 'bg-neon-red', 'bg-opacity-20');
         btn.classList.add('bg-transparent');
-        
+
         if (btnFilter === filter) {
             btn.classList.add('active');
             btn.classList.remove('bg-transparent');
-            
+
             // Set specific background color based on filter type
             if (filter === 'all') {
                 btn.classList.add('bg-neon-purple', 'bg-opacity-20');
@@ -287,14 +287,41 @@ function setActiveFilter(filter: string): void {
 
 function filterMatches(filter: string): void {
     const matchItems = document.querySelectorAll('.match-item');
+    let visibleCount = 0;
+
     matchItems.forEach(item => {
         const itemElement = item as HTMLElement;
         if (filter === 'all' || itemElement.classList.contains(filter)) {
             itemElement.style.display = 'block';
+            visibleCount++;
         } else {
             itemElement.style.display = 'none';
         }
     });
+
+    // Show empty state if no matches are visible
+    const matchHistoryContainer = document.getElementById('match-history');
+    if (matchHistoryContainer && visibleCount === 0 && filter !== 'all') {
+        const wrapper = matchHistoryContainer.querySelector('div');
+        if (wrapper) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'text-center py-8 filter-empty-state';
+            emptyState.innerHTML = `
+                <div class="text-neon-white/50 text-sm">NO ${filter.toUpperCase()} FOUND</div>
+                <div class="text-neon-white/30 text-xs mt-1">TRY A DIFFERENT FILTER</div>
+            `;
+
+            // Remove existing empty state
+            const existingEmpty = wrapper.querySelector('.filter-empty-state');
+            if (existingEmpty) existingEmpty.remove();
+
+            wrapper.appendChild(emptyState);
+        }
+    } else {
+        // Remove empty state if matches are visible
+        const existingEmpty = matchHistoryContainer?.querySelector('.filter-empty-state');
+        if (existingEmpty) existingEmpty.remove();
+    }
 }
 
 function formatFullDate(date: Date): string {
@@ -303,7 +330,7 @@ function formatFullDate(date: Date): string {
     const year = date.getFullYear();
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
-    
+
     return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 

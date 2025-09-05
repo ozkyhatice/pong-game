@@ -25,14 +25,14 @@ export function init() {
   const chatInput = document.getElementById('chat-input') as HTMLInputElement;
   const sendBtn = document.getElementById('send-message-btn') as HTMLButtonElement;
   const chatMessages = document.getElementById('chat-messages') as HTMLElement;
-  
+
   const userInfoTab = document.getElementById('user-info-tab') as HTMLButtonElement;
   const userSidebar = document.getElementById('user-sidebar') as HTMLElement;
   const closeSidebar = document.getElementById('close-sidebar') as HTMLButtonElement;
   const sidebarOverlay = document.getElementById('sidebar-overlay') as HTMLElement;
   const mainChatArea = document.getElementById('main-chat-area') as HTMLElement;
   const sidebarToggleIcon = document.getElementById('sidebar-toggle-icon') as HTMLElement;
-  
+
   const challengeBtn = document.getElementById('challenge-btn') as HTMLButtonElement;
   const backBtn = document.getElementById('back-btn') as HTMLButtonElement;
   const removeFriendBtn = document.getElementById('remove-friend-btn') as HTMLButtonElement;
@@ -64,9 +64,9 @@ export function init() {
     });
 
     gameService.onInviteAccepted((data: any) => {
-      console.log('🎮 USER-PROFILE: Game invite accepted:', data);
+      console.log('🎮 USER-PROFILE: Game invite Recent Maed:', data);
       notify('Game invite accepted! Starting game...', 'green');
-      
+
       // Store room info if provided
       if (data.roomId) {
         const appState = AppState.getInstance();
@@ -75,7 +75,7 @@ export function init() {
           players: data.players || [currentUserId, friendUserId],
           createdAt: Date.now()
         });
-        
+
         // Navigate to game lobby
         (window as any).router.navigate('game-lobby');
       }
@@ -90,7 +90,7 @@ export function init() {
           players: data.players || [],
           createdAt: Date.now()
         });
-        
+
         // Navigate to game lobby
         (window as any).router.navigate('game-lobby');
       }
@@ -110,11 +110,11 @@ export function init() {
 	backBtn?.addEventListener('click', () => {
       window.history.back();
     });
-    
+
     challengeBtn?.addEventListener('click', () => handleChallenge());
     removeFriendBtn?.addEventListener('click', () => handleRemoveFriend());
     blockFriendBtn?.addEventListener('click', () => handleBlockFriend());
-    
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && isSidebarOpen) {
         closeSidebarPanel();
@@ -137,10 +137,10 @@ export function init() {
       console.log('No friendUserId set');
       return { isOnline: false };
     }
-    
+
     const userStatus = onlineUsersService.getUserStatus(friendUserId);
     console.log('Friend status for ID', friendUserId, ':', userStatus);
-    
+
     return {
       isOnline: userStatus ? userStatus.status === 'online' : false
     };
@@ -155,7 +155,7 @@ export function init() {
 
     const status = getFriendOnlineStatus();
     console.log('Updating friend status:', status);
-    
+
     if (status.isOnline) {
       waitingElement.innerHTML = `
         <span class="text-[10px] font-bold text-neon-green">> YOUR FRIEND IS ONLINE</span>
@@ -179,12 +179,12 @@ export function init() {
     isSidebarOpen = true;
     userSidebar?.classList.remove('translate-x-full');
     sidebarOverlay?.classList.remove('hidden');
-    
+
     // Rotate the toggle icon
     if (sidebarToggleIcon) {
       sidebarToggleIcon.style.transform = 'rotate(180deg)';
     }
-    
+
     // Load match history when sidebar opens
     loadMatchHistory();
   }
@@ -193,7 +193,7 @@ export function init() {
     isSidebarOpen = false;
     userSidebar?.classList.add('translate-x-full');
     sidebarOverlay?.classList.add('hidden');
-    
+
     // Reset the toggle icon
     if (sidebarToggleIcon) {
       sidebarToggleIcon.style.transform = 'rotate(0deg)';
@@ -201,7 +201,7 @@ export function init() {
   }
 
   async function initCurrentUser(): Promise<void> {
-    // user bilgisi authtoken ile 
+    // user bilgisi authtoken ile
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
@@ -246,7 +246,7 @@ export function init() {
       sendBtn: !!sendBtn,
       chatMessages: !!chatMessages
     });
-    
+
     if (chatInput && sendBtn && chatMessages && currentUserId && friendUserId) {
       chatManager = new ChatManager(
         chatInput,
@@ -255,9 +255,9 @@ export function init() {
         currentUserId,
         friendUserId
       );
-      
+
       console.log('ChatManager created, loading messages...');
-      
+
       // Load messages immediately after creating the chat manager
       setTimeout(() => {
         if (chatManager) {
@@ -269,7 +269,7 @@ export function init() {
       console.error('ChatManager initialization failed - missing elements or user IDs');
     }
   }
-  
+
   async function updatePageContent(user: any): Promise<void> {
 
 	const userInfo = await userService.getUserById(user.id);
@@ -288,16 +288,16 @@ export function init() {
 	}
     // Load user stats from API
     loadUserStats(user.id);
-    
+
     // Re-setup online status listener with new friendUserId
     if (unsubscribeStatusChange) {
       unsubscribeStatusChange();
     }
     setupOnlineStatusListener();
-    
+
     // Update friend online status with retry mechanism for refresh issues
     updateFriendOnlineStatusWithRetry();
-    
+
     // Initialize chat automatically since it's the main view
     if (chatManager) {
       chatManager.loadChatMessages();
@@ -306,16 +306,16 @@ export function init() {
 
 function updateFriendOnlineStatusWithRetry(attempt: number = 1): void {
     console.log(`Attempting to update friend status, attempt ${attempt}`);
-    
+
     // WebSocket bağlantısının kurulu olup olmadığını kontrol et
     const wsManager = WebSocketManager.getInstance();
     const isWSConnected = wsManager.isConnected();
     console.log('WebSocket connected:', isWSConnected);
-    
+
     // OnlineUsersService'te kullanıcılar var mı kontrol et
     const hasUsers = onlineUsersService.getAllUsers().length > 0;
     console.log('OnlineUsersService has users:', hasUsers);
-    
+
     if ((isWSConnected && hasUsers) || attempt > 5) {
       // Service hazır veya yeterince denedik
       updateFriendOnlineStatus();
@@ -328,7 +328,7 @@ function updateFriendOnlineStatusWithRetry(attempt: number = 1): void {
           wsManager.connect(token);
         }
       }
-      
+
       // Tekrar dene
       setTimeout(() => {
         updateFriendOnlineStatusWithRetry(attempt + 1);
@@ -344,7 +344,7 @@ async function loadUserStats(userId: number): Promise<void> {
       console.log('Loading stats for user ID:', userId);
 
 	  const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.BY_ID(userId.toString())), {
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
@@ -357,7 +357,7 @@ async function loadUserStats(userId: number): Promise<void> {
 
       const data = await response.json();
       console.log('User stats API response:', data);
-      
+
       if (data.user) {
         updateStatsDisplay(data.user);
       } else {
@@ -412,14 +412,14 @@ function updateStatsDisplay(userData: any) {
       const timeOptions = ['2 hours ago', '5 hours ago', '1 day ago', '2 days ago', '3 days ago'];
       return timeOptions[date] || `${date + 1} days ago`;
     }
-    
+
     // New behavior for Date objects with date and time display
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
-    
+
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   }
 
@@ -431,7 +431,7 @@ async function handleChallenge() {
 
     try {
     const viewingUser = appState.getViewingUser();
-      
+
      if (!viewingUser) {
         notify('No user selected for challenge', 'red');
         return;
@@ -439,7 +439,7 @@ async function handleChallenge() {
 
       gameService.sendGameInvite(friendUserId, currentUsername);
       notify(`Game invitation sent to ${viewingUser.username}!`);
-      
+
       // Close sidebar after sending challenge
       closeSidebarPanel();
     } catch (error) {
@@ -475,7 +475,7 @@ async function handleRemoveFriend() {
           'Authorization': `Bearer ${token}`,
         }
       });
-      
+
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Remove friend error response:', errorData);
@@ -487,7 +487,7 @@ async function handleRemoveFriend() {
       setTimeout(() => {
         router.navigate('home');
       }, 1000);
-      
+
     } catch (error) {
       console.error('Error removing friend:', error);
       notify('Failed to remove friend', 'red');
@@ -521,7 +521,7 @@ async function handleBlockFriend() {
           'Authorization': `Bearer ${token}`,
         }
       });
-      
+
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Block friend error response:', errorData);
@@ -529,11 +529,11 @@ async function handleBlockFriend() {
       }
 
       notify(`Blocked ${viewingUser.username}`, 'green');
-      
+
       setTimeout(() => {
         router.navigate('home');
       }, 1000);
-      
+
     } catch (error) {
       console.error('Error blocking user:', error);
       notify('Failed to block user', 'red');
@@ -602,20 +602,20 @@ async function handleBlockFriend() {
         const opponentId = isPlayer1 ? match.player2Id : match.player1Id;
         const userScore = isPlayer1 ? match.player1Score : match.player2Score;
         const opponentScore = isPlayer1 ? match.player2Score : match.player1Score;
-        
+
         // Get opponent's username
         const opponent = await userService.getUserById(opponentId);
         const opponentUsername = opponent?.username || 'Unknown';
-        
+
         const isWin = match.winnerId === friendUserId;
         const resultClass = isWin ? 'neon-green' : 'neon-red';
         const resultBorderClass = isWin ? 'border-neon-green' : 'border-neon-red';
         const resultLetter = isWin ? 'W' : 'L';
-        
+
         // Format date
         const matchDate = new Date(match.endedAt || match.startedAt);
         const timeAgo = getTimeAgo(matchDate);
-        
+
         matchElements.push(`
           <div class="flex items-center justify-between p-3 bg-terminal-border border border-${resultClass} border-opacity-50 rounded-lg">
             <div class="flex items-center gap-2">
@@ -627,7 +627,7 @@ async function handleBlockFriend() {
               </div>
             </div>
             <div class="text-right">
-              <div class="font-bold text-${resultClass} text-sm">${userScore} - ${opponentScore}</div>
+              <div class="font-bold text-${resultClass} text-sm whitespace-nowrap">${userScore} - ${opponentScore}</div>
             </div>
           </div>
         `);
@@ -644,15 +644,15 @@ async function handleBlockFriend() {
       unsubscribeStatusChange();
       unsubscribeStatusChange = null;
     }
-    
+
     // ChatManager cleanup is handled automatically
     if (chatManager) {
       chatManager = null;
     }
-    
+
     console.log('🧹 USER-PROFILE: Cleanup completed');
   }
-  
+
   (window as any).userProfileCleanup = cleanup;
 }
 
