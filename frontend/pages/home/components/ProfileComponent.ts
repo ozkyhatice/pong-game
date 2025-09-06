@@ -1,6 +1,6 @@
 import { ProfileHeader, UserProfile } from './profile/ProfileHeader.js';
 import { SocialTabs } from './profile/SocialTabs.js';
-import { XSSProtection } from '../../../core/XSSProtection.js';
+import { safeDOM } from '../../../core/XSSProtection.js';
 
 export class ProfileComponent {
   private element: HTMLElement;
@@ -18,8 +18,8 @@ export class ProfileComponent {
   }
 
   private render(): void {
-    this.element.appendChild(this.profileHeader.getElement());
-    this.element.appendChild(this.socialTabs.getElement());
+    safeDOM.appendChild(this.element, this.profileHeader.getElement());
+    safeDOM.appendChild(this.element, this.socialTabs.getElement());
   }
 
   getElement(): HTMLElement {

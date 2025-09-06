@@ -41,7 +41,7 @@ export class GameInviteManager {
         this.activeInvites.set(friendInvite.senderId, friendInvite);
         const inviteElement = this.createGameInviteElement(friendInvite);
         inviteElement.setAttribute('data-invite-sender', friendInvite.senderId.toString());
-        this.chatMessages.appendChild(inviteElement);
+        safeDOM.appendChild(this.chatMessages, inviteElement);
       }
     }
   }
@@ -54,7 +54,7 @@ export class GameInviteManager {
     
     const inviteElement = this.createGameInviteElement(data);
     inviteElement.setAttribute('data-invite-sender', data.senderId.toString());
-    this.chatMessages.appendChild(inviteElement);
+    safeDOM.appendChild(this.chatMessages, inviteElement);
     this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
   }
 

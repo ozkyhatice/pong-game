@@ -314,7 +314,7 @@ export class GameAreaComponent extends Component {
         .querySelector(".reject-btn")
         ?.addEventListener("click", () => this.rejectInvite(invite));
 
-      container.appendChild(inviteEl);
+      safeDOM.appendChild(container, inviteEl);
     }
   }
 

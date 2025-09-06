@@ -84,9 +84,9 @@ export function init() {
 
     const appDiv = document.getElementById('app');
     if (appDiv) {
-      appDiv.appendChild(createdCanvas);
+      safeDOM.appendChild(appDiv, createdCanvas);
     } else {
-      document.body.appendChild(createdCanvas);
+      safeDOM.appendChild(document.body, createdCanvas);
     }
 
     realCanvas = createdCanvas;

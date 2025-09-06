@@ -143,7 +143,7 @@ export class ChatManager {
     
     messages.forEach((message, index) => {
       const messageElement = this.createMessageElement(message);
-      this.chatMessages.appendChild(messageElement);
+      safeDOM.appendChild(this.chatMessages, messageElement);
     });
 
     this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
@@ -234,7 +234,7 @@ export class ChatManager {
       };
 
       const messageElement = this.createMessageElement(sentMessage);
-      this.chatMessages.appendChild(messageElement);
+      safeDOM.appendChild(this.chatMessages, messageElement);
       this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
 
       this.chatService.sendMessage(this.friendUserId, message);
@@ -288,7 +288,7 @@ export class ChatManager {
     };
 
     const messageElement = this.createMessageElement(apiMessage);
-    this.chatMessages.appendChild(messageElement);
+    safeDOM.appendChild(this.chatMessages, messageElement);
     this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
   }
 
