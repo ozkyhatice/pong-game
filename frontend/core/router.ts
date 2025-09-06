@@ -106,7 +106,9 @@ class Router {
 
       this.cleanupCurrentPage();
       
+      
       this.container.innerHTML = html;
+
 
       const module = await import(`../pages/${pageName}/${pageName}.js`);
       if (module.init) module.init();

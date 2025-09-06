@@ -107,22 +107,22 @@ async function loadBlockedUsers(userId: number): Promise<void> {
             const data = await response.json();
             displayBlockedUsers(data.blockedUsers || []);
         } else {
-            listDiv.innerHTML = `
+            safeDOM.setHTML(listDiv, `
                 <div class="text-neon-red text-opacity-70 text-[10px] text-center py-4">
                     FAILED TO LOAD BLOCKED USERS
                 </div>
-            `;
+            `);
         }
     } catch (error) {
         notify('Error loading blocked users', 'red');
         if (loadingDiv) {
             loadingDiv.style.display = 'none';
         }
-        listDiv.innerHTML = `
+        safeDOM.setHTML(listDiv, `
             <div class="text-neon-red text-opacity-70 text-[10px] text-center py-4">
                 ERROR LOADING BLOCKED USERS
             </div>
-        `;
+        `);
     }
 }
 
@@ -131,31 +131,33 @@ function displayBlockedUsers(blockedUsers: any[]): void {
     if (!listDiv) return;
 
     if (blockedUsers.length === 0) {
-        listDiv.innerHTML = `
+        safeDOM.setHTML(listDiv, `
             <div class="text-neon-red text-opacity-50 text-[10px] text-center py-4">
                 NO BLOCKED USERS, TRY ADDING SOME!
             </div>
-        `;
+        `);
         return;
     }
 
-    listDiv.innerHTML = blockedUsers.map(user => `
+    const blockedUsersHTML = blockedUsers.map(user => `
         <div class="flex items-center justify-between p-2 bg-black bg-opacity-40 border border-neon-red border-opacity-30 rounded-sm">
             <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-full bg-neon-red bg-opacity-20 flex items-center justify-center">
-					<img id="header-user-avatar-img" src="${user.avatar || 'https://placehold.co/400x400?text=Player'}" alt="User Avatar" class="w-full h-full object-cover rounded-full">
+					<img id="header-user-avatar-img" src="${XSSProtection.cleanInput(user.avatar || 'https://placehold.co/400x400?text=Player')}" alt="User Avatar" class="w-full h-full object-cover rounded-full">
                     <span class="text-neon-red text-[8px] font-bold"></span>
                 </div>
                 <div>
-                    <p class="text-neon-red text-xs font-bold">${user.username}</p>
+                    <p class="text-neon-red text-xs font-bold">${XSSProtection.escapeHTML(user.username)}</p>
                 </div>
             </div>
-            <button onclick="unblockUser(${user.id})" 
+            <button onclick="unblockUser(${XSSProtection.cleanInput(user.id.toString())})" 
                     class="terminal-btn bg-btn-gradient border border-neon-yellow text-neon-yellow px-3 py-2 font-orbitron text-xs font-bold tracking-wide cursor-pointer rounded-sm">
                 UNBLOCK
             </button>
         </div>
     `).join('');
+    
+    safeDOM.setHTML(listDiv, blockedUsersHTML);
 }
 
 async function unblockUser(userId: number): Promise<void> {
