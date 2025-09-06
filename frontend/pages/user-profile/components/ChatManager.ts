@@ -164,7 +164,8 @@ export class ChatManager {
         ? this.currentUserAvatar 
         : null;
         
-      messageDiv.innerHTML = `
+      messageDiv.innerHTML = '';
+      safeDOM.setHTML(messageDiv, `
         <div class="flex items-end gap-2 justify-end">
           <div class="max-w-[280px] min-w-[60px]">
             <div class="text-neon-white border border-neon-yellow border-opacity-50 p-3 rounded-lg shadow-sm bg-terminal-border break-words">
@@ -174,22 +175,23 @@ export class ChatManager {
           </div>
           <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-neon-yellow">
             ${avatarSrc 
-              ? `<img src="${avatarSrc}" alt="Your Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full bg-neon-yellow rounded-full flex items-center justify-center text-console-bg text-sm font-bold\\'>ME</div>';">`
+              ? `<img src="${XSSProtection.cleanInput(avatarSrc)}" alt="Your Avatar" class="w-full h-full object-cover">`
               : `<div class="w-full h-full bg-neon-yellow rounded-full flex items-center justify-center text-console-bg text-sm font-bold">ME</div>`
             }
           </div>
         </div>
-      `;
+      `);
     } else {
       const avatarSrc = this.friendUserAvatar && this.friendUserAvatar.trim() !== '' 
         ? this.friendUserAvatar 
         : null;
       
-      messageDiv.innerHTML = `
+      messageDiv.innerHTML = '';
+      safeDOM.setHTML(messageDiv, `
         <div class="flex items-end gap-2">
           <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-neon-white">
             ${avatarSrc 
-              ? `<img src="${avatarSrc}" alt="Friend Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full bg-neon-white rounded-full flex items-center justify-center text-console-bg text-sm font-bold\\'>U</div>';">`
+              ? `<img src="${XSSProtection.cleanInput(avatarSrc)}" alt="Friend Avatar" class="w-full h-full object-cover">`
               : `<div class="w-full h-full bg-neon-white rounded-full flex items-center justify-center text-console-bg text-sm font-bold">U</div>`
             }
           </div>
@@ -200,7 +202,7 @@ export class ChatManager {
             <div class="text-[10px] text-neon-white/30 mt-1">${displayTime}</div>
           </div>
         </div>
-      `;
+      `);
     }
 
     return messageDiv;

@@ -62,25 +62,25 @@ export class GameInviteManager {
     const inviteDiv = document.createElement('div');
     inviteDiv.className = 'mb-4';
     
-    inviteDiv.innerHTML = `
+    safeDOM.setHTML(inviteDiv, `
       <div class="flex items-start gap-3">
         <div class="w-8 h-8 bg-purple-400 rounded-full flex items-center justify-center text-white text-sm font-bold">🎮</div>
         <div class="flex-1">
           <div class="bg-gradient-to-r from-purple-100 to-blue-100 p-4 rounded-lg shadow-sm border border-purple-200">
             <p class="text-slate-800 font-medium mb-3">
-              <strong>${this.escapeHtml(invite.senderUsername)}</strong> invited you to play Pong!
+              <strong>${XSSProtection.escapeHTML(invite.senderUsername)}</strong> invited you to play Pong!
             </p>
             <div class="flex gap-2">
               <button 
                 class="accept-invite px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                data-sender-id="${invite.senderId}"
-                data-sender-username="${this.escapeHtml(invite.senderUsername)}"
+                data-sender-id="${XSSProtection.cleanInput(invite.senderId.toString())}"
+                data-sender-username="${XSSProtection.escapeHTML(invite.senderUsername)}"
               >
                 Accept
               </button>
               <button 
                 class="reject-invite px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-                data-sender-id="${invite.senderId}"
+                data-sender-id="${XSSProtection.cleanInput(invite.senderId.toString())}"
               >
                 Reject  
               </button>
@@ -89,7 +89,7 @@ export class GameInviteManager {
           <div class="text-xs text-slate-500 mt-1">Game Invitation</div>
         </div>
       </div>
-    `;
+    `);
 
     const acceptBtn = inviteDiv.querySelector('.accept-invite') as HTMLButtonElement;
     const rejectBtn = inviteDiv.querySelector('.reject-invite') as HTMLButtonElement;

@@ -416,12 +416,12 @@ export function init() {
         <div class="flex items-center space-x-3 p-3 border ${borderClass} rounded-lg bg-opacity-60 ${glowClass} transition-all hover:scale-105">
           <div class="relative">
             <div class="w-10 h-10 bg-gradient-to-br from-neon-green to-neon-blue rounded-full flex items-center justify-center border-2 border-neon-green overflow-hidden">
-              ${avatarUrl ? `<img src="${avatarUrl}" alt="${participant.username}" class="w-full h-full rounded-full object-cover">` : `<span class="text-black font-bold text-sm">${participant.username[0].toUpperCase()}</span>`}
+              ${avatarUrl ? `<img src="${XSSProtection.cleanInput(avatarUrl)}" alt="${XSSProtection.escapeHTML(participant.username)}" class="w-full h-full rounded-full object-cover">` : `<span class="text-black font-bold text-sm">${XSSProtection.escapeHTML(participant.username[0].toUpperCase())}</span>`}
             </div>
             ${isCurrentUser ? '<div class="absolute -top-1 -right-1 w-3 h-3 bg-neon-green rounded-full border border-black flex items-center justify-center"><span class="text-black text-xs">✓</span></div>' : ''}
           </div>
           <div class="flex-1">
-            <div class="text-neon-white font-bold text-sm uppercase tracking-wide">${participant.username}</div>
+            <div class="text-neon-white font-bold text-sm uppercase tracking-wide">${XSSProtection.escapeHTML(participant.username)}</div>
             <div class="text-xs uppercase tracking-wide ${isCurrentUser ? 'text-neon-green font-bold' : 'text-neon-blue'}">${isCurrentUser ? 'YOU' : 'WARRIOR'}</div>
           </div>
           ${isCurrentUser ? '<div class="status-dot"></div>' : '<div class="w-2 h-2 bg-neon-blue rounded-full animate-pulse"></div>'}
@@ -445,7 +445,7 @@ export function init() {
       `;
     }
 
-    participantsGrid.innerHTML = html;
+    safeDOM.setHTML(participantsGrid, html);
   }
 
   function updateWaitingMessage() {
@@ -587,10 +587,10 @@ export function init() {
               <div class="space-y-2">
                 <div class="flex items-center justify-center space-x-2 p-2 bg-black bg-opacity-60 rounded border ${winnerIsPlayer1 ? 'border-neon-yellow bg-yellow-900 bg-opacity-20' : 'border-gray-500'}">
                   <div class="w-8 h-8 bg-gradient-to-br from-neon-green to-neon-blue rounded-full flex items-center justify-center border border-neon-green overflow-hidden">
-                    ${player1Avatar ? `<img src="${player1Avatar}" alt="${match.player1Username}" class="w-full h-full rounded-full object-cover">` : `<span class="text-black font-bold text-xs">${match.player1Username[0].toUpperCase()}</span>`}
+                    ${player1Avatar ? `<img src="${XSSProtection.cleanInput(player1Avatar)}" alt="${XSSProtection.escapeHTML(match.player1Username)}" class="w-full h-full rounded-full object-cover">` : `<span class="text-black font-bold text-xs">${XSSProtection.escapeHTML(match.player1Username[0].toUpperCase())}</span>`}
                   </div>
                   <div class="flex-1 text-center">
-                    <span class="font-bold text-neon-white text-xs block">${match.player1Username}</span>
+                    <span class="font-bold text-neon-white text-xs block">${XSSProtection.escapeHTML(match.player1Username)}</span>
                     ${winnerIsPlayer1 ? '<div class="text-neon-yellow text-sm">★</div>' : ''}
                     ${isUserInMatch && match.player1Id === currentUser?.id ? '<div class="text-neon-green text-xs font-bold">YOU</div>' : ''}
                   </div>
@@ -602,12 +602,12 @@ export function init() {
                 
                 <div class="flex items-center justify-center space-x-2 p-2 bg-black bg-opacity-60 rounded border ${winnerIsPlayer2 ? 'border-neon-yellow bg-yellow-900 bg-opacity-20' : 'border-gray-500'}">
                   <div class="flex-1 text-center">
-                    <span class="font-bold text-neon-white text-xs block">${match.player2Username}</span>
+                    <span class="font-bold text-neon-white text-xs block">${XSSProtection.escapeHTML(match.player2Username)}</span>
                     ${winnerIsPlayer2 ? '<div class="text-neon-yellow text-sm">★</div>' : ''}
                     ${isUserInMatch && match.player2Id === currentUser?.id ? '<div class="text-neon-green text-xs font-bold">YOU</div>' : ''}
                   </div>
                   <div class="w-8 h-8 bg-gradient-to-br from-neon-purple to-neon-red rounded-full flex items-center justify-center border border-neon-purple overflow-hidden">
-                    ${player2Avatar ? `<img src="${player2Avatar}" alt="${match.player2Username}" class="w-full h-full rounded-full object-cover">` : `<span class="text-black font-bold text-xs">${match.player2Username[0].toUpperCase()}</span>`}
+                    ${player2Avatar ? `<img src="${XSSProtection.cleanInput(player2Avatar)}" alt="${XSSProtection.escapeHTML(match.player2Username)}" class="w-full h-full rounded-full object-cover">` : `<span class="text-black font-bold text-xs">${XSSProtection.escapeHTML(match.player2Username[0].toUpperCase())}</span>`}
                   </div>
                 </div>
               </div>
@@ -635,7 +635,7 @@ export function init() {
     }
     
     html += '</div>';
-    bracketContainer.innerHTML = html;
+    safeDOM.setHTML(bracketContainer, html);
   }
 
   function updateCurrentMatchInfo() {
@@ -651,30 +651,30 @@ export function init() {
         const roundName = userMatch.round === 1 ? 'Semifinal' : userMatch.round === 2 ? 'Final' : `Round ${userMatch.round}`;
         
         if (matchDetails) {
-          matchDetails.innerHTML = `
+          safeDOM.setHTML(matchDetails, `
             <div class="flex items-center justify-center space-x-4">
               <div class="text-center">
                 <div class="w-12 h-12 bg-gradient-to-br from-neon-green to-neon-blue rounded-full flex items-center justify-center text-black font-bold text-lg mb-2 border-2 border-neon-green shadow-btn-glow">
-                  ${currentUser?.username[0].toUpperCase()}
+                  ${XSSProtection.escapeHTML(currentUser?.username[0].toUpperCase() || 'U')}
                 </div>
-                <div class="text-xs text-neon-white font-bold uppercase">${currentUser?.username}</div>
+                <div class="text-xs text-neon-white font-bold uppercase">${XSSProtection.escapeHTML(currentUser?.username || 'USER')}</div>
                 <div class="text-xs text-neon-green font-bold">YOU</div>
               </div>
               
               <div class="text-center">
                 <div class="text-neon-purple font-bold text-xl mb-1" style="text-shadow: 0 0 15px #c187fc;">VS</div>
-                <div class="text-neon-purple text-xs font-bold uppercase">${roundName}</div>
+                <div class="text-neon-purple text-xs font-bold uppercase">${XSSProtection.escapeHTML(roundName)}</div>
               </div>
               
               <div class="text-center">
                 <div class="w-12 h-12 bg-gradient-to-br from-neon-purple to-neon-red rounded-full flex items-center justify-center text-black font-bold text-lg mb-2 border-2 border-neon-purple shadow-btn-glow">
-                  ${opponent[0].toUpperCase()}
+                  ${XSSProtection.escapeHTML(opponent[0].toUpperCase())}
                 </div>
-                <div class="text-xs text-neon-white font-bold uppercase">${opponent}</div>
+                <div class="text-xs text-neon-white font-bold uppercase">${XSSProtection.escapeHTML(opponent)}</div>
                 <div class="text-xs text-neon-red font-bold">OPPONENT</div>
               </div>
             </div>
-          `;
+          `);
         }
         
         currentMatchInfo.classList.remove('hidden');
