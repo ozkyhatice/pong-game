@@ -1,4 +1,4 @@
-import { safeDOM } from './XSSProtection';
+import { safeDOM } from './XSSProtection.js';
 
 const timeoutMS = 2000;
 

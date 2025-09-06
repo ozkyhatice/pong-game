@@ -1,4 +1,4 @@
-import { XSSProtection } from './XSSProtection';
+import { XSSProtection } from './XSSProtection.js';
 
 interface ViewingUser {
   id: number;
