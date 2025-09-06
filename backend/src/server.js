@@ -21,9 +21,7 @@ async function createInitialTournament() {
         [`Initial Tournament ${Date.now()}`]
       );
     }
-  } catch (error) {
-    console.error('Error creating initial tournament:', error);
-  }
+  } catch (error) {}
 }
 
 app.listen({ port: PORT, host: HOST }, async (err, address) => {

@@ -1,6 +1,5 @@
-<!-- Mobile Layout - Only show on actual mobile devices -->
 <div id="mobile-layout" class="mobile-only h-screen bg-gradient-to-br from-terminal-bg via-black to-terminal-bg relative overflow-hidden" style="display: none;">
-  <!-- Animated background -->
+
   <div class="absolute inset-0 opacity-20">
     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-green to-transparent animate-pulse"></div>
     <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-green to-transparent animate-pulse"></div>
@@ -8,10 +7,8 @@
     <div class="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-transparent via-neon-green to-transparent animate-pulse"></div>
   </div>
 
-  <!-- Mobile Header - Enhanced -->
   <div class="relative z-10 bg-gradient-to-r from-terminal-bg/90 via-black/90 to-terminal-bg/90 backdrop-blur-sm border-b border-neon-green/30 p-4">
     <div class="flex justify-between items-center">
-      <!-- Player 1 (Left Player - Blue) -->
       <div class="flex items-center space-x-3">
         <div class="relative">
           <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-2 border-blue-400 shadow-lg shadow-blue-500/30 overflow-hidden" id="mobile-player1-avatar-container">
@@ -25,12 +22,10 @@
         </div>
       </div>
 
-      <!-- Center Status -->
       <div class="text-center">
-        <div class="text-neon-green font-mono text-xs font-bold animate-pulse" id="mobile-game-status">⚡ CONNECTING...</div>
+        <div class="text-neon-green font-mono text-xs font-bold animate-pulse" id="mobile-game-status"> CONNECTING...</div>
         <div class="text-neon-green font-mono text-xs mt-1" id="mobile-room-id">ARENA</div>
 
-        <!-- Mobile Pause Message -->
         <div id="mobile-pause-message" class="hidden mt-2 bg-neon-yellow/20 rounded-lg px-3 py-2 border border-neon-yellow/50 backdrop-blur-sm">
           <div class="text-neon-yellow text-xs font-mono font-bold" id="mobile-pause-text">⏸️ PAUSED</div>
           <div class="text-neon-yellow text-xs font-mono" id="mobile-pause-countdown"></div>
@@ -41,7 +36,6 @@
         </button>
       </div>
 
-      <!-- Player 2 (Right Player - Red) -->
       <div class="flex items-center space-x-3">
         <div>
           <div class="text-red-200 font-mono text-sm font-bold text-right" id="mobile-player2-name">WARRIOR 2</div>
@@ -57,12 +51,9 @@
     </div>
   </div>
 
-  <!-- Mobile Game Area -->
   <div class="flex-1 flex flex-col relative">
-    <!-- 3D Canvas Container -->
     <div class="flex-1 flex items-center justify-center p-4">
       <div class="relative w-full max-w-md">
-        <!-- Canvas Frame -->
         <div class="relative bg-gradient-to-br from-console-bg to-black rounded-2xl p-4 border-2 border-neon-green/50 shadow-2xl shadow-neon-green/20">
           <canvas
             id="mobile-game-canvas"
@@ -70,7 +61,6 @@
             style="background: radial-gradient(ellipse at center, #001122 0%, #000000 70%);"
           ></canvas>
 
-          <!-- Corner decorations -->
           <div class="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-neon-green rounded-tl"></div>
           <div class="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-neon-green rounded-tr"></div>
           <div class="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-neon-green rounded-bl"></div>
@@ -80,10 +70,8 @@
       </div>
     </div>
 
-    <!-- Touch Controls - Enhanced -->
     <div class="bg-gradient-to-t from-terminal-bg/95 to-transparent backdrop-blur-sm border-t border-neon-green/30 p-6">
       <div class="flex justify-center space-x-16">
-        <!-- Up Button -->
         <button id="mobile-up-btn" class="relative group">
           <div class="w-24 h-24 bg-gradient-to-br from-neon-green to-green-700 rounded-2xl border-2 border-neon-green flex items-center justify-center text-terminal-bg font-bold text-4xl shadow-2xl shadow-neon-green/30 transition-all duration-200 group-active:scale-95 group-active:shadow-neon-green/50">
             ↑
@@ -91,7 +79,6 @@
           <div class="absolute inset-0 bg-gradient-to-br from-neon-green/20 to-transparent rounded-2xl opacity-0 group-active:opacity-100 transition-opacity"></div>
         </button>
 
-        <!-- Down Button -->
         <button id="mobile-down-btn" class="relative group">
           <div class="w-24 h-24 bg-gradient-to-br from-neon-green to-green-700 rounded-2xl border-2 border-neon-green flex items-center justify-center text-terminal-bg font-bold text-4xl shadow-2xl shadow-neon-green/30 transition-all duration-200 group-active:scale-95 group-active:shadow-neon-green/50">
             ↓
@@ -107,14 +94,12 @@
   </div>
 </div>
 
-<!-- Desktop Layout - Only show on desktop browsers -->
 <div id="desktop-layout" class="desktop-only min-h-screen bg-gradient-to-br from-terminal-bg via-black to-terminal-bg relative overflow-hidden" style="display: flex;">
-  <!-- Animated background grid -->
+
   <div class="absolute inset-0 opacity-10">
     <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25px 25px, #39FF14 2px, transparent 0), radial-gradient(circle at 75px 75px, #39FF14 2px, transparent 0); background-size: 100px 100px; background-position: 0 0, 50px 50px;"></div>
   </div>
 
-  <!-- Floating particles effect -->
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
     <div class="absolute w-2 h-2 bg-neon-green rounded-full opacity-30 animate-ping" style="top: 20%; left: 10%; animation-delay: 0s;"></div>
     <div class="absolute w-1 h-1 bg-neon-green rounded-full opacity-40 animate-ping" style="top: 60%; left: 80%; animation-delay: 1s;"></div>
@@ -122,10 +107,9 @@
   </div>
 
   <div class="relative z-10 flex flex-col w-full p-6">
-    <!-- Enhanced Header -->
     <div class="w-full mb-6">
       <div class="flex justify-between items-center bg-gradient-to-r from-terminal-bg/80 via-black/80 to-terminal-bg/80 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-neon-green/20">
-        <!-- Player 1 (Left Player - Blue) -->
+
         <div class="flex flex-col items-center space-y-2 group">
           <div class="relative">
             <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-2 border-blue-400 shadow-lg overflow-hidden" id="player1-avatar-container">
@@ -139,31 +123,26 @@
           </div>
         </div>
 
-        <!-- Center Arena Info -->
         <div class="flex flex-col items-center space-y-3 text-center">
           <div class="space-y-1">
             <span class="text-neon-green text-sm font-mono tracking-widest">BATTLE ARENA</span>
             <div class="text-neon-green font-mono text-xs" id="room-id">ROOM: LOADING...</div>
           </div>
 
-          <!-- Game Status -->
           <div class="bg-neon-green/20 rounded-lg px-4 py-2 border border-neon-green/50">
-            <span class="text-neon-green text-sm font-mono font-bold" id="game-status">⚡ CONNECTING...</span>
+            <span class="text-neon-green text-sm font-mono font-bold" id="game-status"> CONNECTING...</span>
           </div>
 
-          <!-- Pause Message -->
           <div id="pause-message" class="hidden bg-neon-yellow/20 rounded-lg px-4 py-2 border border-neon-yellow/50">
             <div class="text-neon-yellow text-sm font-mono font-bold text-center" id="pause-text">⏸️ GAME PAUSED</div>
             <div class="text-neon-yellow text-xs font-mono text-center mt-1" id="pause-countdown"></div>
           </div>
 
-          <!-- Leave Button -->
           <button id="leave-game-btn" class="bg-gradient-to-r from-neon-red to-neon-red hover:from-red-500 hover:to-red-400 text-white px-6 py-2 rounded-lg font-mono font-bold transition-all border border-neon-red shadow-lg">
             🚪 LEAVE
           </button>
         </div>
 
-        <!-- Player 2 (Right Player - Red) -->
         <div class="flex flex-col items-center space-y-2 group">
           <div class="relative">
             <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center border-2 border-red-400 shadow-lg overflow-hidden" id="player2-avatar-container">
@@ -179,7 +158,6 @@
       </div>
     </div>
 
-    <!-- Game Canvas Container -->
     <div class="w-full flex justify-center mb-6">
       <div class="bg-gradient-to-br from-terminal-bg to-black rounded-xl shadow-2xl p-4 border-2 border-neon-green/50">
         <canvas
@@ -190,10 +168,8 @@
       </div>
     </div>
 
-    <!-- Desktop Controls Info -->
     <div class="bg-gradient-to-r from-terminal-bg/80 to-console-bg/80 rounded-xl p-4 shadow-xl border border-neon-green/30">
       <div class="text-center space-y-3">
-        <!-- Controls -->
         <div class="flex justify-center space-x-8">
           <div class="flex items-center space-x-2">
             <div class="flex space-x-1">
@@ -203,7 +179,7 @@
             <span class="text-neon-green font-mono text-sm">MOVE PADDLE</span>
           </div>
 
-          <div class="text-neon-green font-mono text-lg">⚡</div>
+          <div class="text-neon-green font-mono text-lg"></div>
 
           <div class="flex items-center space-x-2">
             <span class="text-neon-green font-mono text-sm">OR USE ARROWS</span>
@@ -214,7 +190,6 @@
           </div>
         </div>
 
-        <!-- Instructions -->
         <div class="text-neon-green font-mono text-sm">
         </div>
       </div>

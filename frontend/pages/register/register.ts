@@ -2,7 +2,6 @@ import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
 
 export async function init() {
-  console.log('Register page loaded');
 
   const form = document.getElementById('registerForm') as HTMLFormElement;
   const googleRegisterBtn = document.getElementById('googleRegisterBtn') as HTMLButtonElement;

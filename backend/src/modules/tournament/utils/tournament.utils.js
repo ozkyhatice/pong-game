@@ -49,7 +49,6 @@ export async function getTournamentPlayers(tournamentId) {
         const players = await db.all(sql, params);
         return players;
     } catch (error) {
-        console.error('Error fetching tournament players:', error);
         throw error;
     }
 }

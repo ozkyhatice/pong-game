@@ -21,7 +21,6 @@
     margin: 0 auto;
   }
 
-  /* Typing effect sadece caret için CSS */
   .typing-text {
     display: inline-block;
     white-space: nowrap;
@@ -32,12 +31,10 @@
   }
   @keyframes caret-blink { 50% { border-color: transparent; } }
 
-  /* Responsive font sizes */
   @media (max-width: 640px) { .landing-title { font-size: 5rem; } }
   @media (min-width: 641px) and (max-width: 1024px) { .landing-title { font-size: 8rem; } }
   @media (min-width: 1025px) { .landing-title { font-size: 12rem; } }
 
-  /* Neon buttons */
   .neon-btn {
     background: rgba(0,0,0,0.45);
     border: 1px solid rgba(57,255,20,0.12);
@@ -65,7 +62,6 @@
     box-shadow: 0 0 8px var(--neon-glow);
   }
 
-  /* Responsive button layout */
   .button-container {
     display: flex;
     align-items: center;
@@ -73,14 +69,12 @@
     gap: 2rem;
   }
 
-  /* Mobile: vertical layout */
   @media (max-width: 768px) {
     .button-container {
       flex-direction: column;
     }
   }
 
-  /* Desktop: horizontal layout */
   @media (min-width: 769px) {
     .button-container {
       flex-direction: row;
@@ -88,7 +82,6 @@
     }
   }
 
-  /* Fade out the landing UI when user starts controlling the paddle */
   #landing-ui { transition: opacity 300ms ease, filter 300ms ease; }
   #landing-ui.fade-out {
     opacity: 0;
@@ -98,12 +91,10 @@
 </style>
 
 <div id="landing-ui" class="h-screen flex flex-col items-center justify-center">
-  <!-- PONG Başlık -->
   <h1 id="landing-title" class="landing-title" style="margin-bottom: 4rem;" aria-label="PONG">
     <span class="typing-text"></span>
   </h1>
 
-  <!-- Butonlar -->
   <div class="button-container">
     <button
       onclick="window.closeBabylonGame && window.closeBabylonGame(); router.navigate('game')"

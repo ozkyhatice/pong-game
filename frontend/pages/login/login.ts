@@ -2,7 +2,6 @@ import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
 
 export async function init() {
-  console.log('Login page loaded');
 
   const form = document.getElementById('loginForm') as HTMLFormElement;
   const googleLoginBtn = document.getElementById('googleLoginBtn') as HTMLButtonElement;
@@ -33,7 +32,6 @@ export async function init() {
       });
 
       const data = await response.json();
-      console.log('Login response:', data);
 
       if (data.message === '2FA_REQUIRED') {
         sessionStorage.setItem('tempUserId', data.userId.toString());

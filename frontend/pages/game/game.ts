@@ -351,7 +351,6 @@ export async function init() {
   }
 
   function setupMobileControls() {
-    // Player 1 Up Button
     if (mobileUpBtnP1) {
       ['touchstart', 'mousedown'].forEach(event => {
         mobileUpBtnP1!.addEventListener(event, (e: any) => {
@@ -944,7 +943,6 @@ export async function init() {
         gameLoopInterval = null;
       }
 
-      // Clear mobile control intervals
       if (mobileControlP1Interval) {
         clearInterval(mobileControlP1Interval);
         mobileControlP1Interval = null;

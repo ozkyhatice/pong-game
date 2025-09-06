@@ -153,8 +153,6 @@ export class WebSocketManager {
   send(message: WSMessage): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
-    } else {
-      console.log('WS: Not connected');
     }
   }
 

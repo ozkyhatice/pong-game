@@ -31,7 +31,6 @@ interface MatchDetails {
 }
 
 export function init() {
-  console.log('🏆 Tournament page initializing...');
   const appState = AppState.getInstance();
   const tournamentService = new TournamentService();
   const userService = new UserService();
@@ -42,7 +41,6 @@ export function init() {
   let retryCount = 0;
   const MAX_RETRIES = 3;
 
-  // DOM elements
   const tournamentStatus = document.getElementById('tournament-status');
   const tournamentStatusMobile = document.getElementById('tournament-status-mobile');
   const participantCount = document.getElementById('participant-count');
@@ -73,12 +71,10 @@ export function init() {
   let countdownInterval: number | null = null;
   let wsReconnectInterval: number | null = null;
 
-  // Initialize
   initPage();
 
   async function initPage() {
     try {
-      // User'ı al
       currentUser = await userService.getCurrentUser();
       if (!currentUser) {
         notify('Please login first');
@@ -86,41 +82,29 @@ export function init() {
         return;
       }
 
-      // Reload guard: If there is no active tournament in state, redirect to home
       if (!appState.isInTournament()) {
         const tournamentInfo = appState.getCurrentTournament();
-        console.log('Current tournament from AppState:', tournamentInfo);
-        console.log('❌ TOURNAMENT PAGE: No active tournament in AppState, redirecting to home');
         (window as any).router.navigate('home');
         return;
       }
 
-      // Ensure WebSocket is connected on reload
       const wsManager = (tournamentService as any)['wsManager'] as any;
       if (!wsManager?.isConnected?.()) {
-        console.log('🔌 TOURNAMENT PAGE: WS not connected, attempting reconnect...');
         if (wsManager?.reconnect) {
           wsManager.reconnect();
         }
       }
 
-      // Tournament durumunu kontrol et - sadece initial request
       requestInitialTournamentData();
       
-      // Event listeners'ı kurulum
       setupEventListeners();
-      
-      // Tournament service listeners
       setupTournamentListeners();
-      
-      // WebSocket reconnection handling
       setupWebSocketReconnection();
-      
-      // Check for recent tournament match result
+    
       checkForRecentMatchResult();
       
     } catch (error) {
-      console.error('Error initializing tournament page:', error);
+
       notify('Failed to load tournament data');
       (window as any).router.navigate('home');
     }
@@ -133,133 +117,91 @@ export function init() {
         const result = JSON.parse(lastMatchResult);
         const timeDiff = Date.now() - result.timestamp;
         
-        // Show result if it's less than 30 seconds old
         if (timeDiff < 30000) {
-          console.log('🏆 TOURNAMENT: Showing recent match result:', result);
           notify(result.message || `Match completed! Round ${result.round}`, 'green');
         }
         
-        // Clean up the stored result
         localStorage.removeItem('lastTournamentMatchResult');
       } catch (error) {
-        console.error('Error parsing last tournament match result:', error);
         localStorage.removeItem('lastTournamentMatchResult');
       }
     }
   }
 
   function requestInitialTournamentData() {
-    console.log('🔄 TOURNAMENT PAGE: Requesting initial tournament data...');
-    
+
     if (!currentUser) {
-      console.error('❌ TOURNAMENT PAGE: No current user, cannot load tournament data');
       return;
     }
     
-    // Initial request for tournament details - only once at startup
-    console.log('📡 TOURNAMENT PAGE: Requesting initial tournament details...');
     tournamentService.getTournamentDetails();
     
-    // Also request bracket information
     setTimeout(() => {
-      console.log('📡 TOURNAMENT PAGE: Requesting initial tournament bracket...');
       tournamentService.getTournamentBracket();
     }, 500);
   }
 
   function setupEventListeners() {
-    // Leave tournament button
     leaveTournamentBtn?.addEventListener('click', handleLeaveTournament);
-    
-    // Return home button
+  
     returnHomeBtn?.addEventListener('click', () => {
       (window as any).router.navigate('home');
     });
   }
 
   function setupTournamentListeners() {
-    // Tournament details geldiğinde
     tournamentService.onTournamentDetails((data) => {
-      console.log('📊 TOURNAMENT PAGE: Tournament details received:', data);
       currentTournament = data.tournament;
       
       if (!currentTournament) {
-        console.log('❌ TOURNAMENT PAGE: No tournament data received');
-        // Tournament sayfasındaysak ve kullanıcı tournament'ta ise bekle (max 3 retry)
         if (currentUser && retryCount < MAX_RETRIES) {
           retryCount++;
-          console.log(`⏳ TOURNAMENT PAGE: User exists, retrying tournament data in 2 seconds... (${retryCount}/${MAX_RETRIES})`);
           setTimeout(() => {
             tournamentService.getTournamentDetails();
           }, 2000);
           return;
         }
-        console.log('❌ TOURNAMENT PAGE: Max retries reached or no user, navigating to home');
         (window as any).router.navigate('home');
         return;
       }
       
-      // Reset retry count on successful data
       retryCount = 0;
-      
-      console.log(`📊 TOURNAMENT PAGE: Tournament ${currentTournament.id} status: ${currentTournament.status}, participants: ${currentTournament.participants?.length || 0}`);
-      
-      // Handle elimination status
+
       if (data.userStatus === 'eliminated') {
-        console.log('❌ TOURNAMENT PAGE: User is eliminated');
         showEliminationStatus();
       } else if (data.userStatus === 'spectator') {
-        console.log('👁️ TOURNAMENT PAGE: User is spectator');
         showSpectatorMode();
-      } else {
-        console.log('✅ TOURNAMENT PAGE: User is active participant');
       }
       
       updateTournamentDisplay();
     });
 
-    // Player joined/left events
     tournamentService.onTournamentPlayerJoined((data) => {
-      console.log('🎯 Player joined:', data);
       if (currentTournament) {
         currentTournament.currentPlayers = data.currentPlayers;
-        // Update display without making new requests
         updateTournamentDisplay();
       }
       notify(`Player joined tournament (${data.currentPlayers}/4)`);
     });
 
     tournamentService.onTournamentPlayerLeft((data) => {
-      console.log('🎯 Player left:', data);
       if (currentTournament) {
         currentTournament.currentPlayers = data.currentPlayers;
-        // Update display without making new requests
         updateTournamentDisplay();
       }
-      notify(`Player left tournament (${data.currentPlayers}/4)`);
     });
 
-    // Tournament started
     tournamentService.onTournamentStarted((data) => {
-      console.log('🏆 Tournament started:', data);
-      // Update tournament with complete data from the event
       currentTournament = data.tournament || data;
       updateTournamentDisplay();
       notify('Tournament has started! Matches begin now.');
     });
 
-    // Match pairings revealed
     tournamentService.onTournamentMatchPairings((data) => {
-      console.log('🎯 Match pairings revealed:', data);
       showMatchPairingsCountdown(data);
     });
 
-    // Match started
     tournamentService.onTournamentMatchStarted((data) => {
-      console.log('🎮 Tournament match starting:', data);
-      console.log('🎮 Tournament match players order from server:', data.players);
-      console.log('🎮 TOURNAMENT POSITION ASSIGNMENT - LEFT (BLUE):', data.players?.[0], ', RIGHT (RED):', data.players?.[1]);
-      
       currentMatch = {
         matchId: data.matchId,
         opponent: data.opponent,
@@ -269,7 +211,6 @@ export function init() {
       
       notify(`Your match vs ${data.opponent} is starting!`);
       
-      // Navigate directly to remote-game for tournaments (skip lobby)
       appState.setCurrentRoom({
         roomId: data.roomId,
         players: data.players || [],
@@ -278,17 +219,12 @@ export function init() {
       (window as any).router.navigate('remote-game');
     });
 
-    // Round completed (show winners)
     tournamentService.onTournamentRoundCompleted((data) => {
-      console.log('🏆 Round completed:', data);
       showRoundCompletionDisplay(data);
       notify(data.message);
     });
 
-    // Next round started
     tournamentService.onTournamentNextRound((data) => {
-      console.log('🏆 Next round started:', data);
-      // Update tournament data from the received event data
       if (data.tournament) {
         currentTournament = data.tournament;
         updateTournamentDisplay();
@@ -296,25 +232,18 @@ export function init() {
       notify(`${data.roundName || `Round ${data.round}`} has begun!`);
     });
 
-    // Tournament ended
     tournamentService.onTournamentEnded((data) => {
-      console.log('🏆 Tournament ended:', data);
       showTournamentEndModal(data);
     });
 
-    // New tournament created
     tournamentService.onNewTournamentCreated((data) => {
-      console.log('🆕 New tournament created:', data);
       notify('A new tournament has been created!');
-      // Don't navigate away if user is still in current tournament
       if (!currentUser || !currentTournament || currentTournament.status === 'completed') {
         (window as any).router.navigate('home');
       }
     });
 
-    // Tournament bracket updates
     tournamentService.onTournamentBracket((data) => {
-      console.log('📊 TOURNAMENT PAGE: Bracket data received:', data);
       if (data.tournament) {
         currentTournament = { ...currentTournament, ...data.tournament };
         updateTournamentDisplay();
@@ -325,7 +254,6 @@ export function init() {
   function showPendingBracket() {
     if (!bracketContainer || !currentTournament) return;
     
-    // Enhanced compact bracket design for pending tournament
     bracketContainer.innerHTML = `
       <div class="space-y-4">
         <!-- Semifinals Section -->
@@ -442,7 +370,6 @@ export function init() {
   function updateTournamentDisplay() {
     if (!currentTournament) return;
 
-    // Update header - both desktop and mobile
     const status = currentTournament.status.charAt(0).toUpperCase() + currentTournament.status.slice(1);
     const playerCount = currentTournament.currentPlayers.toString();
     
@@ -453,7 +380,6 @@ export function init() {
       tournamentStatusMobile.textContent = status;
     }
 
-    // Update participant count - both desktop and mobile
     if (participantCount) {
       participantCount.textContent = playerCount;
     }
@@ -461,16 +387,9 @@ export function init() {
       participantCountMobile.textContent = playerCount;
     }
 
-    // Update participants grid
     updateParticipantsGrid();
-
-    // Update waiting message
     updateWaitingMessage();
-
-    // Update bracket
     updateBracket();
-
-    // Update current match info
     updateCurrentMatchInfo();
   }
 
@@ -479,19 +398,17 @@ export function init() {
 
     let html = '';
     
-    // Show current participants with enhanced design and real avatars
     for (const participant of currentTournament.participants) {
       const isCurrentUser = participant.id === currentUser?.id;
       const borderClass = isCurrentUser ? 'border-neon-green bg-gradient-to-r from-green-900 to-black' : 'border-neon-blue border-opacity-50 bg-black';
       const glowClass = isCurrentUser ? 'shadow-btn-glow' : '';
       
-      // Fetch user details for avatar
       let avatarUrl = '';
       try {
         const userDetails = await userService.getUserById(participant.id);
         avatarUrl = userDetails?.avatar || '';
       } catch (error) {
-        console.log('Could not fetch user details for avatar');
+        notify('Could not fetch user avatar', 'red');
       }
       
       html += `
@@ -511,7 +428,6 @@ export function init() {
       `;
     }
 
-    // Show empty slots with enhanced design
     const emptySlots = 4 - currentTournament.participants.length;
     for (let i = 0; i < emptySlots; i++) {
       html += `
@@ -552,7 +468,6 @@ export function init() {
     if (!bracketContainer || !currentTournament) return;
 
     if (currentTournament.status === 'pending') {
-      // 4 kişi dolmuşsa bracket'i göster, değilse bekleme mesajı
       if (currentTournament.currentPlayers === 4) {
         showPendingBracket();
       } else {
@@ -596,7 +511,6 @@ export function init() {
       return;
     }
 
-    // Group matches by round
     const rounds: { [key: number]: any[] } = {};
     currentTournament.matches.forEach(match => {
       if (!rounds[match.round]) {
@@ -605,7 +519,6 @@ export function init() {
       rounds[match.round].push(match);
     });
 
-    // Create enhanced tournament bracket with modern compact design
     let html = '<div class="space-y-4">';
     
     for (const roundKey of Object.keys(rounds)) {
@@ -626,11 +539,9 @@ export function init() {
           <div class="${round === 1 ? 'grid grid-cols-1 md:grid-cols-2 gap-3' : 'flex justify-center'}">
       `;
       
-      // Process matches and get user avatars
       for (let index = 0; index < roundMatches.length; index++) {
         const match = roundMatches[index];
-        
-        // Fetch user avatars
+      
         let player1Avatar = '';
         let player2Avatar = '';
         
@@ -640,7 +551,7 @@ export function init() {
           player1Avatar = player1Details?.avatar || '';
           player2Avatar = player2Details?.avatar || '';
         } catch (error) {
-          console.log('Could not fetch user avatars for match');
+          notify('Could not fetch user avatars for match', 'red');
         }
         
         const isCompleted = match.winnerId !== null;
@@ -710,7 +621,6 @@ export function init() {
       
       html += '</div></div>';
       
-      // Add connection flow between rounds
       if (round === 1 && rounds[2]) {
         html += `
           <div class="flex justify-center mb-3">
@@ -730,7 +640,6 @@ export function init() {
   function updateCurrentMatchInfo() {
     if (!currentMatchInfo || !currentTournament) return;
 
-    // Find user's current match
     if (currentTournament.matches) {
       const userMatch = currentTournament.matches.find(match => 
         (match.player1Id === currentUser?.id || match.player2Id === currentUser?.id) && !match.winnerId
@@ -784,26 +693,21 @@ export function init() {
   }
 
   function handleStartMatch() {
-    // This function is deprecated - match start is handled by the backend
     notify('Waiting for match to start...');
   }
 
   function showMatchPairingsCountdown(data: any) {
-    // Show 6-second countdown with new design
     if (countdownTimer && countdownDisplay && countdownMessage && countdownBar) {
       const pairingsText = data.pairings.map((p: any) => `${p.player1} vs ${p.player2}`).join(' | ');
       
       countdownMessage.textContent = `${data.roundName.toUpperCase()} STARTING`;
       if (countdownText) countdownText.textContent = 'GET READY!';
       
-      // Hide waiting message and show countdown
       waitingMessage?.classList.add('hidden');
       countdownTimer.classList.remove('hidden');
       
-      // Reset countdown bar
       (countdownBar as HTMLElement).style.width = '0%';
       
-      // Start 6-second countdown
       let timeLeft = 6;
       if (countdownInterval) clearInterval(countdownInterval);
       
@@ -826,7 +730,6 @@ export function init() {
           if (countdownText) countdownText.textContent = 'BATTLE TIME!';
           if (countdownDisplay) countdownDisplay.textContent = 'GO!';
           
-          // Hide countdown after 2 seconds
           setTimeout(() => {
             countdownTimer?.classList.add('hidden');
             if (countdownBar) {
@@ -837,11 +740,9 @@ export function init() {
       }, 1000) as any;
     }
     
-    // Display will be updated by WebSocket events - no need for additional requests
   }
 
   function showEliminationStatus() {
-    // Show eliminated status with enhanced compact design
     if (currentMatchInfo) {
       currentMatchInfo.innerHTML = `
         <div class="bg-gradient-to-r from-red-900 to-black border border-neon-red rounded-lg p-4 text-center shadow-terminal">
@@ -857,8 +758,7 @@ export function init() {
         </div>
       `;
       currentMatchInfo.classList.remove('hidden');
-      
-      // Add leave handler
+
       const leaveBtn = currentMatchInfo.querySelector('#leave-after-elimination');
       leaveBtn?.addEventListener('click', () => {
         (window as any).router.navigate('home');
@@ -867,7 +767,6 @@ export function init() {
   }
 
   function showSpectatorMode() {
-    // Show spectator status with enhanced compact design 
     if (currentMatchInfo) {
       currentMatchInfo.innerHTML = `
         <div class="bg-gradient-to-r from-blue-900 to-black border border-neon-blue rounded-lg p-4 text-center shadow-terminal">
@@ -884,7 +783,6 @@ export function init() {
   }
 
   function showRoundCompletionDisplay(data: any) {
-    // Show round completion info in sidebar
     if (roundTransition && transitionMessage && roundCountdownText && roundCountdownBar) {
       const winnersList = data.winners.map((w: any) => w.username).join(', ');
       
@@ -893,7 +791,6 @@ export function init() {
       
       roundTransition.classList.remove('hidden');
       
-      // Reset and animate countdown bar
       (roundCountdownBar as HTMLElement).style.width = '0%';
       setTimeout(() => {
         if (roundCountdownBar) {
@@ -901,7 +798,6 @@ export function init() {
         }
       }, 100);
       
-      // Start countdown text
       let timeLeft = data.nextRoundStartsIn || 5;
       if (countdownInterval) clearInterval(countdownInterval);
       
@@ -922,7 +818,6 @@ export function init() {
       }, 1000) as any;
     }
     
-    // Bracket will be updated by WebSocket events - no need for additional requests
   }
 
   function showTournamentEndModal(data: any) {
@@ -939,7 +834,6 @@ export function init() {
   }
 
   function setupWebSocketReconnection() {
-    // Check WebSocket connection status via WebSocketManager
     const checkConnection = () => {
       const wsManager = tournamentService['wsManager'] as any;
       const isConnected = wsManager?.isConnected() || false;
@@ -950,7 +844,6 @@ export function init() {
           connectionIndicator.className = 'w-3 h-3 bg-red-500 rounded-full animate-pulse';
           connectionText.textContent = 'RECONNECTING...';
           
-          // Try to reconnect via WebSocketManager
           if (wsManager?.reconnect) {
             wsManager.reconnect();
           }
@@ -958,33 +851,26 @@ export function init() {
           connectionIndicator.className = 'w-3 h-3 bg-green-500 rounded-full';
           connectionText.textContent = 'CONNECTED';
           
-          // Hide connection status after 2 seconds when connected
           setTimeout(() => {
             connectionStatus.classList.add('hidden');
           }, 2000);
           
-          // Request fresh data only once when reconnected
-          console.log('🔄 TOURNAMENT PAGE: Reconnected, requesting fresh tournament data');
           tournamentService.getTournamentDetails();
         }
       }
     };
 
-    // Check connection every 5 seconds
     wsReconnectInterval = setInterval(checkConnection, 5000) as any;
     
-    // Also check on page visibility change
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
         checkConnection();
       }
     });
     
-    // Initial connection check
     setTimeout(checkConnection, 1000);
   }
 
-  // Cleanup function
   function cleanup() {
     if (countdownInterval) {
       clearInterval(countdownInterval);
@@ -996,15 +882,12 @@ export function init() {
     }
   }
 
-  // Add cleanup on page unload
   window.addEventListener('beforeunload', cleanup);
 }
 
-// Export cleanup function for use by router
+
 export function cleanup() {
-  console.log('🧹 TOURNAMENT: Cleaning up tournament page...');
   
-  // Clean up intervals
   let countdownInterval: number | null = null;
   let wsReconnectInterval: number | null = null;
   
@@ -1017,6 +900,4 @@ export function cleanup() {
     wsReconnectInterval = null;
   }
   
-  // TournamentService cleanup is handled by router's clearAllListeners
-  console.log('✅ TOURNAMENT: Tournament page cleanup completed');
 }

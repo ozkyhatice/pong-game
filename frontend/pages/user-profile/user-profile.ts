@@ -57,12 +57,10 @@ export function init() {
 
   function setupGameInviteListeners(): void {
     gameService.onGameInvite((data: any) => {
-      console.log('🎮 USER-PROFILE: Game invite received:', data);
       notify(`Game invite from ${data.senderUsername || 'Unknown player'}`, 'blue');
     });
 
     gameService.onInviteAccepted((data: any) => {
-      console.log('🎮 USER-PROFILE: Game invite Recent Maed:', data);
       notify('Game invite accepted! Starting game...', 'green');
 
       if (data.roomId) {
@@ -78,7 +76,6 @@ export function init() {
     });
 
     gameService.onRoomCreated((data: any) => {
-      console.log('🎮 USER-PROFILE: Room created for game invite:', data);
       if (data.roomId) {
         const appState = AppState.getInstance();
         appState.setCurrentRoom({
@@ -92,7 +89,6 @@ export function init() {
     });
 
     gameService.onGameError((data: any) => {
-      console.log('🎮 USER-PROFILE: Game error:', data);
       notify(data.message || 'Game error occurred', 'red');
     });
   }
@@ -118,9 +114,7 @@ export function init() {
   }
 
   function setupOnlineStatusListener(): void {
-    console.log('Setting up online status listener for friendUserId:', friendUserId);
     unsubscribeStatusChange = onlineUsersService.onStatusChange(() => {
-      console.log('Online status changed, updating friend status');
       if (friendUserId) {
         updateFriendOnlineStatus();
       }
@@ -129,12 +123,10 @@ export function init() {
 
   function getFriendOnlineStatus(): { isOnline: boolean } {
     if (!friendUserId) {
-      console.log('No friendUserId set');
       return { isOnline: false };
     }
 
     const userStatus = onlineUsersService.getUserStatus(friendUserId);
-    console.log('Friend status for ID', friendUserId, ':', userStatus);
 
     return {
       isOnline: userStatus ? userStatus.status === 'online' : false
@@ -144,12 +136,10 @@ export function init() {
   function updateFriendOnlineStatus(): void {
     const waitingElement = document.querySelector('.waiting-status');
     if (!waitingElement) {
-      console.log('Waiting status element not found');
       return;
     }
 
     const status = getFriendOnlineStatus();
-    console.log('Updating friend status:', status);
 
     if (status.isOnline) {
       waitingElement.innerHTML = `
@@ -216,27 +206,17 @@ export function init() {
       const viewingUser = appState.getViewingUser();
       if (viewingUser) {
         friendUserId = viewingUser.id;
-        console.log('Set friendUserId to:', friendUserId, 'for user:', viewingUser);
         updatePageContent(viewingUser);
         initializeChatManager();
       } else {
-        console.error('No user selected to view');
         notify('No user selected to view');
       }
     } catch (error) {
-      console.error('Error getting current user:', error);
       notify('Failed to load user data');
     }
   }
 
   function initializeChatManager(): void {
-    console.log('Initializing ChatManager with:', {
-      currentUserId,
-      friendUserId,
-      chatInput: !!chatInput,
-      sendBtn: !!sendBtn,
-      chatMessages: !!chatMessages
-    });
 
     if (chatInput && sendBtn && chatMessages && currentUserId && friendUserId) {
       chatManager = new ChatManager(
@@ -247,17 +227,13 @@ export function init() {
         friendUserId
       );
 
-      console.log('ChatManager created, loading messages...');
 
       setTimeout(() => {
         if (chatManager) {
-          console.log('Calling loadChatMessages...');
           chatManager.loadChatMessages();
         }
       }, 100);
-    } else {
-      console.error('ChatManager initialization failed - missing elements or user IDs');
-    }
+    } 
   }
 
   async function updatePageContent(user: any): Promise<void> {
@@ -269,7 +245,6 @@ export function init() {
 	  const headerAvatarImgEl = document.getElementById('header-user-avatar-img') as HTMLImageElement;
 	  const sidebarAvatarImgEl = document.getElementById('sidebar-user-avatar-img') as HTMLImageElement;
 
-	  console.log('Updating sidebar content for user:', user);
 		const usernameEl = document.getElementById('username');
 		if (headerAvatarImgEl) headerAvatarImgEl.src = userInfo.avatar || 'https://placehold.co/400x400?text=Player';
 		if (headerUsernameEl) headerUsernameEl.textContent = user.username;
@@ -290,14 +265,11 @@ export function init() {
     }
   }
 function updateFriendOnlineStatusWithRetry(attempt: number = 1): void {
-    console.log(`Attempting to update friend status, attempt ${attempt}`);
 
     const wsManager = WebSocketManager.getInstance();
     const isWSConnected = wsManager.isConnected();
-    console.log('WebSocket connected:', isWSConnected);
 
     const hasUsers = onlineUsersService.getAllUsers().length > 0;
-    console.log('OnlineUsersService has users:', hasUsers);
 
     if ((isWSConnected && hasUsers) || attempt > 5) {
       updateFriendOnlineStatus();
@@ -305,7 +277,6 @@ function updateFriendOnlineStatusWithRetry(attempt: number = 1): void {
       if (!isWSConnected && attempt <= 2) {
         const token = localStorage.getItem('authToken');
         if (token) {
-          console.log('Attempting WebSocket reconnection...');
           wsManager.connect(token);
         }
       }
@@ -321,7 +292,6 @@ async function loadUserStats(userId: number): Promise<void> {
       const token = localStorage.getItem('authToken');
       if (!token) return;
 
-      console.log('Loading stats for user ID:', userId);
 
 	  const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.BY_ID(userId.toString())), {
         headers: {
@@ -331,21 +301,15 @@ async function loadUserStats(userId: number): Promise<void> {
       });
 
       if (!response.ok) {
-        console.error('Failed to fetch user stats:', response.status, response.statusText);
         return;
       }
 
       const data = await response.json();
-      console.log('User stats API response:', data);
 
       if (data.user) {
         updateStatsDisplay(data.user);
-      } else {
-        console.error('No user data in response:', data);
       }
-    } catch (error) {
-      console.error('Error loading user stats:', error);
-    }
+    } catch (error) {}
 }
 
 function updateStatsDisplay(userData: any) {
@@ -366,20 +330,15 @@ function updateStatsDisplay(userData: any) {
 
   const matchHistoryEl = document.getElementById('match-history');
   const matchHistory = gameService.getMatchHistory(userData.id);
-  console.log('Match history:', matchHistory);
-  console.log('user data:', userData);
 
-	console.log('Stats updated:', { wins, losses, winRate, totalGames });
   }
 
   function getTimeAgo(date: Date | number): string {
     if (typeof date === 'number') {
-      // Old behavior for compatibility
       const timeOptions = ['2 hours ago', '5 hours ago', '1 day ago', '2 days ago', '3 days ago'];
       return timeOptions[date] || `${date + 1} days ago`;
     }
 
-    // New behavior for Date objects with date and time display
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
@@ -406,10 +365,8 @@ async function handleChallenge() {
       gameService.sendGameInvite(friendUserId, currentUsername);
       notify(`Game invitation sent to ${viewingUser.username}!`);
 
-      // Close sidebar after sending challenge
       closeSidebarPanel();
     } catch (error) {
-      console.error('Failed to send game invitation:', error);
       notify('Failed to send game invitation', 'red');
     }
 }
@@ -433,7 +390,6 @@ async function handleRemoveFriend() {
         return;
       }
 
-      console.log('Calling remove friend API with friendUserId:', friendUserId);
 
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.REMOVE(friendUserId.toString())), {
         method: 'DELETE',
@@ -444,7 +400,6 @@ async function handleRemoveFriend() {
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error('Remove friend error response:', errorData);
         throw new Error(`Failed to remove friend: ${response.status} ${response.statusText} - ${errorData}`);
       }
 
@@ -455,7 +410,6 @@ async function handleRemoveFriend() {
       }, 1000);
 
     } catch (error) {
-      console.error('Error removing friend:', error);
       notify('Failed to remove friend', 'red');
     }
 }
@@ -479,8 +433,6 @@ async function handleBlockFriend() {
         return;
       }
 
-      console.log('Calling block friend API with friendUserId:', friendUserId);
-
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FRIENDS.BLOCK(friendUserId.toString())), {
         method: 'POST',
         headers: {
@@ -490,7 +442,6 @@ async function handleBlockFriend() {
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error('Block friend error response:', errorData);
         throw new Error(`Failed to block user: ${response.status} ${response.statusText} - ${errorData}`);
       }
 
@@ -501,21 +452,18 @@ async function handleBlockFriend() {
       }, 1000);
 
     } catch (error) {
-      console.error('Error blocking user:', error);
       notify('Failed to block user', 'red');
     }
   }
 
   async function loadMatchHistory(): Promise<void> {
     if (!friendUserId) {
-      console.log('No friend user ID available for match history');
       return;
     }
 
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        console.error('No auth token available');
         return;
       }
 
@@ -532,8 +480,6 @@ async function handleBlockFriend() {
       const data = await response.json();
       displayMatchHistory(data.matches || []);
     } catch (error) {
-      console.error('Error loading match history:', error);
-      // Show a message if loading fails
       const matchHistoryContainer = document.getElementById('match-history');
       if (matchHistoryContainer) {
         matchHistoryContainer.innerHTML = `
@@ -558,18 +504,16 @@ async function handleBlockFriend() {
       return;
     }
 
-    // Get usernames for player IDs
     const userService = new UserService();
     const matchElements: string[] = [];
 
-    for (const match of matches.slice(0, 5)) { // Show only last 5 matches
+    for (const match of matches.slice(0, 5)) {
       try {
         const isPlayer1 = match.player1Id === friendUserId;
         const opponentId = isPlayer1 ? match.player2Id : match.player1Id;
         const userScore = isPlayer1 ? match.player1Score : match.player2Score;
         const opponentScore = isPlayer1 ? match.player2Score : match.player1Score;
 
-        // Get opponent's username
         const opponent = await userService.getUserById(opponentId);
         const opponentUsername = opponent?.username || 'Unknown';
 
@@ -578,7 +522,6 @@ async function handleBlockFriend() {
         const resultBorderClass = isWin ? 'border-neon-green' : 'border-neon-red';
         const resultLetter = isWin ? 'W' : 'L';
 
-        // Format date
         const matchDate = new Date(match.endedAt || match.startedAt);
         const timeAgo = getTimeAgo(matchDate);
 
@@ -597,9 +540,7 @@ async function handleBlockFriend() {
             </div>
           </div>
         `);
-      } catch (error) {
-        console.error('Error processing match:', error);
-      }
+      } catch (error) {}
     }
 
     matchHistoryContainer.innerHTML = matchElements.join('');
@@ -611,19 +552,15 @@ async function handleBlockFriend() {
       unsubscribeStatusChange = null;
     }
 
-    // ChatManager cleanup is handled automatically
     if (chatManager) {
       chatManager = null;
     }
-
-    console.log('🧹 USER-PROFILE: Cleanup completed');
   }
 
   (window as any).userProfileCleanup = cleanup;
 }
 
 export function cleanup() {
-  console.log('🧹 USER-PROFILE: Cleaning up user-profile page...');
   if ((window as any).userProfileCleanup) {
     (window as any).userProfileCleanup();
   }

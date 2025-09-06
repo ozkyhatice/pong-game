@@ -108,7 +108,7 @@ async function loadBlockedUsers(userId: number): Promise<void> {
             `;
         }
     } catch (error) {
-        console.error('Error loading blocked users:', error);
+        notify('Error loading blocked users', 'red');
         if (loadingDiv) {
             loadingDiv.style.display = 'none';
         }
@@ -133,7 +133,6 @@ function displayBlockedUsers(blockedUsers: any[]): void {
         return;
     }
 
-	console.log(blockedUsers);
     listDiv.innerHTML = blockedUsers.map(user => `
         <div class="flex items-center justify-between p-2 bg-black bg-opacity-40 border border-neon-red border-opacity-30 rounded-sm">
             <div class="flex items-center gap-2">
@@ -167,7 +166,6 @@ async function unblockUser(userId: number): Promise<void> {
 
         if (response.ok) {
             notify('User unblocked successfully', 'green');
-            // Reload the current user's profile to refresh blocked users list
             const currentUserResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -180,12 +178,10 @@ async function unblockUser(userId: number): Promise<void> {
             notify(errorData.error || 'Failed to unblock user', 'red');
         }
     } catch (error) {
-        console.error('Error unblocking user:', error);
         notify('Error unblocking user', 'red');
     }
 }
 
-// Make unblockUser globally available
 (window as any).unblockUser = unblockUser;
 
 function update2FAStatus(isEnabled: boolean): void {
@@ -385,7 +381,7 @@ export async function removeAvatar(): Promise<void> {
 
         if (response.ok) {
             notify(data.message || 'Avatar removed successfully!');
-            loadProfile(); // Reload profile to update avatar display
+            loadProfile();
         } else {
             notify(data.error || 'Failed to remove avatar', 'red');
         }

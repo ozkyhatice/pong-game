@@ -36,7 +36,7 @@ export class GameInviteManager {
     if (friendInvite) {
       const now = Date.now();
       const inviteAge = now - (friendInvite.timestamp || 0);
-      if (inviteAge < 10 * 60 * 1000) { // 10 minutes
+      if (inviteAge < 10 * 60 * 1000) {
         this.activeInvites.set(friendInvite.senderId, friendInvite);
         const inviteElement = this.createGameInviteElement(friendInvite);
         inviteElement.setAttribute('data-invite-sender', friendInvite.senderId.toString());
@@ -46,7 +46,6 @@ export class GameInviteManager {
   }
 
   private handleGameInvite(data: any): void {
-    // data now comes from message.data since we're using standard game event format
     if (!data || data.receiverId !== this.currentUserId) return;
     
     this.storeGameInvite(data);
@@ -108,7 +107,6 @@ export class GameInviteManager {
       this.gameService.acceptGameInvite(invite.senderId);
       
       this.gameService.onRoomCreated((data: any) => {
-        console.log('Room created:', data);
         notify('Game room created! Redirecting to lobby...');
         
         const appState = AppState.getInstance();
@@ -129,7 +127,6 @@ export class GameInviteManager {
       });
 
     } catch (error) {
-      console.error('Failed to accept game invitation:', error);
       notify('Failed to accept invitation', 'red');
     }
   }
@@ -141,7 +138,6 @@ export class GameInviteManager {
   }
 
   private handleInviteAccepted(data: any): void {
-    console.log('Game invite accepted:', data);
     notify(`Your game invitation was accepted! Room ${data.roomId} created.`);
     
     const appState = AppState.getInstance();
@@ -169,10 +165,8 @@ export class GameInviteManager {
 
     const storedInvites = JSON.parse(localStorage.getItem('gameInvites') || '[]');
     
-    // Remove old invite from same sender
     const filteredInvites = storedInvites.filter((inv: any) => inv.senderId !== invite.senderId);
-    
-    // Add new invite
+  
     filteredInvites.push({
       ...invite,
       timestamp: Date.now()

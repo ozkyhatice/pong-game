@@ -31,7 +31,7 @@ export class ChatManager {
   private isLoadingMessages = false;
   private chatService: ChatService;
   private gameInviteManager: GameInviteManager;
-  private sentMessages = new Set<string>(); // Gönderilen mesajları takip etmek için
+  private sentMessages = new Set<string>();
   private userService: UserService;
   private currentUserAvatar: string | null = null;
   private friendUserAvatar: string | null = null;
@@ -78,48 +78,29 @@ export class ChatManager {
 
   private async loadUserAvatars(): Promise<void> {
     try {
-      console.log('Loading user avatars...', {
-        currentUserId: this.currentUserId,
-        friendUserId: this.friendUserId
-      });
 
       if (this.currentUserId) {
         const currentUser = await this.userService.getUserById(this.currentUserId);
-        console.log('Current user data:', currentUser);
         this.currentUserAvatar = currentUser?.avatar || null;
       }
       
       if (this.friendUserId) {
         const friendUser = await this.userService.getUserById(this.friendUserId);
-        console.log('Friend user data:', friendUser);
         this.friendUserAvatar = friendUser?.avatar || null;
       }
 
-      console.log('Avatar URLs loaded:', {
-        currentUserAvatar: this.currentUserAvatar,
-        friendUserAvatar: this.friendUserAvatar
-      });
-    } catch (error) {
-      console.error('Error loading user avatars:', error);
-    }
+    } catch (error) {}
   }
 
   async loadChatMessages(): Promise<void> {
-    console.log('loadChatMessages called with:', {
-      isLoadingMessages: this.isLoadingMessages,
-      friendUserId: this.friendUserId,
-      currentUserId: this.currentUserId
-    });
     
     if (this.isLoadingMessages || !this.friendUserId || !this.currentUserId) {
-      console.log('Early return from loadChatMessages');
       return;
     }
     
     this.isLoadingMessages = true;
     
     try {
-      // Ensure avatars are loaded before rendering messages
       await this.loadUserAvatars();
       
       const token = localStorage.getItem('authToken');
@@ -132,19 +113,14 @@ export class ChatManager {
       });
 
       const data: ChatHistoryResponse = await response.json();
-      console.log('Chat API response:', data);
       
       if (data.success) {
-        console.log('Rendering messages:', data.data.messages);
         this.renderMessages(data.data.messages);
-        // Load stored invites after rendering messages
         this.gameInviteManager.loadStoredInvites();
       } else {
-        console.error('API returned unsuccessful response:', data);
         notify('Failed to load messages', 'red');
       }
     } catch (error) {
-      console.error('Failed to load chat messages:', error);
       notify('Failed to load messages. Please try again.', 'red');
     } finally {
       this.isLoadingMessages = false;
@@ -152,8 +128,6 @@ export class ChatManager {
   }
 
   private renderMessages(messages: ApiMessage[]): void {
-    console.log('renderMessages called with:', messages.length, 'messages');
-    console.log('Chat messages element:', this.chatMessages);
     
     this.chatMessages.innerHTML = '';
     
@@ -172,22 +146,19 @@ export class ChatManager {
     });
 
     this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-    console.log('Messages rendered successfully');
   }
 
   private createMessageElement(message: ApiMessage): HTMLElement {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'mb-4';
 
-    // Türkiye saati için +3 saat ekle
     const messageDate = new Date(message.createdAt);
     messageDate.setHours(messageDate.getHours() + 3);
-    const displayTime = messageDate.toISOString().slice(11, 16); // HH:MM formatında
+    const displayTime = messageDate.toISOString().slice(11, 16);
     
     const isFromMe = message.senderId === this.currentUserId;
 
     if (isFromMe) {
-      // My message - use current user's avatar or create a proper fallback
       const avatarSrc = this.currentUserAvatar && this.currentUserAvatar.trim() !== '' 
         ? this.currentUserAvatar 
         : null;
@@ -209,7 +180,6 @@ export class ChatManager {
         </div>
       `;
     } else {
-      // Friend's message - use friend's avatar or create a proper fallback
       const avatarSrc = this.friendUserAvatar && this.friendUserAvatar.trim() !== '' 
         ? this.friendUserAvatar 
         : null;
@@ -244,13 +214,11 @@ export class ChatManager {
     this.sendBtn.disabled = true;
 
     try {
-      // Mesajı gönderilen mesajlar listesine ekle
       const messageKey = `${this.friendUserId}-${message}-${Date.now()}`;
       this.sentMessages.add(messageKey);
 
-      // Hemen mesajı kendi ekranında göster
       const now = new Date();
-      now.setHours(now.getHours() + 3); // Türkiye saati için +3 saat
+      now.setHours(now.getHours() + 3);
       
       const sentMessage: ApiMessage = {
         id: Date.now(),
@@ -266,10 +234,8 @@ export class ChatManager {
       this.chatMessages.appendChild(messageElement);
       this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
 
-      // Sonra WebSocket ile gönder
       this.chatService.sendMessage(this.friendUserId, message);
 
-      // 5 saniye sonra sent mesajları temizle (memory leak önlemek için)
       setTimeout(() => {
         this.sentMessages.delete(messageKey);
       }, 5000);
@@ -286,28 +252,15 @@ export class ChatManager {
   private async handleReceiveMessage(message: any): Promise<void> {
     if (!message || (!message.from && !message.to)) return;
     
-    console.log('handleReceiveMessage received:', message);
     
-    // Gönderdiğimiz mesajları kontrol et
     const messageKey = `${message.to}-${message.content}`;
     const isRecentlySent = Array.from(this.sentMessages).some(key => key.includes(messageKey));
     
-    // Kendi gönderdiğiniz mesajları tekrar render etmeyin 
     const isFromMe = message.from === this.currentUserId || 
                      (message.from === undefined && message.to === this.friendUserId) ||
                      isRecentlySent;
     
-    console.log('Message analysis:', {
-      from: message.from,
-      to: message.to,
-      currentUserId: this.currentUserId,
-      friendUserId: this.friendUserId,
-      isFromMe,
-      isRecentlySent
-    });
-    
     if (isFromMe) {
-      console.log('Skipping own message');
       return;
     }
     

@@ -13,7 +13,6 @@ body {
   font-family: 'Orbitron', system-ui, sans-serif;
 }
 
-/* Better responsive layout control */
 .mobile-only {
   display: none !important;
 }
@@ -22,7 +21,6 @@ body {
   display: flex !important;
 }
 
-/* Only show mobile layout on actual mobile devices */
 @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
   .mobile-only {
     display: block !important;
@@ -33,7 +31,6 @@ body {
   }
 }
 
-/* Additional mobile device detection */
 @media screen and (max-device-width: 768px) {
   .mobile-only {
     display: block !important;

@@ -56,13 +56,11 @@ function startTypingEffect() {
 }
 
 export function init() {
-  console.log('Landing page loaded');
 
   startTypingEffect();
 
   const BABYLON = (window as any).BABYLON;
   if (!BABYLON) {
-    console.error('BABYLON is not loaded. Please include Babylon.js via CDN in your index.html.');
     return;
   }
 
@@ -120,14 +118,14 @@ export function init() {
   if (isMobile()) {
     camera.setPosition(new BABYLON.Vector3(0, 12, 0));
     camera.setTarget(BABYLON.Vector3.Zero());
-    camera.alpha = 0; // No horizontal rotation
-    camera.beta = 0; // Look down from above
+    camera.alpha = 0;
+    camera.beta = 0;
 
   } else {
     camera.setPosition(new BABYLON.Vector3(0, 6, 0));
     camera.setTarget(BABYLON.Vector3.Zero());
-    camera.alpha = Math.PI / 2; // Rotate 90 degrees horizontally
-    camera.beta = 0; // Look down from above
+    camera.alpha = Math.PI / 2;
+    camera.beta = 0;
   }
 
   function resizeCanvas() {
@@ -139,12 +137,12 @@ export function init() {
 
     if (isMobile()) {
       camera.setPosition(new BABYLON.Vector3(0, 12, 0));
-      camera.alpha = 0; // No horizontal rotation
-      camera.beta = 0; // Look down from above
+      camera.alpha = 0;
+      camera.beta = 0;
     } else {
       camera.setPosition(new BABYLON.Vector3(0, 6, 0));
-      camera.alpha = Math.PI / 2; // 90 degree rotation
-      camera.beta = 0; // Look down from above
+      camera.alpha = Math.PI / 2;
+      camera.beta = 0;
     }
   }
   resizeCanvas();
@@ -243,7 +241,7 @@ export function init() {
   const borderHalf = borderThickness / 2;
   const safetyGap = 0.02;
   const paddleHalfDepth = paddleDepth / 2;
-  const paddleZClamp = fieldHalfDepth - borderHalf - paddleHalfDepth - safetyGap; // e.g., ~1.43
+  const paddleZClamp = fieldHalfDepth - borderHalf - paddleHalfDepth - safetyGap;
 
   const leftBorderLight = new BABYLON.PointLight("leftBorderLight", new BABYLON.Vector3(-3.8, 0.5, 0), scene);
   leftBorderLight.diffuse = toColor3(COLORS.BORDER);
@@ -343,7 +341,7 @@ export function init() {
   });
 
   engine.runRenderLoop(() => {
-    const deltaTime = engine.getDeltaTime() / 1000; // Convert to seconds
+    const deltaTime = engine.getDeltaTime() / 1000;
 
     if (leftBorderFlashTime > 0) {
       leftBorderFlashTime -= deltaTime;
@@ -446,7 +444,6 @@ export function init() {
     } else
       paddle2.position.z += Math.sign(ball.position.z - paddle2.position.z) * PADSPEED;
 
-  // Clamp paddles so they don't intersect top/bottom borders
   paddle1.position.z = Math.max(Math.min(paddle1.position.z, paddleZClamp), -paddleZClamp);
   paddle2.position.z = Math.max(Math.min(paddle2.position.z, paddleZClamp), -paddleZClamp);
 

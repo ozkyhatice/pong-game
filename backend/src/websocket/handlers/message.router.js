@@ -21,17 +21,13 @@ export async function routeMessage(message, userId, connection) {
         const { handleGameMessage} = await import('../../modules/game/controller/game.controller.js');
         try {
           await handleGameMessage(msgObj, userId, connection);
-        } catch (err) {
-          console.log('Unknown game message:', err);
-        }
+        } catch (err) {}
         break;
       case 'tournament':
         const { handleTournamentMessage } = await import('../../modules/tournament/controller/tournament.controller.js');
         try {
           await handleTournamentMessage(msgObj, userId, connection);
-        } catch (err) {
-          console.log('Unknown tournament message:', err);
-        }
+        } catch (err) {}
         break;
       default:
         throw new Error(`Unknown message type: ${type}`);

@@ -61,7 +61,7 @@ help:
 	@echo "\033[31m🛑 make docker-down      \033[0m- Stop all Docker services"
 	@echo "\033[33m🔄 make docker-restart   \033[0m- Restart all Docker services"
 	@echo "\033[33m🔨 make docker-build     \033[0m- Build all Docker images"
-	@echo "\033[33m⚡ make docker-rebuild   \033[0m- Rebuild and restart all services"
+	@echo "\033[33m make docker-rebuild   \033[0m- Rebuild and restart all services"
 	@echo "\033[35m📋 make docker-logs      \033[0m- Show Docker services logs"
 	@echo "\033[36m📊 make docker-status    \033[0m- Check Docker services status"
 	@echo "\033[31m🧹 make docker-clean     \033[0m- Clean Docker containers & images"

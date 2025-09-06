@@ -297,9 +297,7 @@ export async function processTournamentMatchResult(matchId, winnerId) {
     setTimeout(async () => {
         try {
             await advanceToNextRound(tournamentId, round);
-        } catch (error) {
-            console.error(`Error advancing to next round for tournament ${tournamentId}:`, error);
-        }
+        } catch (error) {}
     }, 5000);
 }
 

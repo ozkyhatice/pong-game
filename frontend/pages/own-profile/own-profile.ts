@@ -30,7 +30,6 @@ let currentFilter = 'all';
 let userService: UserService = new UserService();
 
 export function init() {
-    console.log('Own Profile page initialized');
     setupEventListeners();
     loadProfile();
 }
@@ -82,11 +81,9 @@ async function loadProfile(): Promise<void> {
             await loadUserStats(data.user.id);
             await loadMatchHistory(data.user.id);
         } else {
-            console.error('Failed to load profile:', data.error || 'Unknown error');
             notify('Failed to load profile', 'red');
         }
     } catch (error) {
-        console.error('Error loading profile:', error);
         notify('Error loading profile', 'red');
     }
 }
@@ -120,7 +117,6 @@ async function loadUserStats(userId: number): Promise<void> {
         });
 
         if (!response.ok) {
-            console.error('Failed to fetch user stats:', response.status, response.statusText);
             return;
         }
 
@@ -129,10 +125,9 @@ async function loadUserStats(userId: number): Promise<void> {
         if (data.user) {
             updateStatsDisplay(data.user);
         } else {
-            console.error('No user data in response:', data);
         }
     } catch (error) {
-        console.error('Error loading user stats:', error);
+        notify('Error loading user stats', 'red');
     }
 }
 
@@ -157,7 +152,6 @@ async function loadMatchHistory(userId: number): Promise<void> {
     try {
         const token = getToken();
         if (!token) {
-            console.error('No auth token available');
             return;
         }
 
@@ -175,7 +169,6 @@ async function loadMatchHistory(userId: number): Promise<void> {
         matchHistory = data.matches || [];
         await displayMatchHistory(matchHistory);
     } catch (error) {
-        console.error('Error loading match history:', error);
         displayEmptyMatchHistory();
     }
 }
@@ -325,7 +318,6 @@ function formatFullDate(date: Date): string {
 }
 
 export function cleanup() {
-    console.log('🧹 OWN-PROFILE: Cleaning up own-profile page...');
     currentUser = null;
     matchHistory = [];
     currentFilter = 'all';

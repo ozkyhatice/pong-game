@@ -35,15 +35,14 @@ const PONG_3D_CONFIG = {
     BORDER: { r: 0.2, g: 1, b: 0.2 },
     LEFT_PADDLE: { r: 0, g: 0.8, b: 1 },
     RIGHT_PADDLE: { r: 1, g: 0.2, b: 0.3 },
-    BALL: { r: 1, g: 1, b: 1 }, // Bright white
-    BORDER_FLASH: { r: 1, g: 0, b: 1 }, // Magenta flash
-    PADDLE_FLASH: { r: 1, g: 1, b: 0 }, // Yellow flash
-    SCORE_FLASH: { r: 0, g: 1, b: 0 }, // Green score flash
-    // Particle effects colors
+    BALL: { r: 1, g: 1, b: 1 },
+    BORDER_FLASH: { r: 1, g: 0, b: 1 },
+    PADDLE_FLASH: { r: 1, g: 1, b: 0 },
+    SCORE_FLASH: { r: 0, g: 1, b: 0 },
     PARTICLES: {
-      HIT: { r: 1, g: 1, b: 0 }, // Yellow hit particles
-      SCORE: { r: 0, g: 1, b: 0 }, // Green score particles
-      TRAIL: { r: 0.5, g: 0.8, b: 1 } // Blue trail particles
+      HIT: { r: 1, g: 1, b: 0 },
+      SCORE: { r: 0, g: 1, b: 0 },
+      TRAIL: { r: 0.5, g: 0.8, b: 1 }
     }
   }
 };
@@ -119,24 +118,15 @@ function initResponsiveLayout() {
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                   (window.innerWidth <= 768 && 'ontouchstart' in window);
 
-  console.log('📱 Initializing responsive layout:', {
-    userAgent: navigator.userAgent,
-    screenWidth: window.innerWidth,
-    hasTouchSupport: 'ontouchstart' in window,
-    isMobile
-  });
-
   const mobileLayout = document.getElementById('mobile-layout');
   const desktopLayout = document.getElementById('desktop-layout');
 
   if (isMobile) {
     if (mobileLayout) mobileLayout.style.display = 'block';
     if (desktopLayout) desktopLayout.style.display = 'none';
-    console.log('📱 Mobile layout activated');
   } else {
     if (mobileLayout) mobileLayout.style.display = 'none';
     if (desktopLayout) desktopLayout.style.display = 'flex';
-    console.log('🖥️ Desktop layout activated');
   }
 }
 
@@ -151,7 +141,6 @@ export async function init() {
     const userToken = localStorage.getItem('authToken');
 
     if (currentRoom && userToken) {
-      console.log('🔄 Remote-game: Page reloaded, attempting to reconnect and rejoin room...');
 
       try {
         wsManager.connect(userToken);
@@ -179,18 +168,15 @@ export async function init() {
         const gameService = new GameService();
         gameService.reconnectToGame();
 
-        console.log('✅ Remote-game: Successfully reconnected to WebSocket');
         notify('Reconnecting to game...');
 
       } catch (error) {
-        console.error('❌ Remote-game: Failed to reconnect:', error);
         notify('Failed to reconnect. Returning to home...');
         currentAppState.clearCurrentRoom();
         window.router.navigate('home');
         return;
       }
     } else {
-      console.log('🔄 Remote-game: No room data or token, redirecting to home');
       window.router.navigate('home');
       return;
     }
@@ -198,7 +184,6 @@ export async function init() {
 
   const BABYLON = (window as any).BABYLON;
   if (!BABYLON) {
-    console.error('BABYLON is not loaded. Please include Babylon.js via CDN in your index.html.');
     notify('3D engine not available. Please refresh the page.');
     return;
   }
@@ -207,7 +192,6 @@ export async function init() {
   const mobileCanvas = document.getElementById('mobile-game-canvas') as HTMLCanvasElement | null;
 
   if (!desktopCanvas && !mobileCanvas) {
-    console.error('No canvas found');
     notify('Game canvas not found!');
     return;
   }
@@ -278,9 +262,6 @@ export async function init() {
     if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' BATTLE ';
 
     if (data.players && currentRoom) {
-      console.log('🎮 Updating room players order from game-started event:', data.players);
-      console.log('🎮 Previous room players order:', currentRoom.players);
-
       const updatedRoom = {
         ...currentRoom,
         players: data.players
@@ -288,8 +269,6 @@ export async function init() {
       currentAppState.setCurrentRoom(updatedRoom);
       currentRoom = updatedRoom;
 
-      console.log('🎮 Room players order updated to:', currentRoom.players);
-      console.log('🎮 CONSISTENT ORDER - LEFT (BLUE):', currentRoom.players[0], ', RIGHT (RED):', currentRoom.players[1]);
     }
 
     players = data.players || [];
@@ -303,7 +282,6 @@ export async function init() {
 
   gameService.onPlayerLeft((data: any) => {
     if (data.isTournamentMatch && data.tournamentId) {
-      console.log('🏆 Tournament player left:', data);
       notify(`Player ${data.leftPlayer} left the match. You win! Returning to tournament...`);
       currentAppState.updateTournamentStatus('active', data.round);
       currentAppState.clearCurrentRoom();
@@ -319,7 +297,6 @@ export async function init() {
 
   gameService.onGameOver((data: any) => {
     if (data.isTournamentMatch && data.tournamentId) {
-      console.log('🏆 Tournament match completed:', data);
       notify(data.message + ' Returning to tournament...');
       currentAppState.updateTournamentStatus('active', data.round);
       currentAppState.clearCurrentRoom();
@@ -339,7 +316,7 @@ export async function init() {
         winner: data.winner,
         finalScore: data.finalScore,
         message: data.message,
-        playerOrder: currentRoom?.players || [], // Add room players order for consistent display
+        playerOrder: currentRoom?.players || [],
         timestamp: Date.now()
       }));
       currentAppState.clearCurrentRoom();
@@ -349,17 +326,14 @@ export async function init() {
   });
 
   gameService.onGamePaused((data: any) => {
-    console.log('⏸️ Game paused:', data);
     showPauseMessage(data.message, data.timeoutSeconds);
   });
 
   gameService.onGameResumed((data: any) => {
-    console.log('▶️ Game resumed:', data);
     hidePauseMessage();
   });
 
   wsManager.on('room-state', (data: any) => {
-    console.log('🎮 REMOTE-GAME: Room state received:', data);
     if (data.roomId && data.state) {
       gameState = data.state;
       update3DGameState();
@@ -369,12 +343,7 @@ export async function init() {
   });
 
   gameService.onPlayerReconnected((data: any) => {
-    console.log('🔄 Player reconnected:', data);
     notify(`Player ${data.playerId} reconnected`, 'green');
-  });
-
-  gameService.onGameInvite((data: any) => {
-    console.log('🎮 REMOTE-GAME: Game invite received during game:', data);
   });
 
   wsManager.on('player-move', (data: any) => {
@@ -388,14 +357,12 @@ export async function init() {
   });
 
   wsManager.on('flash-effect', (data: any) => {
-    console.log('💥 Flash effect received from server:', data);
     if (data.flash) {
       handleServerFlashEffect(data.flash);
     }
   });
 
   wsManager.on('game-update', (data: any) => {
-    console.log('🎮 REMOTE-GAME: Game update received:', data);
     if (data.state) {
       gameState = data.state;
       update3DGameState();
@@ -403,18 +370,13 @@ export async function init() {
     }
   });
 
-  wsManager.on('game-end', (data: any) => {
-    console.log('🎮 REMOTE-GAME: Game end received:', data);
-    // This is handled by gameService.onGameOver, but adding as backup
-  });
 
   const tournamentService = new (await import('../../services/TournamentService.js')).TournamentService();
   tournamentService.onTournamentEnded((data: any) => {
-    console.log('🏆 Tournament ended during game:', data);
     const isWinner = data.winnerId === myPlayerId;
     const message = isWinner
       ? '🎉 Congratulations! You won the tournament!'
-      : `🏆 Tournament ended. Winner: ${data.winnerUsername}`;
+      : `Tournament ended. Winner: ${data.winnerUsername}`;
 
     notify(message);
 
@@ -449,17 +411,14 @@ export async function init() {
   });
 
   gameService.onPlayerReconnected((data: any) => {
-    console.log('🔄 Player reconnected:', data);
     hidePauseMessage();
   });
 
   startCountdown();
 
   function init3DScene() {
-    console.log('🎮 Initializing Enhanced 3D Pong Arena...');
 
     if (engine) {
-      console.log('🧹 Cleaning up existing engine...');
       cleanup3D();
     }
 
@@ -467,10 +426,8 @@ export async function init() {
                     (window.innerWidth <= 768 && 'ontouchstart' in window);
     const targetCanvas = (isMobile && mobileCanvas) ? mobileCanvas : desktopCanvas;
 
-    console.log('🎮 Canvas selection:', { isMobile, targetCanvas: targetCanvas?.id });
 
     if (!targetCanvas) {
-      console.error('No target canvas available');
       return;
     }
 
@@ -485,18 +442,16 @@ export async function init() {
     scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
 
     camera = new BABYLON.ArcRotateCamera('camera',
-      -Math.PI / 2,          // Alpha: -90 degrees (opposite side view)
-      Math.PI / 4,           // Beta: 45 degrees (45 degree angle from top)
-      12,                    // Radius: distance from target
-      BABYLON.Vector3.Zero(), // Target: center of the table
+      -Math.PI / 2,
+      Math.PI / 4,
+      12,
+      BABYLON.Vector3.Zero(),
       scene
     );
 
     camera.inputs.clear();
 
     camera.setTarget(BABYLON.Vector3.Zero());
-
-    console.log('🎮 Fixed camera setup: 45° view from opposite side');
 
 
     glowLayer = new BABYLON.GlowLayer("glow", scene);
@@ -531,7 +486,6 @@ export async function init() {
 
     window.addEventListener('resize', resizeHandler);
 
-    console.log('✅ Enhanced 3D Pong Arena initialized successfully');
   }
 
   function createEnhancedTable() {
@@ -612,9 +566,9 @@ export async function init() {
     paddle1Mat.alpha = 0.9;
     paddle1.material = paddle1Mat;
 
-    paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5; // Left side
-    paddle1.position.y = paddleConfig.height/2; // On table surface
-    paddle1.position.z = 0; // Center position initially
+    paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5;
+    paddle1.position.y = paddleConfig.height/2;
+    paddle1.position.z = 0; 
     glowLayer.addIncludedOnlyMesh(paddle1);
 
     paddle2 = BABYLON.MeshBuilder.CreateBox('paddle2', {
@@ -631,9 +585,9 @@ export async function init() {
     paddle2Mat.alpha = 0.9;
     paddle2.material = paddle2Mat;
 
-    paddle2.position.x = PONG_3D_CONFIG.TABLE.width/2 - 0.5; // Right side
-    paddle2.position.y = paddleConfig.height/2; // On table surface
-    paddle2.position.z = 0; // Center position initially
+    paddle2.position.x = PONG_3D_CONFIG.TABLE.width/2 - 0.5;
+    paddle2.position.y = paddleConfig.height/2;
+    paddle2.position.z = 0;
     glowLayer.addIncludedOnlyMesh(paddle2);
   }
 
@@ -730,7 +684,7 @@ export async function init() {
     scoreParticles.maxSize = 0.15;
     scoreParticles.minLifeTime = 1.0;
     scoreParticles.maxLifeTime = 2.0;
-    scoreParticles.emitRate = 0; // Manual emission only
+    scoreParticles.emitRate = 0;
     scoreParticles.minEmitPower = 1.0;
     scoreParticles.maxEmitPower = 3.0;
     scoreParticles.gravity = new BABYLON.Vector3(0, -1, 0);
@@ -740,13 +694,6 @@ export async function init() {
   function setupResponsiveCanvas(targetCanvas: HTMLCanvasElement) {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                     (window.innerWidth <= 768 && 'ontouchstart' in window);
-
-    console.log('📱 Device detection:', {
-      userAgent: navigator.userAgent,
-      screenWidth: window.innerWidth,
-      hasTouchSupport: 'ontouchstart' in window,
-      isMobile
-    });
 
     if (isMobile && mobileCanvas) {
       const maxWidth = Math.min(window.innerWidth - 32, 400);
@@ -764,7 +711,6 @@ export async function init() {
         desktopLayout.style.display = 'none';
       }
 
-      console.log(`📱 Enhanced 3D Mobile canvas: ${mobileCanvas.width}x${mobileCanvas.height}`);
     } else if (desktopCanvas) {
       desktopCanvas.width = 1000;
       desktopCanvas.height = 600;
@@ -779,7 +725,6 @@ export async function init() {
         desktopLayout.style.display = 'flex';
       }
 
-      console.log(`🖥️ Enhanced 3D Desktop canvas: ${desktopCanvas.width}x${desktopCanvas.height}`);
     }
 
     if (engine) {
@@ -897,8 +842,7 @@ export async function init() {
         const paddleOffset = PONG_3D_CONFIG.PADDLE.depth / 2;
         paddle1.position.z = paddleZ + paddleOffset;
         paddle1.position.y = PONG_3D_CONFIG.PADDLE.height/2;
-        paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5; // LEFT side (BLUE)
-        console.log(`🎮 Left paddle (BLUE) - Player ${currentRoom.players[0]} at Z: ${paddleZ}`);
+        paddle1.position.x = -PONG_3D_CONFIG.TABLE.width/2 + 0.5;
       }
 
       const paddle2Data = gameState.paddles[currentRoom.players[1]];
@@ -907,8 +851,7 @@ export async function init() {
         const paddleOffset = PONG_3D_CONFIG.PADDLE.depth / 2;
         paddle2.position.z = paddleZ + paddleOffset;
         paddle2.position.y = PONG_3D_CONFIG.PADDLE.height/2;
-        paddle2.position.x = PONG_3D_CONFIG.TABLE.width/2 - 0.5; // RIGHT side (RED)
-        console.log(`🎮 Right paddle (RED) - Player ${currentRoom.players[1]} at Z: ${paddleZ}`);
+        paddle2.position.x = PONG_3D_CONFIG.TABLE.width/2 - 0.5;
       }
     }
 
@@ -919,8 +862,8 @@ export async function init() {
     if (!flashEffectsEnabled || !gameState || !currentRoom?.players || currentRoom.players.length < 2) return;
 
     const ball = gameState.ball;
-    const paddle1 = gameState.paddles[currentRoom.players[0]]; // LEFT paddle (BLUE)
-    const paddle2 = gameState.paddles[currentRoom.players[1]]; // RIGHT paddle (RED)
+    const paddle1 = gameState.paddles[currentRoom.players[0]];
+    const paddle2 = gameState.paddles[currentRoom.players[1]];
 
     const ballRadius = 8;
     const paddleMargin = 8;
@@ -928,10 +871,8 @@ export async function init() {
 
     if (ball.y <= ballRadius + 5) {
       borderFlashTimes[3] = 1.5;
-      console.log('💥 Ball hit TOP border - flashing');
     } else if (ball.y >= 400 - ballRadius - 5) {
       borderFlashTimes[2] = 1.5;
-      console.log('💥 Ball hit BOTTOM border - flashing');
     }
 
     if (paddle1 && ball.dx < 0) {
@@ -940,10 +881,9 @@ export async function init() {
           ball.y + ballRadius >= paddle1.y - paddleLengthMargin &&
           ball.y - ballRadius <= paddle1.y + paddle1.height + paddleLengthMargin) {
 
-        paddleFlashTimes[0] = 1.0; // Flash LEFT paddle (BLUE)
-        borderFlashTimes[0] = 0.8; // Flash left border briefly too
+        paddleFlashTimes[0] = 1.0;
+        borderFlashTimes[0] = 0.8;
         triggerHitParticles(ball.x, ball.y);
-        console.log(`💥 Ball hit LEFT paddle (BLUE) - Player ${currentRoom.players[0]} - FLASH TRIGGERED`);
       }
     }
 
@@ -953,41 +893,34 @@ export async function init() {
           ball.y + ballRadius >= paddle2.y - paddleLengthMargin &&
           ball.y - ballRadius <= paddle2.y + paddle2.height + paddleLengthMargin) {
 
-        paddleFlashTimes[1] = 1.0; // Flash RIGHT paddle (RED)
-        borderFlashTimes[1] = 0.8; // Flash right border briefly too
+        paddleFlashTimes[1] = 1.0;
+        borderFlashTimes[1] = 0.8;
         triggerHitParticles(ball.x, ball.y);
-        console.log(`💥 Ball hit RIGHT paddle (RED) - Player ${currentRoom.players[1]} - FLASH TRIGGERED`);
       }
     }
 
     if (ball.x < -ballRadius) {
       triggerScoreFlash(currentRoom.players[1]);
       borderFlashTimes[0] = 2.0;
-      console.log(`� RIGHT player scored - LEFT border flash`);
     } else if (ball.x > 800 + ballRadius) {
       triggerScoreFlash(currentRoom.players[0]);
       borderFlashTimes[1] = 2.0;
-      console.log(`🎯 LEFT player scored - RIGHT border flash`);
     }
   }
 
   function handleServerFlashEffect(flash: any) {
     if (!flashEffectsEnabled) return;
 
-    console.log(`🎭 Server flash effect: ${flash.type} index ${flash.index} for ${flash.duration}s`);
-
     switch (flash.type) {
       case 'border':
         if (flash.index >= 0 && flash.index < borderFlashTimes.length) {
           borderFlashTimes[flash.index] = flash.duration;
-          console.log(`💥 Border ${flash.index} flash triggered for ${flash.duration}s`);
         }
         break;
 
       case 'paddle':
         if (flash.index >= 0 && flash.index < paddleFlashTimes.length) {
           paddleFlashTimes[flash.index] = flash.duration;
-          console.log(`🏓 Paddle ${flash.index} flash triggered for ${flash.duration}s`);
         }
         break;
 
@@ -995,14 +928,13 @@ export async function init() {
         const playerIndex = currentRoom?.players.indexOf(flash.index);
         if (playerIndex !== undefined && playerIndex >= 0 && playerIndex < paddleFlashTimes.length) {
           paddleFlashTimes[playerIndex] = flash.duration;
-          console.log(`🎯 Score flash for player ${flash.index} (index ${playerIndex}) triggered for ${flash.duration}s`);
         }
         break;
 
-      default:
-        console.log(`⚠️ Unknown flash effect type: ${flash.type}`);
     }
-  }  function triggerHitParticles(x: number, y: number) {
+  }
+
+  function triggerHitParticles(x: number, y: number) {
     if (!hitParticles || !scene) return;
 
     hitParticles.manualEmitCount = 20;
@@ -1031,31 +963,28 @@ export async function init() {
     controlsEnabled = false;
     flashEffectsEnabled = false;
 
-    if (gameStatusEl) gameStatusEl.textContent = `⚡ BATTLE STARTS IN ${count}... ⚡`;
-    if (mobileGameStatusEl) mobileGameStatusEl.textContent = `⚡ ${count} ⚡`;
+    if (gameStatusEl) gameStatusEl.textContent = `BATTLE STARTS IN ${count}... `;
+    if (mobileGameStatusEl) mobileGameStatusEl.textContent = `${count}`;
 
     const countdownInterval = setInterval(() => {
       count--;
       if (count > 0) {
-        if (gameStatusEl) gameStatusEl.textContent = `⚡ BATTLE STARTS IN ${count}... ⚡`;
-        if (mobileGameStatusEl) mobileGameStatusEl.textContent = `⚡ ${count} ⚡`;
+        if (gameStatusEl) gameStatusEl.textContent = ` BATTLE STARTS IN ${count}... `;
+        if (mobileGameStatusEl) mobileGameStatusEl.textContent = `${count}`;
       } else {
         clearInterval(countdownInterval);
 
         controlsEnabled = true;
         flashEffectsEnabled = true;
-        console.log('🎮 Controls enabled - Battle begins!');
 
         const isFirstPlayer = currentRoom && currentRoom.players[0] === myPlayerId;
         if (isFirstPlayer && currentRoom) {
-          console.log('🎮 Starting game as first player...');
-          if (gameStatusEl) gameStatusEl.textContent = '⚡ BATTLE ACTIVE ⚡';
-          if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚡ FIGHT ⚡';
+          if (gameStatusEl) gameStatusEl.textContent = ' BATTLE ACTIVE ';
+          if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' FIGHT ';
           gameService.startGame(currentRoom.roomId);
         } else {
-          console.log('🎮 Waiting for game to start...');
-          if (gameStatusEl) gameStatusEl.textContent = '⚡ BATTLE ACTIVE ⚡';
-          if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⚡ FIGHT ⚡';
+          if (gameStatusEl) gameStatusEl.textContent = ' BATTLE ACTIVE ';
+          if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' FIGHT ';
         }
 
         setTimeout(() => {
@@ -1084,11 +1013,9 @@ export async function init() {
       newY = Math.max(1, myPaddle.y - PADDLE_MOVE_SPEED);
     }
 
-    // Only send move message if position actually changed and is different from last sent position
     if (newY !== null && newY !== myPaddle.y && newY !== lastPaddlePosition) {
       lastPaddlePosition = newY;
       gameService.movePlayer(currentRoom.roomId, newY);
-      console.log(`🎮 PADDLE: Moving player ${myPlayerId} to Y: ${newY} (prev: ${myPaddle.y})`);
     }
   }
 
@@ -1103,13 +1030,11 @@ export async function init() {
     document.addEventListener('keyup', handleKeyUp);
 
     const handleWindowBlur = () => {
-      console.log('🎮 WINDOW: Focus lost, clearing keys');
       keysPressed = {};
       lastPaddlePosition = null;
     };
 
     const handleWindowFocus = () => {
-      console.log('🎮 WINDOW: Focus regained');
       keysPressed = {};
       lastPaddlePosition = null;
     };
@@ -1131,7 +1056,6 @@ export async function init() {
 
     if (!keysPressed[e.code]) {
       keysPressed[e.code] = true;
-      console.log(`🎮 KEY: ${e.code} pressed`);
       handleKeyPress();
     }
   }
@@ -1143,9 +1067,7 @@ export async function init() {
 
     if (keysPressed[e.code]) {
       keysPressed[e.code] = false;
-      console.log(`🎮 KEY: ${e.code} released`);
 
-      // Reset last position when key is released to allow immediate re-movement
       if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
         lastPaddlePosition = null;
       }
@@ -1222,7 +1144,6 @@ export async function init() {
       if (newY !== myPaddle.y && newY !== lastPaddlePosition) {
         lastPaddlePosition = newY;
         gameService.movePlayer(currentRoom.roomId, newY);
-        console.log(`🎮 MOBILE: Moving player ${myPlayerId} to Y: ${newY} (prev: ${myPaddle.y})`);
       }
     }
 
@@ -1305,8 +1226,7 @@ export async function init() {
     if (myPlayerId && currentRoom?.players) {
       const myPosition = currentRoom.players.indexOf(myPlayerId);
       const side = myPosition === 0 ? 'LEFT (BLUE)' : myPosition === 1 ? 'RIGHT (RED)' : 'UNKNOWN';
-      console.log(`🎮 My player ID: ${myPlayerId}, Position: ${side}, Room players order:`, currentRoom.players);
-      console.log(`🎮 Player positions - Player 1 (LEFT/BLUE): ${currentRoom.players[0]}, Player 2 (RIGHT/RED): ${currentRoom.players[1]}`);
+
     }
   }
 
@@ -1315,11 +1235,10 @@ export async function init() {
 
     try {
       const [player1, player2] = await Promise.all([
-        userService.getUserById(currentRoom.players[0]), // LEFT player (BLUE)
-        userService.getUserById(currentRoom.players[1])  // RIGHT player (RED)
+        userService.getUserById(currentRoom.players[0]),
+        userService.getUserById(currentRoom.players[1])
       ]);
 
-      console.log(`🎮 Player order from room - LEFT (BLUE): ${player1?.username} (${currentRoom.players[0]}), RIGHT (RED): ${player2?.username} (${currentRoom.players[1]})`);
 
       player1Avatar = player1?.avatar || null;
       player2Avatar = player2?.avatar || null;
@@ -1338,17 +1257,15 @@ export async function init() {
       displayPlayerAvatar('mobile-player1-avatar-container', player1Avatar, player1Initial, true);
       displayPlayerAvatar('mobile-player2-avatar-container', player2Avatar, player2Initial, false);
     } catch (e) {
-      console.error('Error updating player names:', e);
+      notify('Error updating player names', 'red');
     }
   }
 
   function updateScores() {
     if (!gameState?.score || !currentRoom?.players || currentRoom.players.length < 2) return;
 
-    const score1 = gameState.score[currentRoom.players[0]] || 0; // LEFT player (BLUE)
-    const score2 = gameState.score[currentRoom.players[1]] || 0; // RIGHT player (RED)
-
-    console.log(`🎮 Score update - LEFT (BLUE): ${score1}, RIGHT (RED): ${score2}`);
+    const score1 = gameState.score[currentRoom.players[0]] || 0;
+    const score2 = gameState.score[currentRoom.players[1]] || 0;
 
     if (player1ScoreEl) player1ScoreEl.textContent = score1.toString();
     if (player2ScoreEl) player2ScoreEl.textContent = score2.toString();
@@ -1359,17 +1276,13 @@ export async function init() {
 
   async function initRoomPlayerNames() {
     if (!currentRoom?.players || currentRoom.players.length < 2) {
-      console.log('⚠️ Not enough players in room for name display');
       return;
     }
 
-    console.log('🎮 Initializing player names from room data - Player order:', currentRoom.players);
-    console.log('🎮 POSITION ASSIGNMENT - LEFT (BLUE): Player', currentRoom.players[0], ', RIGHT (RED): Player', currentRoom.players[1]);
-
     try {
       const [player1, player2] = await Promise.all([
-        userService.getUserById(currentRoom.players[0]), // LEFT player (BLUE)
-        userService.getUserById(currentRoom.players[1])  // RIGHT player (RED)
+        userService.getUserById(currentRoom.players[0]),
+        userService.getUserById(currentRoom.players[1])
       ]);
 
       player1Avatar = player1?.avatar || null;
@@ -1396,12 +1309,8 @@ export async function init() {
         if (el) el.textContent = '0';
       });
 
-      console.log('🎮 Enhanced player names and avatars initialized:', {
-        leftBlue: `${player1Name} (ID: ${currentRoom.players[0]}) - Avatar: ${player1Avatar ? 'loaded' : 'fallback'}`,
-        rightRed: `${player2Name} (ID: ${currentRoom.players[1]}) - Avatar: ${player2Avatar ? 'loaded' : 'fallback'}`
-      });
     } catch (e) {
-      console.error('Error initializing player names:', e);
+      notify('Error initializing player names', 'red');
     }
   }
 
@@ -1422,44 +1331,36 @@ export async function init() {
       };
 
       container.appendChild(img);
-      console.log(`🖼️ Avatar loaded for ${containerId}:`, avatarUrl);
     } else {
       container.innerHTML = `<span class="text-white font-bold ${containerId.includes('mobile') ? 'text-sm' : 'text-2xl'}">${fallbackText}</span>`;
-      console.log(`📝 Fallback text for ${containerId}:`, fallbackText);
     }
   }
 
   function cleanup3D() {
     try {
-      console.log('🧹 Starting complete cleanup of remote-game page...');
 
       if (keyboardControlInterval) {
         clearInterval(keyboardControlInterval);
         keyboardControlInterval = null;
-        console.log('✅ Keyboard control interval cleared');
       }
 
       if (mobileControlInterval) {
         clearInterval(mobileControlInterval);
         mobileControlInterval = null;
-        console.log('✅ Mobile control interval cleared');
       }
 
       if (pauseCountdownTimer) {
         clearInterval(pauseCountdownTimer);
         pauseCountdownTimer = null;
-        console.log('✅ Pause countdown timer cleared');
       }
 
       if (warmupTimer) {
         clearTimeout(warmupTimer);
         warmupTimer = null;
-        console.log('✅ Warmup timer cleared');
       }
 
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
-      console.log('✅ Keyboard event listeners removed');
 
       document.removeEventListener('touchmove', () => {});
       document.removeEventListener('visibilitychange', () => {});
@@ -1526,9 +1427,8 @@ export async function init() {
       myPlayerId = null;
       mobileControlDirection = null;
 
-      console.log('🧹 Enhanced 3D scene and controls cleaned up');
     } catch (e) {
-      console.error('Error cleaning up enhanced 3D scene:', e);
+      notify('Error cleaning up enhanced 3D scene', 'red');
     }
   }
 

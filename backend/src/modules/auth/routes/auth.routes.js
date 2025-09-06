@@ -43,8 +43,6 @@ export default async function authRoutes(app, options) {
 
       app.get('/google/callback', googleCallbackHandler);
       
-    } catch (error) {
-      console.log('Google OAuth setup failed:', error.message);
-    }
+    } catch (error) {}
   }
 }
