@@ -1,101 +1,11 @@
-<style>
-  :root { --neon: #39FF14; --neon-glow: rgba(57,255,20,0.25); }
+<body class="landing-page">
 
-  html, body { height: 100%; margin: 0; }
-  body {
-    background: radial-gradient(ellipse at center, #010912 0%, #041025 60%);
-    color: var(--neon);
-  }
-
-  .landing-title {
-    display: inline-block;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    line-height: 0.9;
-    font-weight: 900;
-    text-shadow:
-      0 0 6px var(--neon),
-      0 0 18px var(--neon-glow),
-      0 6px 30px rgba(0,0,0,0.6);
-    -webkit-text-stroke: 0.5px rgba(0,0,0,0.35);
-    margin: 0 auto;
-  }
-
-  .typing-text {
-    display: inline-block;
-    white-space: nowrap;
-    padding-right: 12px;
-    border-right: 4px solid var(--neon);
-    box-sizing: content-box;
-    animation: caret-blink 1s step-end infinite;
-  }
-  @keyframes caret-blink { 50% { border-color: transparent; } }
-
-  @media (max-width: 640px) { .landing-title { font-size: 5rem; } }
-  @media (min-width: 641px) and (max-width: 1024px) { .landing-title { font-size: 8rem; } }
-  @media (min-width: 1025px) { .landing-title { font-size: 12rem; } }
-
-  .neon-btn {
-    background: rgba(0,0,0,0.45);
-    border: 1px solid rgba(57,255,20,0.12);
-    color: var(--neon) !important;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.6), 0 0 18px var(--neon-glow);
-    backdrop-filter: blur(6px);
-    transition: transform 0.2s;
-  }
-  .neon-btn:hover { transform: translateY(-3px) scale(1.05); }
-
-  .or-divider {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    color: var(--neon);
-    opacity: 0.7;
-  }
-  .or-divider::before,
-  .or-divider::after {
-    content: '';
-    width: 40px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--neon), transparent);
-    box-shadow: 0 0 8px var(--neon-glow);
-  }
-
-  .button-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
-  }
-
-  @media (max-width: 768px) {
-    .button-container {
-      flex-direction: column;
-    }
-  }
-
-  @media (min-width: 769px) {
-    .button-container {
-      flex-direction: row;
-      flex-wrap: wrap;
-    }
-  }
-
-  #landing-ui { transition: opacity 300ms ease, filter 300ms ease; }
-  #landing-ui.fade-out {
-    opacity: 0;
-    filter: blur(2px);
-    pointer-events: none;
-  }
-</style>
-
-<div id="landing-ui" class="h-screen flex flex-col items-center justify-center">
-  <h1 id="landing-title" class="landing-title" style="margin-bottom: 4rem;" aria-label="PONG">
+<div id="landing-ui" class="landing-ui h-screen flex flex-col items-center justify-center">
+  <h1 id="landing-title" class="landing-title text-5xl md:text-8xl xl:text-9xl mb-16" aria-label="PONG">
     <span class="typing-text"></span>
   </h1>
 
-  <div class="button-container">
+  <div class="flex items-center justify-center gap-8 flex-col md:flex-row md:flex-wrap">
     <button
       onclick="window.closeBabylonGame && window.closeBabylonGame(); router.navigate('game')"
       class="w-48 rounded-md neon-btn py-3 text-lg sm:text-xl font-bold">
@@ -113,3 +23,5 @@
     </button>
   </div>
 </div>
+
+</body>
