@@ -1,6 +1,5 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
-import { safeDOM, XSSProtection } from '../../core/XSSProtection.js';
 
 interface User {
     id: number;
@@ -41,8 +40,7 @@ async function loadProfile(): Promise<void> {
         const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const rawData: ProfileResponse = await response.json();
-        const data = XSSProtection.sanitizeJSON(rawData);
+        const data: ProfileResponse = await response.json();
 
         if (response.ok && data.user) {
             displayProfile(data.user);
@@ -60,16 +58,13 @@ async function loadProfile(): Promise<void> {
 function displayProfile(user: User): void {
     const profileDiv = document.getElementById('profileInfo');
     if (profileDiv) {
-        const username = XSSProtection.escapeHTML(user.username);
-        const email = XSSProtection.escapeHTML(user.email);
-        
-        safeDOM.setHTML(profileDiv, `
+        profileDiv.innerHTML = `
             <div class="text-neon-blue text-xs space-y-1">
-                <p class="uppercase tracking-wide">USERNAME: <span class="text-neon-white">${username}</span></p>
-                <p class="uppercase tracking-wide">EMAIL: <span class="text-neon-white">${email}</span></p>
+                <p class="uppercase tracking-wide">USERNAME: <span class="text-neon-white">${user.username}</span></p>
+                <p class="uppercase tracking-wide">EMAIL: <span class="text-neon-white">${user.email}</span></p>
                 <p class="uppercase tracking-wide">STATS: <span class="text-neon-white">${user.wins}W / ${user.losses}L</span></p>
             </div>
-        `);
+        `;
     }
 }
 
@@ -77,10 +72,9 @@ function displayAvatar(avatar: string | null): void {
     const avatarDiv = document.getElementById('avatarPreview');
     if (avatarDiv) {
         if (avatar) {
-            const safeAvatar = XSSProtection.escapeHTML(avatar);
-            safeDOM.setHTML(avatarDiv, `<img src="${safeAvatar}" class="w-full h-full object-cover rounded-full">`);
+            avatarDiv.innerHTML = `<img src="${avatar}" class="w-full h-full object-cover rounded-full">`;
         } else {
-            safeDOM.setHTML(avatarDiv, `<span class="text-neon-blue text-xs uppercase">NO AVATAR</span>`);
+            avatarDiv.innerHTML = `<span class="text-neon-blue text-xs uppercase">NO AVATAR</span>`;
         }
     }
 }
@@ -107,22 +101,22 @@ async function loadBlockedUsers(userId: number): Promise<void> {
             const data = await response.json();
             displayBlockedUsers(data.blockedUsers || []);
         } else {
-            safeDOM.setHTML(listDiv, `
+            listDiv.innerHTML = `
                 <div class="text-neon-red text-opacity-70 text-[10px] text-center py-4">
                     FAILED TO LOAD BLOCKED USERS
                 </div>
-            `);
+            `;
         }
     } catch (error) {
         notify('Error loading blocked users', 'red');
         if (loadingDiv) {
             loadingDiv.style.display = 'none';
         }
-        safeDOM.setHTML(listDiv, `
+        listDiv.innerHTML = `
             <div class="text-neon-red text-opacity-70 text-[10px] text-center py-4">
                 ERROR LOADING BLOCKED USERS
             </div>
-        `);
+        `;
     }
 }
 
@@ -131,11 +125,11 @@ function displayBlockedUsers(blockedUsers: any[]): void {
     if (!listDiv) return;
 
     if (blockedUsers.length === 0) {
-        safeDOM.setHTML(listDiv, `
+        listDiv.innerHTML = `
             <div class="text-neon-red text-opacity-50 text-[10px] text-center py-4">
                 NO BLOCKED USERS, TRY ADDING SOME!
             </div>
-        `);
+        `;
         return;
     }
 
@@ -143,21 +137,21 @@ function displayBlockedUsers(blockedUsers: any[]): void {
         <div class="flex items-center justify-between p-2 bg-black bg-opacity-40 border border-neon-red border-opacity-30 rounded-sm">
             <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-full bg-neon-red bg-opacity-20 flex items-center justify-center">
-					<img id="header-user-avatar-img" src="${XSSProtection.cleanInput(user.avatar || 'https://placehold.co/400x400?text=Player')}" alt="User Avatar" class="w-full h-full object-cover rounded-full">
+					<img id="header-user-avatar-img" src="${user.avatar || 'https://placehold.co/400x400?text=Player'}" alt="User Avatar" class="w-full h-full object-cover rounded-full">
                     <span class="text-neon-red text-[8px] font-bold"></span>
                 </div>
                 <div>
-                    <p class="text-neon-red text-xs font-bold">${XSSProtection.escapeHTML(user.username)}</p>
+                    <p class="text-neon-red text-xs font-bold">${user.username}</p>
                 </div>
             </div>
-            <button onclick="unblockUser(${XSSProtection.cleanInput(user.id.toString())})" 
+            <button onclick="unblockUser(${user.id})" 
                     class="terminal-btn bg-btn-gradient border border-neon-yellow text-neon-yellow px-3 py-2 font-orbitron text-xs font-bold tracking-wide cursor-pointer rounded-sm">
                 UNBLOCK
             </button>
         </div>
     `).join('');
     
-    safeDOM.setHTML(listDiv, blockedUsersHTML);
+    listDiv.innerHTML = blockedUsersHTML;
 }
 
 async function unblockUser(userId: number): Promise<void> {
@@ -242,8 +236,8 @@ function displayQRCode(qr: string, secret: string): void {
     const secretKey = document.getElementById('secretKey');
 
     if (qrContainer && qrCode && secretKey) {
-        safeDOM.setHTML(qrCode, `<img src="${qr}" alt="QR Code">`);
-        safeDOM.setText(secretKey, secret);
+        qrCode.innerHTML = `<img src="${qr}" alt="QR Code">`;
+        secretKey.textContent = secret;
         qrContainer.style.display = 'block';
     }
 }
