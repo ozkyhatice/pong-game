@@ -1,5 +1,6 @@
 import { WebSocketManager } from '../core/WebSocketManager.js';
 import { GameMessage } from '../core/types.js';
+import { XSSProtection } from '../core/XSSProtection.js';
 
 export class GameService {
   private wsManager: WebSocketManager;
@@ -9,7 +10,8 @@ export class GameService {
   }
 
   joinGame(roomId?: string): void {
-    this.send('join', { roomId: roomId || null });
+    const cleanRoomId = roomId ? XSSProtection.cleanInput(roomId, 100) : null;
+    this.send('join', { roomId: cleanRoomId });
   }
 
   startGame(roomId: string): void {
@@ -41,7 +43,8 @@ export class GameService {
   }
 
   sendGameInvite(receiverId: number, senderUsername: string): void {
-    this.send('game-invite', { receiverId, senderUsername });
+    const cleanUsername = XSSProtection.cleanInput(senderUsername, 50);
+    this.send('game-invite', { receiverId, senderUsername: cleanUsername });
   }
 
   acceptGameInvite(senderId: number): void {

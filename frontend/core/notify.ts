@@ -1,3 +1,5 @@
+import { safeDOM } from './XSSProtection.js';
+
 const timeoutMS = 2000;
 
 export function notify(message: string, color?: string) {
@@ -51,7 +53,7 @@ export function notify(message: string, color?: string) {
   toast.style.textShadow = `0 0 5px ${colorValue}`;
 
   const msg = document.createElement('b');
-  msg.textContent = displayMsg;
+  safeDOM.setText(msg, displayMsg);
   toast.appendChild(msg);
 
   document.body.appendChild(toast);

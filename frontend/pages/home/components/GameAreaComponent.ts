@@ -5,6 +5,7 @@ import { GameService } from "../../../services/GameService.js";
 import { UserService } from "../../../services/UserService.js";
 import { TournamentService } from "../../../services/TournamentService.js";
 import { API_CONFIG, getApiUrl } from "../../../config.js";
+import { XSSProtection, safeDOM } from "../../../core/XSSProtection.js";
 
 export class GameAreaComponent extends Component {
   private gameService = new GameService();
@@ -527,16 +528,16 @@ export class GameAreaComponent extends Component {
     const waitingElement = this.element.querySelector("#tournament-waiting");
 
     if (playersElement) {
-      playersElement.textContent = data.currentPlayers.toString();
+      safeDOM.setText(playersElement, data.currentPlayers.toString());
     }
 
     if (waitingElement) {
       const remaining = 4 - data.currentPlayers;
       if (remaining > 0) {
-        waitingElement.textContent = `Waiting for ${remaining} more players to join...`;
+        safeDOM.setText(waitingElement, `Waiting for ${remaining} more players to join...`);
         waitingElement.classList.remove("hidden");
       } else {
-        waitingElement.textContent = "Tournament will start soon!";
+        safeDOM.setText(waitingElement, "Tournament will start soon!");
         waitingElement.classList.remove("hidden");
       }
     }
@@ -551,7 +552,7 @@ export class GameAreaComponent extends Component {
     const leaveBtn = this.element.querySelector("#leave-tournament-btn");
 
     if (!tournament) {
-      if (noTournament) noTournament.textContent = "No active tournament";
+      if (noTournament) safeDOM.setText(noTournament, "No active tournament");
       noTournament?.classList.remove("hidden");
       tournamentDetails?.classList.add("hidden");
       joinBtn?.classList.add("hidden");
@@ -563,21 +564,21 @@ export class GameAreaComponent extends Component {
     tournamentDetails?.classList.remove("hidden");
 
     if (playersElement)
-      playersElement.textContent = tournament.currentPlayers.toString();
-    if (statusElement) statusElement.textContent = tournament.status;
+      safeDOM.setText(playersElement, tournament.currentPlayers.toString());
+    if (statusElement) safeDOM.setText(statusElement, XSSProtection.cleanInput(tournament.status));
 
     const waitingElement = this.element.querySelector("#tournament-waiting");
     if (waitingElement) {
       if (tournament.status === "pending") {
         const remaining = 4 - tournament.currentPlayers;
         if (remaining > 0) {
-          waitingElement.textContent = `Waiting for ${remaining} more players to join...`;
+          safeDOM.setText(waitingElement, `Waiting for ${remaining} more players to join...`);
         } else {
-          waitingElement.textContent = "Tournament will start soon!";
+          safeDOM.setText(waitingElement, "Tournament will start soon!");
         }
         waitingElement.classList.remove("hidden");
       } else if (tournament.status === "active") {
-        waitingElement.textContent = "Tournament in progress";
+        safeDOM.setText(waitingElement, "Tournament in progress");
         waitingElement.classList.remove("hidden");
       } else {
         waitingElement.classList.add("hidden");

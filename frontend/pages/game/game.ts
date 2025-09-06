@@ -1,5 +1,6 @@
 import { Router } from "../../core/router.js";
 import { notify } from "../../core/notify.js";
+import { XSSProtection, safeDOM } from "../../core/XSSProtection.js";
 
 declare global {
   var router: Router;
@@ -163,7 +164,7 @@ export async function init() {
   const mobileUpBtnP2 = document.getElementById('mobile-up-btn-p2');
   const mobileDownBtnP2 = document.getElementById('mobile-down-btn-p2');
 
-  if (roomIdEl) roomIdEl.textContent = 'LOCAL GAME';
+  if (roomIdEl) safeDOM.setText(roomIdEl, 'LOCAL GAME');
   if (leaveGameBtn) leaveGameBtn.addEventListener('click', handleLeaveGame);
   if (mobileLeaveBtn) mobileLeaveBtn.addEventListener('click', handleLeaveGame);
 
@@ -182,15 +183,15 @@ export async function init() {
   startLocalGame();
 
   function initLocalPlayerNames() {
-    if (player1NameEl) player1NameEl.textContent = 'PLAYER 1 (BLUE)';
-    if (player2NameEl) player2NameEl.textContent = 'PLAYER 2 (RED)';
-    if (player1InitialEl) player1InitialEl.textContent = 'P1';
-    if (player2InitialEl) player2InitialEl.textContent = 'P2';
+    if (player1NameEl) safeDOM.setText(player1NameEl, 'PLAYER 1 (BLUE)');
+    if (player2NameEl) safeDOM.setText(player2NameEl, 'PLAYER 2 (RED)');
+    if (player1InitialEl) safeDOM.setText(player1InitialEl, 'P1');
+    if (player2InitialEl) safeDOM.setText(player2InitialEl, 'P2');
 
-    if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = 'PLAYER 1 (BLUE)';
-    if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = 'PLAYER 2 (RED)';
-    if (mobilePlayer1InitialEl) mobilePlayer1InitialEl.textContent = 'P1';
-    if (mobilePlayer2InitialEl) mobilePlayer2InitialEl.textContent = 'P2';
+    if (mobilePlayer1NameEl) safeDOM.setText(mobilePlayer1NameEl, 'PLAYER 1 (BLUE)');
+    if (mobilePlayer2NameEl) safeDOM.setText(mobilePlayer2NameEl, 'PLAYER 2 (RED)');
+    if (mobilePlayer1InitialEl) safeDOM.setText(mobilePlayer1InitialEl, 'P1');
+    if (mobilePlayer2InitialEl) safeDOM.setText(mobilePlayer2InitialEl, 'P2');
 
   }
 
@@ -198,16 +199,16 @@ export async function init() {
     const score1 = localGameState.score[1] || 0;
     const score2 = localGameState.score[2] || 0;
 
-    if (player1ScoreEl) player1ScoreEl.textContent = score1.toString();
-    if (player2ScoreEl) player2ScoreEl.textContent = score2.toString();
+    if (player1ScoreEl) safeDOM.setText(player1ScoreEl, score1.toString());
+    if (player2ScoreEl) safeDOM.setText(player2ScoreEl, score2.toString());
 
-    if (mobilePlayer1ScoreEl) mobilePlayer1ScoreEl.textContent = score1.toString();
-    if (mobilePlayer2ScoreEl) mobilePlayer2ScoreEl.textContent = score2.toString();
+    if (mobilePlayer1ScoreEl) safeDOM.setText(mobilePlayer1ScoreEl, score1.toString());
+    if (mobilePlayer2ScoreEl) safeDOM.setText(mobilePlayer2ScoreEl, score2.toString());
   }
 
   function startLocalGame() {
-    if (gameStatusEl) gameStatusEl.textContent = 'LOCAL BATTLE';
-    if (mobileGameStatusEl) mobileGameStatusEl.textContent = 'BATTLE';
+    if (gameStatusEl) safeDOM.setText(gameStatusEl, 'LOCAL BATTLE');
+    if (mobileGameStatusEl) safeDOM.setText(mobileGameStatusEl, 'BATTLE');
 
     gameLoopInterval = setInterval(updateLocalGame, 16) as any;
   }
@@ -311,9 +312,10 @@ export async function init() {
   function checkGameOver() {
     if (localGameState.score[1] >= GAME_CONFIG.MAX_SCORE || localGameState.score[2] >= GAME_CONFIG.MAX_SCORE) {
       const winner = localGameState.score[1] >= GAME_CONFIG.MAX_SCORE ? 'Player 1' : 'Player 2';
+      const safeWinnerText = XSSProtection.cleanInput(winner);
 
-      if (gameStatusEl) gameStatusEl.textContent = `🏆 ${winner} WINS! 🏆`;
-      if (mobileGameStatusEl) mobileGameStatusEl.textContent = `🏆 ${winner} WINS! 🏆`;
+      if (gameStatusEl) safeDOM.setText(gameStatusEl, `🏆 ${safeWinnerText} WINS! 🏆`);
+      if (mobileGameStatusEl) safeDOM.setText(mobileGameStatusEl, `🏆 ${safeWinnerText} WINS! 🏆`);
 
       localGameState.gameOver = true;
 
@@ -503,14 +505,14 @@ export async function init() {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         gamePaused = true;
-        if (gameStatusEl) gameStatusEl.textContent = '⏸️ GAME PAUSED ⏸️';
-        if (mobileGameStatusEl) mobileGameStatusEl.textContent = '⏸️ PAUSED ⏸️';
+        if (gameStatusEl) safeDOM.setText(gameStatusEl, '⏸️ GAME PAUSED ⏸️');
+        if (mobileGameStatusEl) safeDOM.setText(mobileGameStatusEl, '⏸️ PAUSED ⏸️');
         if (ballTrailParticles) ballTrailParticles.stop();
       } else {
         if (!localGameState.gameOver) {
           gamePaused = false;
-          if (gameStatusEl) gameStatusEl.textContent = 'LOCAL BATTLE';
-          if (mobileGameStatusEl) mobileGameStatusEl.textContent = 'BATTLE';
+          if (gameStatusEl) safeDOM.setText(gameStatusEl, 'LOCAL BATTLE');
+          if (mobileGameStatusEl) safeDOM.setText(mobileGameStatusEl, 'BATTLE');
           if (ballTrailParticles) ballTrailParticles.start();
         }
       }

@@ -1,5 +1,6 @@
 import { getApiUrl, API_CONFIG } from '../../../../config.js';
 import { notify } from '../../../../core/notify.js';
+import { XSSProtection, safeDOM } from '../../../../core/XSSProtection.js';
 
 export class AddFriendTab {
   private element: HTMLElement;
@@ -61,7 +62,7 @@ export class AddFriendTab {
     }
 
     button.disabled = true;
-    button.textContent = 'Sending...';
+    safeDOM.setText(button, 'Sending...');
 
     try {
       const token = localStorage.getItem('authToken');
@@ -96,7 +97,7 @@ export class AddFriendTab {
       notify('Error sending friend request', 'red');
     } finally {
       button.disabled = false;
-      button.textContent = 'Send Request';
+      safeDOM.setText(button, 'Send Request');
     }
   }
 

@@ -1,5 +1,6 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
+import { XSSProtection } from '../../core/XSSProtection.js';
 
 export async function init() {
 
@@ -26,6 +27,9 @@ export async function init() {
       return;
     }
 
+    // Sanitize 2FA code input
+    const cleanCode = XSSProtection.cleanInput(code, 6);
+
     try {
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.TWOFA.VERIFY_LOGIN), {
         method: 'POST',
@@ -34,11 +38,12 @@ export async function init() {
         },
         body: JSON.stringify({
           userId: parseInt(userId),
-          token: code
+          token: cleanCode
         }),
       });
 
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = XSSProtection.sanitizeJSON(rawData);
 
       if (response.ok && data.success && data.token) {
         sessionStorage.removeItem('tempUserId');

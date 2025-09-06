@@ -1,4 +1,5 @@
 import './crtShader.js';
+import { XSSProtection, safeDOM } from "../../core/XSSProtection.js";
 
 const PADSPEED = 0.09;
 const BALLSPEEDXDEFAULT = 0.09;
@@ -41,12 +42,12 @@ function startTypingEffect() {
   if (!typingElement) return;
 
   const text = 'PONG';
-  typingElement.textContent = '';
+  safeDOM.setText(typingElement, '');
   let i = 0;
 
   function typeChar() {
     if (i < text.length && typingElement) {
-      typingElement.textContent += text[i];
+      safeDOM.setText(typingElement, typingElement.textContent + text[i]);
       i++;
       setTimeout(typeChar, 250);
     }

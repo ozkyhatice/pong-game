@@ -1,5 +1,6 @@
 import { WebSocketManager } from '../core/WebSocketManager.js';
 import { UserInfo } from './UserService.js';
+import { XSSProtection } from '../core/XSSProtection.js';
 
 export interface OnlineUser extends UserInfo {
   status: 'online' | 'offline';
@@ -77,13 +78,18 @@ export class OnlineUsersService {
   }
 
   private parseOnlineClientsData(data: any): OnlineUser[] {
+    let clients = [];
+    
     if (Array.isArray(data)) {
-      return data;
+      clients = data;
+    } else if (data && Array.isArray(data.data)) {
+      clients = data.data;
+    } else {
+      return [];
     }
-    if (data && Array.isArray(data.data)) {
-      return data.data;
-    }
-    return [];
+    
+    // Sanitize user data
+    return clients.map((client: any) => XSSProtection.sanitizeJSON(client));
   }
 
   private updateOnlineUsers(clients: OnlineUser[]): void {

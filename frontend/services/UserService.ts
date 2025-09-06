@@ -1,4 +1,5 @@
 import { API_CONFIG, getApiUrl } from '../config.js';
+import { XSSProtection } from '../core/XSSProtection.js';
 
 export interface UserInfo {
   id: number;
@@ -40,7 +41,7 @@ export class UserService {
       if (!response.ok) return null;
 
       const data = await response.json();
-      const user: UserInfo = data.user || data;
+      const user: UserInfo = XSSProtection.sanitizeJSON(data.user || data);
       
       this.currentUserCache = user;
       this.currentUserCacheTime = Date.now();
@@ -65,7 +66,7 @@ export class UserService {
       if (!response.ok) return null;
 
       const data = await response.json();
-      const user: UserInfo = data.user || data;
+      const user: UserInfo = XSSProtection.sanitizeJSON(data.user || data);
       this.cache.set(userId, user);
       return user;
     } catch {
@@ -82,7 +83,7 @@ export class UserService {
       if (!response.ok) return null;
 
       const data = await response.json();
-      const user: UserInfo = data.user || data;
+      const user: UserInfo = XSSProtection.sanitizeJSON(data.user || data);
       this.cache.set(user.id, user);
       return user;
     } catch {
@@ -92,19 +93,26 @@ export class UserService {
 
   async updateProfile(data: UpdateUserData): Promise<UserInfo | null> {
     try {
+      // Sanitize input data before sending
+      const sanitizedData = {
+        username: data.username ? XSSProtection.cleanInput(data.username, 50) : undefined,
+        email: data.email ? XSSProtection.cleanInput(data.email, 100) : undefined,
+        avatar: data.avatar ? XSSProtection.cleanInput(data.avatar, 500) : undefined
+      };
+
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.UPDATE), {
         method: 'PUT',
         headers: {
           ...this.getAuthHeaders(),
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(sanitizedData)
       });
 
       if (!response.ok) return null;
 
       const responseData = await response.json();
-      const user: UserInfo = responseData.user || responseData;
+      const user: UserInfo = XSSProtection.sanitizeJSON(responseData.user || responseData);
       
       this.currentUserCache = null;
       this.currentUserCacheTime = 0;

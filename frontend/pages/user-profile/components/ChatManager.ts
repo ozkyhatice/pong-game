@@ -4,6 +4,7 @@ import { notify } from '../../../core/notify.js';
 import { GameInviteManager } from './GameInviteManager.js';
 import { getApiUrl, API_CONFIG } from '../../../config.js';
 import { UserService } from '../../../services/UserService.js';
+import { XSSProtection, safeDOM } from '../../../core/XSSProtection.js';
 
 interface ApiMessage {
   id: number;
@@ -290,8 +291,6 @@ export class ChatManager {
   }
 
   private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return XSSProtection.escapeHTML(text);
   }
 }

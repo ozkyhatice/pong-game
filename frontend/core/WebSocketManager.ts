@@ -2,6 +2,7 @@ import { WSMessage } from './types.js';
 import { AppState } from './AppState.js';
 import { notify } from './notify.js';
 import { getWsUrl } from '../config.js';
+import { XSSProtection } from './XSSProtection.js';
 
 export class WebSocketManager {
   private static instance: WebSocketManager;
@@ -43,7 +44,9 @@ export class WebSocketManager {
     this.ws.onmessage = (event) => {
       let message: any;
       try {
-        message = JSON.parse(event.data);
+        const rawMessage = JSON.parse(event.data);
+        // Sanitize incoming WebSocket data
+        message = XSSProtection.sanitizeJSON(rawMessage);
       } catch (parseError) {
         return;
       }
@@ -79,13 +82,15 @@ export class WebSocketManager {
             if (message.data && message.data.isTournamentMatch && message.data.tournamentId) {
               if (currentPage !== 'tournament') {
                 if (message.data) {
-                  localStorage.setItem('lastTournamentMatchResult', JSON.stringify({
+                  // Sanitize data before storing in localStorage
+                  const sanitizedData = XSSProtection.sanitizeJSON({
                     winner: message.data.winner,
                     finalScore: message.data.finalScore,
                     message: message.data.message,
                     round: message.data.round,
                     timestamp: Date.now()
-                  }));
+                  });
+                  localStorage.setItem('lastTournamentMatchResult', JSON.stringify(sanitizedData));
                 }
                 setTimeout(() => {
                   (window as any).router.navigate('tournament');
@@ -95,7 +100,9 @@ export class WebSocketManager {
 
               if (currentPage !== 'end-game' && currentPage !== 'home') {
                 if (message.data) {
-                  localStorage.setItem('gameResult', JSON.stringify(message.data));
+                  // Sanitize game result data before storing
+                  const sanitizedGameResult = XSSProtection.sanitizeJSON(message.data);
+                  localStorage.setItem('gameResult', JSON.stringify(sanitizedGameResult));
                 }
                 setTimeout(() => {
                   (window as any).router.navigate('end-game');

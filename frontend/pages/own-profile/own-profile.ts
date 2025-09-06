@@ -1,6 +1,7 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
 import { UserService } from '../../services/UserService.js';
+import { XSSProtection, safeDOM } from '../../core/XSSProtection.js';
 
 interface User {
     id: number;
@@ -92,8 +93,8 @@ function displayProfile(user: User): void {
     const usernameEl = document.getElementById('username');
     const userEmailEl = document.getElementById('user-email');
 
-    if (usernameEl) usernameEl.textContent = user.username.toUpperCase();
-    if (userEmailEl) userEmailEl.textContent = user.email || 'No email provided';
+    if (usernameEl) safeDOM.setText(usernameEl, XSSProtection.cleanInput(user.username.toUpperCase()));
+    if (userEmailEl) safeDOM.setText(userEmailEl, XSSProtection.cleanInput(user.email || 'No email provided'));
 }
 
 function displayAvatar(avatarUrl: string | null): void {
@@ -142,10 +143,10 @@ function updateStatsDisplay(user: User): void {
     const totalGames = wins + losses;
     const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
 
-    if (winsEl) winsEl.textContent = wins.toString();
-    if (lossesEl) lossesEl.textContent = losses.toString();
-    if (totalGamesEl) totalGamesEl.textContent = totalGames.toString();
-    if (winRateEl) winRateEl.textContent = `${winRate}%`;
+    if (winsEl) safeDOM.setText(winsEl, wins.toString());
+    if (lossesEl) safeDOM.setText(lossesEl, losses.toString());
+    if (totalGamesEl) safeDOM.setText(totalGamesEl, totalGames.toString());
+    if (winRateEl) safeDOM.setText(winRateEl, `${winRate}%`);
 }
 
 async function loadMatchHistory(userId: number): Promise<void> {

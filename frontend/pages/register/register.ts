@@ -1,5 +1,6 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
+import { XSSProtection } from '../../core/XSSProtection.js';
 
 export async function init() {
 
@@ -49,18 +50,26 @@ export async function init() {
     }
 
     try {
+      // Additional sanitization before sending
+      const sanitizedData = {
+        username: XSSProtection.cleanInput(cleanUsername, 50),
+        email: XSSProtection.cleanInput(email, 100),
+        password: XSSProtection.cleanInput(password, 200)
+      };
+
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.REGISTER), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify(sanitizedData),
       });
 
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = XSSProtection.sanitizeJSON(rawData);
 
       if (response.ok) {
-        notify(`Registration successful! Welcome ${username}!`, 'green');
+        notify(`Registration successful! Welcome ${sanitizedData.username}!`, 'green');
         router.navigate('login');
       } else {
         throw new Error(data.message || 'Registration failed');

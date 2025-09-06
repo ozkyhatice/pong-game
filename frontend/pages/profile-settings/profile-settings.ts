@@ -1,5 +1,6 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
+import { safeDOM, XSSProtection } from '../../core/XSSProtection.js';
 
 interface User {
     id: number;
@@ -40,7 +41,8 @@ async function loadProfile(): Promise<void> {
         const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER.ME), {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data: ProfileResponse = await response.json();
+        const rawData: ProfileResponse = await response.json();
+        const data = XSSProtection.sanitizeJSON(rawData);
 
         if (response.ok && data.user) {
             displayProfile(data.user);
@@ -58,13 +60,16 @@ async function loadProfile(): Promise<void> {
 function displayProfile(user: User): void {
     const profileDiv = document.getElementById('profileInfo');
     if (profileDiv) {
-        profileDiv.innerHTML = `
+        const username = XSSProtection.escapeHTML(user.username);
+        const email = XSSProtection.escapeHTML(user.email);
+        
+        safeDOM.setHTML(profileDiv, `
             <div class="text-neon-blue text-xs space-y-1">
-                <p class="uppercase tracking-wide">USERNAME: <span class="text-neon-white">${user.username}</span></p>
-                <p class="uppercase tracking-wide">EMAIL: <span class="text-neon-white">${user.email}</span></p>
+                <p class="uppercase tracking-wide">USERNAME: <span class="text-neon-white">${username}</span></p>
+                <p class="uppercase tracking-wide">EMAIL: <span class="text-neon-white">${email}</span></p>
                 <p class="uppercase tracking-wide">STATS: <span class="text-neon-white">${user.wins}W / ${user.losses}L</span></p>
             </div>
-        `;
+        `);
     }
 }
 
@@ -72,9 +77,10 @@ function displayAvatar(avatar: string | null): void {
     const avatarDiv = document.getElementById('avatarPreview');
     if (avatarDiv) {
         if (avatar) {
-            avatarDiv.innerHTML = `<img src="${avatar}" class="w-full h-full object-cover rounded-full">`;
+            const safeAvatar = XSSProtection.escapeHTML(avatar);
+            safeDOM.setHTML(avatarDiv, `<img src="${safeAvatar}" class="w-full h-full object-cover rounded-full">`);
         } else {
-            avatarDiv.innerHTML = `<span class="text-neon-blue text-xs uppercase">NO AVATAR</span>`;
+            safeDOM.setHTML(avatarDiv, `<span class="text-neon-blue text-xs uppercase">NO AVATAR</span>`);
         }
     }
 }
@@ -234,8 +240,8 @@ function displayQRCode(qr: string, secret: string): void {
     const secretKey = document.getElementById('secretKey');
 
     if (qrContainer && qrCode && secretKey) {
-        qrCode.innerHTML = `<img src="${qr}" alt="QR Code">`;
-        secretKey.textContent = secret;
+        safeDOM.setHTML(qrCode, `<img src="${XSSProtection.cleanInput(qr)}" alt="QR Code">`);
+        safeDOM.setText(secretKey, XSSProtection.cleanInput(secret));
         qrContainer.style.display = 'block';
     }
 }

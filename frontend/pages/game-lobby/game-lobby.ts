@@ -3,6 +3,7 @@ import { GameService } from "../../services/GameService.js";
 import { UserService } from "../../services/UserService.js";
 import { Router } from "../../core/router.js";
 import { notify } from "../../core/notify.js";
+import { XSSProtection, safeDOM } from "../../core/XSSProtection.js";
 
 declare global {
   var router: Router;
@@ -90,11 +91,11 @@ export function init() {
     
     if (readyBtn) {
       (readyBtn as HTMLButtonElement).disabled = true;
-		readyBtn.textContent = 'READY';
-		readyBtn.classList.remove('bg-transparent', 'text-neon-green');
-		readyBtn.classList.remove('hover:bg-neon-green', 'hover:text-terminal-border');
-		readyBtn.classList.add('bg-neon-green', 'text-terminal-border');
-		readyBtn.classList.add('cursor-not-allowed');
+      safeDOM.setText(readyBtn, 'READY');
+      readyBtn.classList.remove('bg-transparent', 'text-neon-green');
+      readyBtn.classList.remove('hover:bg-neon-green', 'hover:text-terminal-border');
+      readyBtn.classList.add('bg-neon-green', 'text-terminal-border');
+      readyBtn.classList.add('cursor-not-allowed');
     }
   }
 
@@ -108,7 +109,7 @@ export function init() {
   async function initLobby() {
     if (!currentRoom?.roomId) return;
     
-    if (roomId) roomId.textContent = currentRoom.roomId;
+    if (roomId) safeDOM.setText(roomId, XSSProtection.cleanInput(currentRoom.roomId));
     await loadPlayerInfo();
   }
 
@@ -123,12 +124,12 @@ export function init() {
         userService.getUserById(playerId2)
       ]);
 
-      if (player1Name) player1Name.textContent = player1?.username || `Player ${playerId1}`;
+      if (player1Name) safeDOM.setText(player1Name, XSSProtection.cleanInput(player1?.username || `Player ${playerId1}`));
       if (player1Avatar && player1?.avatar) {
         player1Avatar.src = player1.avatar;
       }
 
-      if (player2Name) player2Name.textContent = player2?.username || `Player ${playerId2}`;
+      if (player2Name) safeDOM.setText(player2Name, XSSProtection.cleanInput(player2?.username || `Player ${playerId2}`));
       if (player2Avatar && player2?.avatar) {
         player2Avatar.src = player2.avatar;
       }
@@ -139,7 +140,7 @@ export function init() {
     const readyCount = data.readyPlayers?.length || 0;
     const totalPlayers = data.totalPlayers || 2;
     if (roomStatus) {
-      roomStatus.textContent = `> ${readyCount}/${totalPlayers} PLAYERS READY`;
+      safeDOM.setText(roomStatus, `> ${readyCount}/${totalPlayers} PLAYERS READY`);
     }
     const player1ReadyText = document.getElementById('player1-ready-text');
     const player2ReadyText = document.getElementById('player2-ready-text');
@@ -148,22 +149,22 @@ export function init() {
       const [playerId1, playerId2] = currentRoom.players;
       if (player1ReadyText) {
         if (readyPlayerIds.includes(playerId1)) {
-          player1ReadyText.textContent = 'READY';
+          safeDOM.setText(player1ReadyText, 'READY');
           player1ReadyText.classList.remove('text-neon-red');
           player1ReadyText.classList.add('text-neon-green');
         } else {
-          player1ReadyText.textContent = 'NOT READY';
+          safeDOM.setText(player1ReadyText, 'NOT READY');
           player1ReadyText.classList.remove('text-neon-green');
           player1ReadyText.classList.add('text-neon-red');
         }
       }
       if (player2ReadyText) {
         if (readyPlayerIds.includes(playerId2)) {
-          player2ReadyText.textContent = 'READY';
+          safeDOM.setText(player2ReadyText, 'READY');
           player2ReadyText.classList.remove('text-neon-red');
           player2ReadyText.classList.add('text-neon-green');
         } else {
-          player2ReadyText.textContent = 'NOT READY';
+          safeDOM.setText(player2ReadyText, 'NOT READY');
           player2ReadyText.classList.remove('text-neon-green');
           player2ReadyText.classList.add('text-neon-red');
         }

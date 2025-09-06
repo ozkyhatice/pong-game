@@ -6,6 +6,7 @@ import { GameService } from '../../services/GameService.js';
 import { OnlineUsersService } from '../../services/OnlineUsersService.js';
 import { WebSocketManager } from '../../core/WebSocketManager.js';
 import { UserService } from '../../services/UserService.js';
+import { XSSProtection, safeDOM } from '../../core/XSSProtection.js';
 
 interface Match {
   id: number;
@@ -247,8 +248,8 @@ export function init() {
 
 		const usernameEl = document.getElementById('username');
 		if (headerAvatarImgEl) headerAvatarImgEl.src = userInfo.avatar || 'https://placehold.co/400x400?text=Player';
-		if (headerUsernameEl) headerUsernameEl.textContent = user.username;
-		if (usernameEl) usernameEl.textContent = user.username;
+		if (headerUsernameEl) safeDOM.setText(headerUsernameEl, XSSProtection.cleanInput(user.username));
+		if (usernameEl) safeDOM.setText(usernameEl, XSSProtection.cleanInput(user.username));
 		if (sidebarAvatarImgEl) sidebarAvatarImgEl.src = userInfo.avatar || 'https://placehold.co/400x400?text=Player';
 	}
     loadUserStats(user.id);
@@ -323,10 +324,10 @@ function updateStatsDisplay(userData: any) {
     const winRateEl = document.getElementById('win-rate');
     const totalGamesEl = document.getElementById('total-games');
 
-    if (winsCountEl) winsCountEl.textContent = wins.toString();
-    if (lossesCountEl) lossesCountEl.textContent = losses.toString();
-    if (winRateEl) winRateEl.textContent = `${winRate}%`;
-    if (totalGamesEl) totalGamesEl.textContent = totalGames.toString();
+    if (winsCountEl) safeDOM.setText(winsCountEl, wins.toString());
+    if (lossesCountEl) safeDOM.setText(lossesCountEl, losses.toString());
+    if (winRateEl) safeDOM.setText(winRateEl, `${winRate}%`);
+    if (totalGamesEl) safeDOM.setText(totalGamesEl, totalGames.toString());
 
   const matchHistoryEl = document.getElementById('match-history');
   const matchHistory = gameService.getMatchHistory(userData.id);

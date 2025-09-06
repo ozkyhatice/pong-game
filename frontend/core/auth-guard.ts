@@ -1,10 +1,16 @@
 import { notify } from './notify.js';
 import { WebSocketManager } from './WebSocketManager.js';
 import { OnlineUsersService } from '../services/OnlineUsersService.js';
+import { XSSProtection } from './XSSProtection.js';
 
 export class AuthGuard {
   public static isAuthenticated(): boolean {
-    return !!localStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken');
+    if (!token) return false;
+    
+    // Basic token validation (check if it looks like a valid token)
+    const cleanToken = XSSProtection.cleanInput(token);
+    return cleanToken.length > 0 && cleanToken === token;
   }
 
   public static getRedirectPage(requestedPage: string): string | null {

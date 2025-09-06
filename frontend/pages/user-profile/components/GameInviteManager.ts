@@ -1,6 +1,7 @@
 import { GameService } from '../../../services/GameService.js';
 import { notify } from '../../../core/notify.js';
 import { AppState } from '../../../core/AppState.js';
+import { XSSProtection, safeDOM } from '../../../core/XSSProtection.js';
 
 export class GameInviteManager {
   private gameService: GameService;
@@ -191,8 +192,6 @@ export class GameInviteManager {
   }
 
   private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return XSSProtection.escapeHTML(text);
   }
 }

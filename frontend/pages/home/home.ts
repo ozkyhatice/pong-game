@@ -9,6 +9,7 @@ import { OnlineUsersService } from '../../services/OnlineUsersService.js';
 import { ChatService } from '../../services/ChatService.js';
 import { UserService } from '../../services/UserService.js';
 import { GameService } from '../../services/GameService.js';
+import { XSSProtection } from '../../core/XSSProtection.js';
 
 
 let currentProfileComponent: ProfileComponent | null = null;
@@ -46,7 +47,8 @@ function setupHeaderButtons() {
       });
       
       if (response.ok) {
-        const data = await response.json();
+        const rawData = await response.json();
+        const data = XSSProtection.sanitizeJSON(rawData);
         const appState = AppState.getInstance();
         appState.setViewingUser(data.user);
         router.navigate('own-profile');

@@ -1,6 +1,7 @@
 import { notify } from "../../core/notify.js";
 import { Router } from "../../core/router.js";
 import { UserService } from "../../services/UserService.js";
+import { safeDOM, XSSProtection } from "../../core/XSSProtection.js";
 
 declare global {
   var router: Router;
@@ -29,7 +30,8 @@ export function init() {
 		if (!gameResultString) return;
 
 		try {
-			const gameResult = JSON.parse(gameResultString);
+			const rawGameResult = JSON.parse(gameResultString);
+			const gameResult = XSSProtection.sanitizeJSON(rawGameResult);
 			
 			let playerIds;
 			if (gameResult.playerOrder && gameResult.playerOrder.length >= 2) {
@@ -52,29 +54,36 @@ export function init() {
 
 			if (gameResultStatus) {
 				if (isCurrentUserWinner) {
-					gameResultStatus.textContent = '> RESULT: VICTORY!';
+					safeDOM.setText(gameResultStatus, '> RESULT: VICTORY!');
 					gameResultStatus.className = 'text-neon-green flex items-center gap-1 mb-1';
 				} else {
-					gameResultStatus.textContent = '> RESULT: DEFEAT...';
+					safeDOM.setText(gameResultStatus, '> RESULT: DEFEAT...');
 					gameResultStatus.className = 'text-neon-red flex items-center gap-1 mb-1';
 				}
 			}
 
 			if (winnerText) {
-				winnerText.textContent = `${winnerUser?.username || 'Player ' + winnerId} WINS!`;
+				const cleanUsername = XSSProtection.escapeHTML(winnerUser?.username || 'Player ' + winnerId);
+				safeDOM.setText(winnerText, `${cleanUsername} WINS!`);
 			}
 
 			if (scoreText) {
 				const score1 = gameResult.finalScore[playerIds[0]] || 0;
 				const score2 = gameResult.finalScore[playerIds[1]] || 0;
-				scoreText.textContent = `${score1} - ${score2}`;
+				safeDOM.setText(scoreText, `${score1} - ${score2}`);
 			}
 
-			if (player1Name) player1Name.textContent = player1?.username || `Player ${playerIds[0]}`;
-			if (player2Name) player2Name.textContent = player2?.username || `Player ${playerIds[1]}`;
+			if (player1Name) safeDOM.setText(player1Name, player1?.username || `Player ${playerIds[0]}`);
+			if (player2Name) safeDOM.setText(player2Name, player2?.username || `Player ${playerIds[1]}`);
 
-			if (player1Avatar && player1?.avatar) player1Avatar.src = player1.avatar;
-			if (player2Avatar && player2?.avatar) player2Avatar.src = player2.avatar;
+			if (player1Avatar && player1?.avatar) {
+				const safeAvatar1 = XSSProtection.escapeHTML(player1.avatar);
+				player1Avatar.src = safeAvatar1;
+			}
+			if (player2Avatar && player2?.avatar) {
+				const safeAvatar2 = XSSProtection.escapeHTML(player2.avatar);
+				player2Avatar.src = safeAvatar2;
+			}
 
 			localStorage.removeItem('gameResult');
 		} catch (e) {
