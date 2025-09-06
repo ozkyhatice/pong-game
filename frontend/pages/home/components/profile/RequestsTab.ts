@@ -14,8 +14,8 @@ export class RequestsTab {
   private render(): void {
     if (this.requests.length === 0) {
       this.element.innerHTML = `
-        <div class="text-center text-gray-500 py-8">
-          <p class="text-sm">No friend requests</p>
+        <div class="text-center text-neon-yellow/50 py-8">
+          <p class="text-sm">NO FRIEND REQUESTS...</p>
         </div>
       `;
       return;

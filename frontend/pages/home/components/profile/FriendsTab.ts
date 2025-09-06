@@ -50,8 +50,8 @@ export class FriendsTab {
   private render(): void {
     if (this.friends.length === 0) {
       this.element.innerHTML = `
-        <div class="text-center text-gray-500 py-8">
-          <p class="text-sm">No friends yet</p>
+        <div class="text-center text-neon-blue/50 py-8">
+          <p class="text-sm">NO FRIENDS...</p>
         </div>
       `;
       return;
