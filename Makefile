@@ -1,6 +1,5 @@
-init-data:
-	@mkdir -p data data/db data/grafana data/prometheus data/frontend data/uploads
-	@chmod -R 777 data
+all: generate-ssl init-data docker-up
+	@echo "All services started."
 
 docker-up: generate-ssl init-data
 	@mkdir -p backend/db
@@ -35,4 +34,18 @@ docker-clean:
 generate-ssl:
 	@cd nginx/ssl && chmod +x generate-ssl.sh && ./generate-ssl.sh
 
-.PHONY: docker-up docker-down docker-logs docker-restart docker-build docker-rebuild docker-status docker-clean generate-ssl init-data
+init-data:
+	@mkdir -p data data/db data/grafana data/prometheus data/frontend data/uploads
+	@chmod -R 777 data
+
+fclean: docker-down
+	@rm -rf data
+	@echo "All Data cleaned."
+
+docker-purune:
+	@docker container prune -f
+	@docker image prune -a -f
+	@docker volume prune -f
+	@docker network prune -f
+
+.PHONY: docker-up docker-down docker-logs docker-restart docker-build docker-rebuild docker-status docker-clean generate-ssl init-data all fclean docker-purge
