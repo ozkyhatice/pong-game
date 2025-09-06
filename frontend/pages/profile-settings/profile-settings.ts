@@ -242,8 +242,8 @@ function displayQRCode(qr: string, secret: string): void {
     const secretKey = document.getElementById('secretKey');
 
     if (qrContainer && qrCode && secretKey) {
-        safeDOM.setHTML(qrCode, `<img src="${XSSProtection.cleanInput(qr)}" alt="QR Code">`);
-        safeDOM.setText(secretKey, XSSProtection.cleanInput(secret));
+        safeDOM.setHTML(qrCode, `<img src="${qr}" alt="QR Code">`);
+        safeDOM.setText(secretKey, secret);
         qrContainer.style.display = 'block';
     }
 }
