@@ -1,6 +1,7 @@
 import { FriendsTab } from './FriendsTab.js';
 import { RequestsTab } from './RequestsTab.js';
 import { AddFriendTab } from './AddFriendTab.js';
+import { safeDOM } from '../../../../core/XSSProtection.js';
 
 export class SocialTabs {
   private element: HTMLElement;
@@ -25,7 +26,7 @@ export class SocialTabs {
   }
 
   private render(): void {
-    this.element.innerHTML = `
+    safeDOM.setHTML(this.element, `
       <!-- Tab Headers -->
       <div class="flex bg-console-bg">
         <button class="tab-btn flex-1 px-2 py-2 md:px-3 md:py-3 text-center text-xs font-medium transition-all duration-300 ${
@@ -85,7 +86,7 @@ export class SocialTabs {
       <div class="flex-1 p-2 md:p-3 overflow-y-auto" id="tab-content">
         <!-- Content will be inserted here -->
       </div>
-    `;
+    `);
 
     this.contentContainer = this.element.querySelector('#tab-content') as HTMLElement;
     this.showTabContent();
@@ -117,18 +118,21 @@ export class SocialTabs {
   }
 
   private showTabContent(): void {
-    this.contentContainer.innerHTML = '';
+    // Clear content safely
+    if (this.contentContainer) {
+      this.contentContainer.innerHTML = '';
 
-    switch (this.activeTab) {
-      case 'friends':
-        this.contentContainer.appendChild(this.friendsTab.getElement());
-        break;
-      case 'requests':
-        this.contentContainer.appendChild(this.requestsTab.getElement());
-        break;
-      case 'add':
-        this.contentContainer.appendChild(this.addFriendTab.getElement());
-        break;
+      switch (this.activeTab) {
+        case 'friends':
+          this.contentContainer.appendChild(this.friendsTab.getElement());
+          break;
+        case 'requests':
+          this.contentContainer.appendChild(this.requestsTab.getElement());
+          break;
+        case 'add':
+          this.contentContainer.appendChild(this.addFriendTab.getElement());
+          break;
+      }
     }
   }
 

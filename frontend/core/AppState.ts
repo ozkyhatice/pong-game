@@ -1,3 +1,5 @@
+import { XSSProtection } from './XSSProtection';
+
 interface ViewingUser {
   id: number;
   username: string;
@@ -37,8 +39,14 @@ export class AppState {
   }
 
   setViewingUser(user: ViewingUser): void {
-    this.viewingUser = user;
-    sessionStorage.setItem('viewingUser', JSON.stringify(user));
+    // Sanitize user data before storing
+    const sanitizedUser = {
+      id: user.id,
+      username: XSSProtection.cleanInput(user.username),
+      avatar: user.avatar ? XSSProtection.cleanInput(user.avatar) : undefined
+    };
+    this.viewingUser = sanitizedUser;
+    sessionStorage.setItem('viewingUser', JSON.stringify(sanitizedUser));
   }
 
   getViewingUser(): ViewingUser | null {
@@ -116,7 +124,9 @@ export class AppState {
     try {
       const storedViewingUser = sessionStorage.getItem('viewingUser');
       if (storedViewingUser) {
-        this.viewingUser = JSON.parse(storedViewingUser);
+        const userData = JSON.parse(storedViewingUser);
+        // Sanitize data loaded from storage
+        this.viewingUser = XSSProtection.sanitizeJSON(userData);
       }
 
       const storedRoom = localStorage.getItem('currentRoom');
@@ -125,7 +135,7 @@ export class AppState {
         const now = Date.now();
         const roomAge = now - roomData.createdAt;
         if (roomAge < 24 * 60 * 60 * 1000) {
-          this.currentRoom = roomData;
+          this.currentRoom = XSSProtection.sanitizeJSON(roomData);
         } else {
           localStorage.removeItem('currentRoom');
         }
@@ -137,7 +147,7 @@ export class AppState {
         const now = Date.now();
         const tournamentAge = now - tournamentData.joinedAt;
         if (tournamentAge < 24 * 60 * 60 * 1000) {
-          this.currentTournament = tournamentData;
+          this.currentTournament = XSSProtection.sanitizeJSON(tournamentData);
         } else {
           localStorage.removeItem('currentTournament');
         }

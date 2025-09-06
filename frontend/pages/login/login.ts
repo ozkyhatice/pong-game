@@ -1,5 +1,6 @@
 import { getApiUrl, API_CONFIG } from '../../config.js';
 import { notify } from '../../core/notify.js';
+import { XSSProtection } from '../../core/XSSProtection.js';
 
 export async function init() {
 
@@ -22,16 +23,21 @@ export async function init() {
       return;
     }
 
+    // Sanitize input before sending
+    const cleanEmail = XSSProtection.cleanInput(email, 100);
+    const cleanPassword = XSSProtection.cleanInput(password, 200);
+
     try {
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.LOGIN), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
       });
 
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = XSSProtection.sanitizeJSON(rawData);
 
       if (data.message === '2FA_REQUIRED') {
         sessionStorage.setItem('tempUserId', data.userId.toString());

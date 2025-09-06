@@ -1,6 +1,7 @@
 import { WebSocketManager } from '../core/WebSocketManager.js';
 import { ChatMessage } from '../core/types.js';
 import { API_CONFIG, getApiUrl } from '../config.js';
+import { XSSProtection } from '../core/XSSProtection.js';
 
 export class ChatService {
   private wsManager: WebSocketManager;
@@ -10,10 +11,13 @@ export class ChatService {
   }
 
   sendMessage(receiverId: number, content: string): void {
+    // Sanitize message content before sending
+    const cleanContent = XSSProtection.cleanInput(content, 2000);
+    
     this.wsManager.send({
       type: 'message',
       receiverId,
-      content
+      content: cleanContent
     });
   }
 
@@ -54,7 +58,9 @@ export class ChatService {
       });
 
       if (!response.ok) return [];
-      return await response.json();
+      const rawData = await response.json();
+      // Sanitize chat history data
+      return XSSProtection.sanitizeJSON(rawData);
     } catch {
       return [];
     }

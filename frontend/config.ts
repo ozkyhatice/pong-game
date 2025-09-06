@@ -1,4 +1,6 @@
 // API Configuration
+import { XSSProtection } from './core/XSSProtection.js';
+
 export const API_CONFIG = {
   // BASE_URL: 'https://pong.42.fr',
   // WS_URL: 'wss://pong.42.fr/ws',
@@ -65,15 +67,15 @@ export const API_CONFIG = {
 
       // GET /api/users/id/:id
       // Headers: { Authorization: Bearer <token> }
-      BY_ID: (id: string) => `/api/users/id/${id}`,
+      BY_ID: (id: string) => `/api/users/id/${XSSProtection.cleanInput(id)}`,
 
       // GET /api/users/:username
       // Headers: { Authorization: Bearer <token> }
-      BY_USERNAME: (username: string) => `/api/users/${username}`,
+      BY_USERNAME: (username: string) => `/api/users/${XSSProtection.cleanInput(username)}`,
 
       // GET /api/users/tournament-status/:id
       // Headers: { Authorization: Bearer <token> }
-      TOURNAMENT_STATUS: (id: string) => `/api/users/tournament-status/${id}`
+      TOURNAMENT_STATUS: (id: string) => `/api/users/tournament-status/${XSSProtection.cleanInput(id)}`
     },
 
     FRIENDS: {
@@ -81,25 +83,25 @@ export const API_CONFIG = {
       LIST: '/api/friends',
 
       // POST /api/friends/add/:targetId
-      ADD: (targetId: string) => `/api/friends/add/${targetId}`,
+      ADD: (targetId: string) => `/api/friends/add/${XSSProtection.cleanInput(targetId)}`,
 
       // POST /api/friends/:targetId/accept
-      ACCEPT: (targetId: string) => `/api/friends/${targetId}/accept`,
+      ACCEPT: (targetId: string) => `/api/friends/${XSSProtection.cleanInput(targetId)}/accept`,
 
       // POST /api/friends/:targetId/reject
-      REJECT: (targetId: string) => `/api/friends/${targetId}/reject`,
+      REJECT: (targetId: string) => `/api/friends/${XSSProtection.cleanInput(targetId)}/reject`,
 
       // DELETE /api/friends/:targetId/remove
-      REMOVE: (targetId: string) => `/api/friends/${targetId}/remove`,
+      REMOVE: (targetId: string) => `/api/friends/${XSSProtection.cleanInput(targetId)}/remove`,
 
       // POST /api/friends/:id/block
-      BLOCK: (id: string) => `/api/friends/${id}/block`,
+      BLOCK: (id: string) => `/api/friends/${XSSProtection.cleanInput(id)}/block`,
 
 	  // GET /api/friends/:id/blocked
-      BLOCKED: (id: string) => `/api/friends/${id}/blocked`,
+      BLOCKED: (id: string) => `/api/friends/${XSSProtection.cleanInput(id)}/blocked`,
 
       // POST /api/friends/:id/unblock
-      UNBLOCK: (id: string) => `/api/friends/${id}/unblock`,
+      UNBLOCK: (id: string) => `/api/friends/${XSSProtection.cleanInput(id)}/unblock`,
 
       REQUESTS: {
         // GET /api/friends/requests/incoming
@@ -113,25 +115,25 @@ export const API_CONFIG = {
     CHAT: {
       // GET /api/chat/history/:userId
       // Headers: { Authorization: Bearer <token> }
-      HISTORY: (userId: string) => `/api/chat/history/${userId}`,
+      HISTORY: (userId: string) => `/api/chat/history/${XSSProtection.cleanInput(userId)}`,
 
       // PUT /api/chat/mark-read/:userId
       // Headers: { Authorization: Bearer <token> }
-      MARK_READ: (userId: string) => `/api/chat/mark-read/${userId}`
+      MARK_READ: (userId: string) => `/api/chat/mark-read/${XSSProtection.cleanInput(userId)}`
     },
 
     GAME: {
       // GET /api/game/matches/history/:userId
       // Headers: { Authorization: Bearer <token> }
-      MATCH_HISTORY: (userId: string) => `/api/game/matches/history/${userId}`
+      MATCH_HISTORY: (userId: string) => `/api/game/matches/history/${XSSProtection.cleanInput(userId)}`
     }
   }
 };
 
 export const getApiUrl = (endpoint: string): string => {
-  return `${API_CONFIG.BASE_URL}${endpoint}`;
+  return `${API_CONFIG.BASE_URL}${XSSProtection.cleanInput(endpoint)}`;
 };
 
 export const getWsUrl = (): string => {
-  return API_CONFIG.WS_URL;
+  return XSSProtection.cleanInput(API_CONFIG.WS_URL);
 };

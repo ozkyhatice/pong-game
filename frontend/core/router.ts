@@ -1,6 +1,7 @@
 import { AuthGuard } from './auth-guard.js';
 import { notify } from './notify.js';
 import { WebSocketManager } from './WebSocketManager.js';
+import { XSSProtection } from './XSSProtection.js';
 
 class Router {
   private container: HTMLElement;
@@ -16,8 +17,10 @@ class Router {
   }
 
   navigate(pageName: string): void {
+    // Sanitize page name to prevent XSS
+    const cleanPageName = XSSProtection.cleanInput(pageName);
     
-    if (pageName === this.currentPage) {
+    if (cleanPageName === this.currentPage) {
       return;
     }
     
@@ -25,9 +28,9 @@ class Router {
       return;
     }
     
-    const redirectPage = AuthGuard.getRedirectPage(pageName);
-    if (redirectPage && redirectPage !== pageName) {
-      if (!AuthGuard.isAuthenticated() && pageName !== 'landing' && pageName !== 'game' && pageName !== 'login' && pageName !== 'register') {
+    const redirectPage = AuthGuard.getRedirectPage(cleanPageName);
+    if (redirectPage && redirectPage !== cleanPageName) {
+      if (!AuthGuard.isAuthenticated() && cleanPageName !== 'landing' && cleanPageName !== 'game' && cleanPageName !== 'login' && cleanPageName !== 'register') {
         notify('Please login to access this page!');
       }
       return this.navigate(redirectPage);
@@ -35,8 +38,8 @@ class Router {
     
     this.isNavigating = true;
     
-    window.history.pushState({ page: pageName }, '', window.location.href);
-    this.loadPage(pageName);
+    window.history.pushState({ page: cleanPageName }, '', window.location.href);
+    this.loadPage(cleanPageName);
   }
 
   loadPageDirect(pageName: string) {

@@ -2,6 +2,7 @@ import { AppState } from '../../core/AppState.js';
 import { TournamentService } from '../../services/TournamentService.js';
 import { UserService } from '../../services/UserService.js';
 import { notify } from '../../core/notify.js';
+import { XSSProtection, safeDOM } from '../../core/XSSProtection.js';
 
 interface TournamentData {
   id: number;
@@ -374,17 +375,17 @@ export function init() {
     const playerCount = currentTournament.currentPlayers.toString();
     
     if (tournamentStatus) {
-      tournamentStatus.textContent = status;
+      safeDOM.setText(tournamentStatus, XSSProtection.cleanInput(status));
     }
     if (tournamentStatusMobile) {
-      tournamentStatusMobile.textContent = status;
+      safeDOM.setText(tournamentStatusMobile, XSSProtection.cleanInput(status));
     }
 
     if (participantCount) {
-      participantCount.textContent = playerCount;
+      safeDOM.setText(participantCount, playerCount);
     }
     if (participantCountMobile) {
-      participantCountMobile.textContent = playerCount;
+      safeDOM.setText(participantCountMobile, playerCount);
     }
 
     updateParticipantsGrid();
@@ -453,10 +454,10 @@ export function init() {
     if (currentTournament.status === 'pending') {
       const remaining = 4 - currentTournament.currentPlayers;
       if (remaining > 0) {
-        waitingText.textContent = `WAITING FOR ${remaining} MORE PLAYER${remaining !== 1 ? 'S' : ''} TO JOIN...`;
+        safeDOM.setText(waitingText, `WAITING FOR ${remaining} MORE PLAYER${remaining !== 1 ? 'S' : ''} TO JOIN...`);
         waitingMessage.classList.remove('hidden');
       } else {
-        waitingText.textContent = 'TOURNAMENT IS FULL! STARTING SOON...';
+        safeDOM.setText(waitingText, 'TOURNAMENT IS FULL! STARTING SOON...');
         waitingMessage.classList.remove('hidden');
       }
     } else {
@@ -700,8 +701,8 @@ export function init() {
     if (countdownTimer && countdownDisplay && countdownMessage && countdownBar) {
       const pairingsText = data.pairings.map((p: any) => `${p.player1} vs ${p.player2}`).join(' | ');
       
-      countdownMessage.textContent = `${data.roundName.toUpperCase()} STARTING`;
-      if (countdownText) countdownText.textContent = 'GET READY!';
+      safeDOM.setText(countdownMessage, XSSProtection.cleanInput(`${data.roundName.toUpperCase()} STARTING`));
+      if (countdownText) safeDOM.setText(countdownText, 'GET READY!');
       
       waitingMessage?.classList.add('hidden');
       countdownTimer.classList.remove('hidden');
@@ -713,7 +714,7 @@ export function init() {
       
       countdownInterval = setInterval(() => {
         if (countdownDisplay) {
-          countdownDisplay.textContent = timeLeft.toString();
+          safeDOM.setText(countdownDisplay, timeLeft.toString());
         }
         if (countdownBar) {
           const progress = ((6 - timeLeft) / 6) * 100;
@@ -726,9 +727,9 @@ export function init() {
           clearInterval(countdownInterval!);
           countdownInterval = null;
           
-          if (countdownMessage) countdownMessage.textContent = 'MATCHES STARTING!';
-          if (countdownText) countdownText.textContent = 'BATTLE TIME!';
-          if (countdownDisplay) countdownDisplay.textContent = 'GO!';
+          if (countdownMessage) safeDOM.setText(countdownMessage, 'MATCHES STARTING!');
+          if (countdownText) safeDOM.setText(countdownText, 'BATTLE TIME!');
+          if (countdownDisplay) safeDOM.setText(countdownDisplay, 'GO!');
           
           setTimeout(() => {
             countdownTimer?.classList.add('hidden');
@@ -786,8 +787,8 @@ export function init() {
     if (roundTransition && transitionMessage && roundCountdownText && roundCountdownBar) {
       const winnersList = data.winners.map((w: any) => w.username).join(', ');
       
-      transitionMessage.textContent = `${data.roundName.toUpperCase()} COMPLETE!`;
-      roundCountdownText.textContent = `WINNERS: ${winnersList.toUpperCase()} | ${data.nextRoundName.toUpperCase()} STARTS IN ${data.nextRoundStartsIn}S`;
+      safeDOM.setText(transitionMessage, XSSProtection.cleanInput(`${data.roundName.toUpperCase()} COMPLETE!`));
+      safeDOM.setText(roundCountdownText, XSSProtection.cleanInput(`WINNERS: ${winnersList.toUpperCase()} | ${data.nextRoundName.toUpperCase()} STARTS IN ${data.nextRoundStartsIn}S`));
       
       roundTransition.classList.remove('hidden');
       
@@ -804,7 +805,7 @@ export function init() {
       countdownInterval = setInterval(() => {
         timeLeft--;
         if (roundCountdownText) {
-          roundCountdownText.textContent = `WINNERS: ${winnersList.toUpperCase()} | ${data.nextRoundName.toUpperCase()} STARTS IN ${timeLeft}S`;
+          safeDOM.setText(roundCountdownText, XSSProtection.cleanInput(`WINNERS: ${winnersList.toUpperCase()} | ${data.nextRoundName.toUpperCase()} STARTS IN ${timeLeft}S`));
         }
         
         if (timeLeft <= 0) {
@@ -828,7 +829,7 @@ export function init() {
       ? 'CONGRATULATIONS! YOU ARE THE CHAMPION!' 
       : `Tournament Complete! Champion: ${data.winnerUsername || data.winnerId}`;
     
-    tournamentResultText.textContent = message;
+    safeDOM.setText(tournamentResultText, XSSProtection.cleanInput(message));
     tournamentEndModal.classList.remove('hidden');
     tournamentEndModal.classList.add('flex');
   }
@@ -842,14 +843,14 @@ export function init() {
         if (!isConnected) {
           connectionStatus.classList.remove('hidden');
           connectionIndicator.className = 'w-3 h-3 bg-red-500 rounded-full animate-pulse';
-          connectionText.textContent = 'RECONNECTING...';
+          safeDOM.setText(connectionText, 'RECONNECTING...');
           
           if (wsManager?.reconnect) {
             wsManager.reconnect();
           }
         } else {
           connectionIndicator.className = 'w-3 h-3 bg-green-500 rounded-full';
-          connectionText.textContent = 'CONNECTED';
+          safeDOM.setText(connectionText, 'CONNECTED');
           
           setTimeout(() => {
             connectionStatus.classList.add('hidden');

@@ -1,3 +1,5 @@
+import { safeDOM } from './XSSProtection';
+
 export interface ComponentOptions {
   className?: string;
   id?: string;
@@ -28,12 +30,12 @@ export class Component {
   }
 
   setHTML(html: string): Component {
-    this.element.innerHTML = html;
+    safeDOM.setHTML(this.element, html);
     return this;
   }
 
   setText(text: string): Component {
-    this.element.textContent = text;
+    safeDOM.setText(this.element, text);
     return this;
   }
 

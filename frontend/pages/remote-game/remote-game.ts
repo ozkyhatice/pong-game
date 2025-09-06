@@ -4,6 +4,7 @@ import { UserService } from "../../services/UserService.js";
 import { Router } from "../../core/router.js";
 import { notify } from "../../core/notify.js";
 import { WebSocketManager } from "../../core/WebSocketManager.js";
+import { XSSProtection, safeDOM } from "../../core/XSSProtection.js";
 
 declare global {
   var router: Router;
@@ -235,7 +236,7 @@ export async function init() {
     return;
   }
 
-  if (roomIdEl) roomIdEl.textContent = `ROOM: ${currentRoom.roomId}`;
+  if (roomIdEl) safeDOM.setText(roomIdEl, `ROOM: ${XSSProtection.cleanInput(currentRoom.roomId)}`);
   if (leaveGameBtn) leaveGameBtn.addEventListener('click', handleLeaveGame);
   if (mobileLeaveBtn) mobileLeaveBtn.addEventListener('click', handleLeaveGame);
 
@@ -248,8 +249,8 @@ export async function init() {
   initRoomPlayerNames();
 
   gameService.onStateUpdate((data) => {
-    if (gameStatusEl) gameStatusEl.textContent = ' BATTLE ';
-    if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' BATTLE ';
+    if (gameStatusEl) safeDOM.setText(gameStatusEl, ' BATTLE ');
+    if (mobileGameStatusEl) safeDOM.setText(mobileGameStatusEl, ' BATTLE ');
 
     gameState = data.state;
     update3DGameState();
@@ -258,8 +259,8 @@ export async function init() {
   });
 
   gameService.onGameStarted((data) => {
-    if (gameStatusEl) gameStatusEl.textContent = ' BATTLE ';
-    if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' BATTLE ';
+    if (gameStatusEl) safeDOM.setText(gameStatusEl, ' BATTLE ');
+    if (mobileGameStatusEl) safeDOM.setText(mobileGameStatusEl, ' BATTLE ');
 
     if (data.players && currentRoom) {
       const updatedRoom = {
@@ -276,8 +277,9 @@ export async function init() {
   });
 
   gameService.onGameError((data) => {
-    if (gameStatusEl) gameStatusEl.textContent = `❌ ERROR: ${data.message}`;
-    if (mobileGameStatusEl) mobileGameStatusEl.textContent = `❌ ERROR`;
+    const safeMessage = XSSProtection.cleanInput(data.message || 'Unknown error');
+    if (gameStatusEl) safeDOM.setText(gameStatusEl, `❌ ERROR: ${safeMessage}`);
+    if (mobileGameStatusEl) safeDOM.setText(mobileGameStatusEl, `❌ ERROR`);
   });
 
   gameService.onPlayerLeft((data: any) => {
@@ -963,14 +965,14 @@ export async function init() {
     controlsEnabled = false;
     flashEffectsEnabled = false;
 
-    if (gameStatusEl) gameStatusEl.textContent = `BATTLE STARTS IN ${count}... `;
-    if (mobileGameStatusEl) mobileGameStatusEl.textContent = `${count}`;
+    if (gameStatusEl) safeDOM.setText(gameStatusEl, `BATTLE STARTS IN ${count}... `);
+    if (mobileGameStatusEl) safeDOM.setText(mobileGameStatusEl, `${count}`);
 
     const countdownInterval = setInterval(() => {
       count--;
       if (count > 0) {
-        if (gameStatusEl) gameStatusEl.textContent = ` BATTLE STARTS IN ${count}... `;
-        if (mobileGameStatusEl) mobileGameStatusEl.textContent = `${count}`;
+        if (gameStatusEl) safeDOM.setText(gameStatusEl, ` BATTLE STARTS IN ${count}... `);
+        if (mobileGameStatusEl) safeDOM.setText(mobileGameStatusEl, `${count}`);
       } else {
         clearInterval(countdownInterval);
 
@@ -979,12 +981,12 @@ export async function init() {
 
         const isFirstPlayer = currentRoom && currentRoom.players[0] === myPlayerId;
         if (isFirstPlayer && currentRoom) {
-          if (gameStatusEl) gameStatusEl.textContent = ' BATTLE ACTIVE ';
-          if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' FIGHT ';
+          if (gameStatusEl) safeDOM.setText(gameStatusEl, ' BATTLE ACTIVE ');
+          if (mobileGameStatusEl) safeDOM.setText(mobileGameStatusEl, ' FIGHT ');
           gameService.startGame(currentRoom.roomId);
         } else {
-          if (gameStatusEl) gameStatusEl.textContent = ' BATTLE ACTIVE ';
-          if (mobileGameStatusEl) mobileGameStatusEl.textContent = ' FIGHT ';
+          if (gameStatusEl) safeDOM.setText(gameStatusEl, ' BATTLE ACTIVE ');
+          if (mobileGameStatusEl) safeDOM.setText(mobileGameStatusEl, ' FIGHT ');
         }
 
         setTimeout(() => {
@@ -1175,10 +1177,10 @@ export async function init() {
 
   function showPauseMessage(message: string, countdownSeconds?: number) {
     if (pauseMessageEl) pauseMessageEl.classList.remove('hidden');
-    if (pauseTextEl) pauseTextEl.textContent = message;
+    if (pauseTextEl) safeDOM.setText(pauseTextEl, XSSProtection.cleanInput(message));
 
     if (mobilePauseMessageEl) mobilePauseMessageEl.classList.remove('hidden');
-    if (mobilePauseTextEl) mobilePauseTextEl.textContent = '⏸️ PAUSED';
+    if (mobilePauseTextEl) safeDOM.setText(mobilePauseTextEl, '⏸️ PAUSED');
 
     if (countdownSeconds) {
       startPauseCountdown(countdownSeconds);
@@ -1204,8 +1206,8 @@ export async function init() {
 
     const updateCountdown = () => {
       const text = `Reconnecting in ${remaining}s...`;
-      if (pauseCountdownEl) pauseCountdownEl.textContent = text;
-      if (mobilePauseCountdownEl) mobilePauseCountdownEl.textContent = text;
+      if (pauseCountdownEl) safeDOM.setText(pauseCountdownEl, text);
+      if (mobilePauseCountdownEl) safeDOM.setText(mobilePauseCountdownEl, text);
 
       remaining--;
 
@@ -1243,16 +1245,19 @@ export async function init() {
       player1Avatar = player1?.avatar || null;
       player2Avatar = player2?.avatar || null;
 
-      if (player1NameEl) player1NameEl.textContent = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
-      if (player2NameEl) player2NameEl.textContent = player2?.username || `WARRIOR ${currentRoom.players[1]}`;
+      const safeName1 = XSSProtection.cleanInput(player1?.username || `WARRIOR ${currentRoom.players[0]}`);
+      const safeName2 = XSSProtection.cleanInput(player2?.username || `WARRIOR ${currentRoom.players[1]}`);
+
+      if (player1NameEl) safeDOM.setText(player1NameEl, safeName1);
+      if (player2NameEl) safeDOM.setText(player2NameEl, safeName2);
 
       const player1Initial = player1?.username?.[0]?.toUpperCase() || 'W1';
       const player2Initial = player2?.username?.[0]?.toUpperCase() || 'W2';
       displayPlayerAvatar('player1-avatar-container', player1Avatar, player1Initial, true);
       displayPlayerAvatar('player2-avatar-container', player2Avatar, player2Initial, false);
 
-      if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
-      if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2?.username || `WARRIOR ${currentRoom.players[1]}`;
+      if (mobilePlayer1NameEl) safeDOM.setText(mobilePlayer1NameEl, safeName1);
+      if (mobilePlayer2NameEl) safeDOM.setText(mobilePlayer2NameEl, safeName2);
 
       displayPlayerAvatar('mobile-player1-avatar-container', player1Avatar, player1Initial, true);
       displayPlayerAvatar('mobile-player2-avatar-container', player2Avatar, player2Initial, false);
@@ -1267,11 +1272,11 @@ export async function init() {
     const score1 = gameState.score[currentRoom.players[0]] || 0;
     const score2 = gameState.score[currentRoom.players[1]] || 0;
 
-    if (player1ScoreEl) player1ScoreEl.textContent = score1.toString();
-    if (player2ScoreEl) player2ScoreEl.textContent = score2.toString();
+    if (player1ScoreEl) safeDOM.setText(player1ScoreEl, score1.toString());
+    if (player2ScoreEl) safeDOM.setText(player2ScoreEl, score2.toString());
 
-    if (mobilePlayer1ScoreEl) mobilePlayer1ScoreEl.textContent = score1.toString();
-    if (mobilePlayer2ScoreEl) mobilePlayer2ScoreEl.textContent = score2.toString();
+    if (mobilePlayer1ScoreEl) safeDOM.setText(mobilePlayer1ScoreEl, score1.toString());
+    if (mobilePlayer2ScoreEl) safeDOM.setText(mobilePlayer2ScoreEl, score2.toString());
   }
 
   async function initRoomPlayerNames() {
@@ -1288,25 +1293,25 @@ export async function init() {
       player1Avatar = player1?.avatar || null;
       player2Avatar = player2?.avatar || null;
 
-      const player1Name = player1?.username || `WARRIOR ${currentRoom.players[0]}`;
-      const player2Name = player2?.username || `WARRIOR ${currentRoom.players[1]}`;
+      const player1Name = XSSProtection.cleanInput(player1?.username || `WARRIOR ${currentRoom.players[0]}`);
+      const player2Name = XSSProtection.cleanInput(player2?.username || `WARRIOR ${currentRoom.players[1]}`);
       const player1Initial = player1?.username?.[0]?.toUpperCase() || 'W1';
       const player2Initial = player2?.username?.[0]?.toUpperCase() || 'W2';
 
-      if (player1NameEl) player1NameEl.textContent = player1Name;
-      if (player2NameEl) player2NameEl.textContent = player2Name;
+      if (player1NameEl) safeDOM.setText(player1NameEl, player1Name);
+      if (player2NameEl) safeDOM.setText(player2NameEl, player2Name);
 
       displayPlayerAvatar('player1-avatar-container', player1Avatar, player1Initial, true);
       displayPlayerAvatar('player2-avatar-container', player2Avatar, player2Initial, false);
 
-      if (mobilePlayer1NameEl) mobilePlayer1NameEl.textContent = player1Name;
-      if (mobilePlayer2NameEl) mobilePlayer2NameEl.textContent = player2Name;
+      if (mobilePlayer1NameEl) safeDOM.setText(mobilePlayer1NameEl, player1Name);
+      if (mobilePlayer2NameEl) safeDOM.setText(mobilePlayer2NameEl, player2Name);
 
       displayPlayerAvatar('mobile-player1-avatar-container', player1Avatar, player1Initial, true);
       displayPlayerAvatar('mobile-player2-avatar-container', player2Avatar, player2Initial, false);
 
       [player1ScoreEl, player2ScoreEl, mobilePlayer1ScoreEl, mobilePlayer2ScoreEl].forEach(el => {
-        if (el) el.textContent = '0';
+        if (el) safeDOM.setText(el, '0');
       });
 
     } catch (e) {

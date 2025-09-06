@@ -1,5 +1,6 @@
 import { ProfileHeader, UserProfile } from './profile/ProfileHeader.js';
 import { SocialTabs } from './profile/SocialTabs.js';
+import { XSSProtection } from '../../../core/XSSProtection.js';
 
 export class ProfileComponent {
   private element: HTMLElement;
