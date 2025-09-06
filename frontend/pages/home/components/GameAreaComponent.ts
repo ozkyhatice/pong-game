@@ -42,7 +42,7 @@ export class GameAreaComponent extends Component {
               <div class="text-[10px] leading-relaxed text-neon-green space-y-1 px-3 py-2">
                 <div class="flex items-center gap-1">
                   <div class="w-1 h-1 bg-neon-green rounded-full animate-pulse"></div>
-                  <span>PLAYER STATUS: ONLINE</span>
+                  <span>GAME STATUS: LOADED</span>
                 </div>
                 <div class="text-neon-green">
                   > START YOUR GAME...
