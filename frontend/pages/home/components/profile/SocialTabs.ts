@@ -124,13 +124,13 @@ export class SocialTabs {
 
       switch (this.activeTab) {
         case 'friends':
-          this.contentContainer.appendChild(this.friendsTab.getElement());
+          safeDOM.appendChild(this.contentContainer, this.friendsTab.getElement());
           break;
         case 'requests':
-          this.contentContainer.appendChild(this.requestsTab.getElement());
+          safeDOM.appendChild(this.contentContainer, this.requestsTab.getElement());
           break;
         case 'add':
-          this.contentContainer.appendChild(this.addFriendTab.getElement());
+          safeDOM.appendChild(this.contentContainer, this.addFriendTab.getElement());
           break;
       }
     }

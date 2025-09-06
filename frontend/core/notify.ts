@@ -54,9 +54,9 @@ export function notify(message: string, color?: string) {
 
   const msg = document.createElement('b');
   safeDOM.setText(msg, displayMsg);
-  toast.appendChild(msg);
+  safeDOM.appendChild(toast, msg);
 
-  document.body.appendChild(toast);
+  safeDOM.appendChild(document.body, toast);
 
   setTimeout(() => {
     toast.style.opacity = '0';

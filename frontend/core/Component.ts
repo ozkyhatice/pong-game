@@ -59,9 +59,9 @@ export class Component {
   append(child: Component | HTMLElement): Component {
     if (child instanceof Component) {
       this.children.push(child);
-      this.element.appendChild(child.getElement());
+      safeDOM.appendChild(this.element, child.getElement());
     } else {
-      this.element.appendChild(child);
+      safeDOM.appendChild(this.element, child);
     }
     return this;
   }

@@ -9,7 +9,7 @@ import { OnlineUsersService } from '../../services/OnlineUsersService.js';
 import { ChatService } from '../../services/ChatService.js';
 import { UserService } from '../../services/UserService.js';
 import { GameService } from '../../services/GameService.js';
-import { XSSProtection } from '../../core/XSSProtection.js';
+import { XSSProtection, safeDOM } from '../../core/XSSProtection.js';
 
 
 let currentProfileComponent: ProfileComponent | null = null;
@@ -121,8 +121,8 @@ export async function init() {
     
     currentProfileComponent = new ProfileComponent(user);
     currentGameAreaComponent = new GameAreaComponent();
-    profileContainer.appendChild(currentProfileComponent.getElement());
-    gameAreaContainer.appendChild(currentGameAreaComponent.getElement());
+    safeDOM.appendChild(profileContainer, currentProfileComponent.getElement());
+    safeDOM.appendChild(gameAreaContainer, currentGameAreaComponent.getElement());
 
     const wsManager = WebSocketManager.getInstance();
     const onlineUsersService = OnlineUsersService.getInstance();

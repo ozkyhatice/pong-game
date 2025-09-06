@@ -1,8 +1,5 @@
-/**
- * Simple XSS Protection Service
- */
+
 export class XSSProtection {
-  // Basic HTML entities
   private static readonly HTML_ENTITIES: Record<string, string> = {
     '&': '&amp;',
     '<': '&lt;',
@@ -11,9 +8,6 @@ export class XSSProtection {
     "'": '&#x27;'
   };
 
-  /**
-   * Escape HTML characters
-   */
   static escapeHTML(input: string): string {
     if (typeof input !== 'string') return '';
     
@@ -22,9 +16,6 @@ export class XSSProtection {
     });
   }
 
-  /**
-   * Remove script tags and dangerous content
-   */
   static sanitizeHTML(input: string): string {
     if (typeof input !== 'string') return '';
 
@@ -34,9 +25,7 @@ export class XSSProtection {
       .replace(/on\w+\s*=/gi, '');
   }
 
-  /**
-   * Safe innerHTML setter
-   */
+
   static safeInnerHTML(element: Element, content: string): void {
     if (!element || typeof content !== 'string') return;
     
@@ -44,27 +33,19 @@ export class XSSProtection {
     element.innerHTML = sanitized;
   }
 
-  /**
-   * Safe text content setter
-   */
+
   static safeTextContent(element: Element, content: string): void {
     if (!element || typeof content !== 'string') return;
     
     element.textContent = content;
   }
 
-  /**
-   * Clean user input
-   */
   static cleanInput(input: string, maxLength: number = 1000): string {
     if (typeof input !== 'string') return '';
     
     return this.escapeHTML(input.trim().substring(0, maxLength));
   }
 
-  /**
-   * Sanitize JSON data recursively
-   */
   static sanitizeJSON(data: any): any {
     if (typeof data === 'string') {
       return this.escapeHTML(data);
@@ -84,11 +65,38 @@ export class XSSProtection {
     
     return data;
   }
+
+
+  static safeAppendChild(parent: Element, child: Element | HTMLCanvasElement): void {
+    if (!parent || !child) return;
+
+    const dangerousElements = ['script', 'object', 'embed', 'iframe'];
+    
+    if (dangerousElements.includes(child.tagName.toLowerCase())) {
+      console.warn('Blocked attempt to inject potentially dangerous element:', child.tagName);
+      return;
+    }
+
+    Array.from(child.attributes).forEach(attr => {
+      if (attr.name.startsWith('on')) {
+        child.removeAttribute(attr.name);
+      }
+    });
+
+    if (child instanceof HTMLAnchorElement) {
+      const href = child.getAttribute('href');
+      if (href && href.toLowerCase().includes('javascript:')) {
+        child.removeAttribute('href');
+      }
+    }
+
+    Node.prototype.appendChild.call(parent, child);
+  }
 }
 
-// Simple utility functions
 export const safeDOM = {
   setHTML: (element: Element, html: string) => XSSProtection.safeInnerHTML(element, html),
   setText: (element: Element, text: string) => XSSProtection.safeTextContent(element, text),
-  cleanInput: (input: string) => XSSProtection.cleanInput(input)
+  cleanInput: (input: string) => XSSProtection.cleanInput(input),
+  appendChild: (parent: Element, child: Element | HTMLCanvasElement) => XSSProtection.safeAppendChild(parent, child)
 };

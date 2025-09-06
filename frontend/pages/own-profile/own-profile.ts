@@ -300,7 +300,7 @@ function filterMatches(filter: string): void {
             const existingEmpty = wrapper.querySelector('.filter-empty-state');
             if (existingEmpty) existingEmpty.remove();
 
-            wrapper.appendChild(emptyState);
+            safeDOM.appendChild(wrapper, emptyState);
         }
     } else {
         const existingEmpty = matchHistoryContainer?.querySelector('.filter-empty-state');
