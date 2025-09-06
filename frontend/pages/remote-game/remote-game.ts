@@ -211,12 +211,12 @@ export async function init() {
   const pauseTextEl = document.getElementById('pause-text');
   const pauseCountdownEl = document.getElementById('pause-countdown');
 
-  const mobilePlayer1NameEl = document.getElementById('mobile-player1_name');
-  const mobilePlayer2NameEl = document.getElementById('mobile-player2_name');
-  const mobilePlayer1InitialEl = document.getElementById('mobile-player1_initial');
-  const mobilePlayer2InitialEl = document.getElementById('mobile-player2_initial');
-  const mobilePlayer1ScoreEl = document.getElementById('mobile-player1_score');
-  const mobilePlayer2ScoreEl = document.getElementById('mobile-player2_score');
+  const mobilePlayer1NameEl = document.getElementById('mobile-player1-name');
+  const mobilePlayer2NameEl = document.getElementById('mobile-player2-name');
+  const mobilePlayer1InitialEl = document.getElementById('mobile-player1-initial');
+  const mobilePlayer2InitialEl = document.getElementById('mobile-player2-initial');
+  const mobilePlayer1ScoreEl = document.getElementById('mobile-player1-score');
+  const mobilePlayer2ScoreEl = document.getElementById('mobile-player2-score');
   const mobileGameStatusEl = document.getElementById('mobile-game-status');
   const mobileLeaveBtn = document.getElementById('mobile-leave-btn');
   const mobileUpBtn = document.getElementById('mobile-up-btn');
@@ -1335,7 +1335,7 @@ export async function init() {
         container.innerHTML = `<span class="text-white font-bold ${containerId.includes('mobile') ? 'text-sm' : 'text-2xl'}">${fallbackText}</span>`;
       };
 
-      safeDOM.appendChild(container, img);
+      container.appendChild(img);
     } else {
       container.innerHTML = `<span class="text-white font-bold ${containerId.includes('mobile') ? 'text-sm' : 'text-2xl'}">${fallbackText}</span>`;
     }
