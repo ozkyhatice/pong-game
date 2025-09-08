@@ -2,6 +2,8 @@
 
 A modern multiplayer Pong game built with TypeScript, featuring real-time gameplay, tournaments, social features, and comprehensive monitoring.
 
+🎮 Play Live -> **[pong.cant.tr](https://pong.cant.tr)**
+
 ## Overview
 
 What started as a simple Pong game evolved into a full-featured multiplayer gaming platform. The project demonstrates modern web development practices with TypeScript, real-time communication, containerization, and production-ready monitoring.
